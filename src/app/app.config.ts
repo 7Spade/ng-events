@@ -86,40 +86,40 @@ if (environment.api?.refreshTokenEnabled && environment.api.refreshTokenType ===
   providers.push(provideBindAuthRefresh());
 }
 
+// Firebase providers - integrated with @delon/auth
+providers.push(
+  provideFirebaseApp(() =>
+    initializeApp({
+      projectId: 'elite-chiller-455712-c4',
+      appId: '1:7807661688:web:0835c399c934321d1d1f8d',
+      databaseURL: 'https://elite-chiller-455712-c4-default-rtdb.asia-southeast1.firebasedatabase.app',
+      storageBucket: 'elite-chiller-455712-c4.firebasestorage.app',
+      apiKey: 'AIzaSyCJ-eayGjJwBKsNIh3oEAG2GjbfTrvAMEI',
+      authDomain: 'elite-chiller-455712-c4.firebaseapp.com',
+      messagingSenderId: '7807661688',
+      measurementId: 'G-W6KXBTP3YD'
+    })
+  ),
+  provideAuth_alias(() => getAuth()),
+  provideAnalytics(() => getAnalytics()),
+  ScreenTrackingService,
+  UserTrackingService,
+  provideAppCheck(() => {
+    // TODO get a reCAPTCHA Enterprise here https://console.cloud.google.com/security/recaptcha?project=_
+    const provider = new ReCaptchaEnterpriseProvider('6LcGnSUsAAAAAMIm1aYeWqoYNEmLphGIbwEfWJlc');
+    return initializeAppCheck(undefined, { provider, isTokenAutoRefreshEnabled: true });
+  }),
+  provideFirestore(() => getFirestore()),
+  provideDatabase(() => getDatabase()),
+  provideDataConnect(() => getDataConnect({ connector: 'example', location: 'asia-southeast1', service: 'ng-events' })),
+  provideFunctions(() => getFunctions()),
+  provideMessaging(() => getMessaging()),
+  providePerformance(() => getPerformance()),
+  provideStorage(() => getStorage()),
+  provideRemoteConfig(() => getRemoteConfig()),
+  provideVertexAI(() => getVertexAI())
+);
+
 export const appConfig: ApplicationConfig = {
-  providers: providers,
-  providers: [
-    provideFirebaseApp(() =>
-      initializeApp({
-        projectId: 'elite-chiller-455712-c4',
-        appId: '1:7807661688:web:0835c399c934321d1d1f8d',
-        databaseURL: 'https://elite-chiller-455712-c4-default-rtdb.asia-southeast1.firebasedatabase.app',
-        storageBucket: 'elite-chiller-455712-c4.firebasestorage.app',
-        apiKey: 'AIzaSyCJ-eayGjJwBKsNIh3oEAG2GjbfTrvAMEI',
-        authDomain: 'elite-chiller-455712-c4.firebaseapp.com',
-        messagingSenderId: '7807661688',
-        measurementId: 'G-W6KXBTP3YD'
-        // projectNumber: '7807661688',
-        // version: '2'
-      })
-    ),
-    provideAuth_alias(() => getAuth()),
-    provideAnalytics(() => getAnalytics()),
-    ScreenTrackingService,
-    UserTrackingService,
-    provideAppCheck(() => {
-      // TODO get a reCAPTCHA Enterprise here https://console.cloud.google.com/security/recaptcha?project=_
-      const provider = new ReCaptchaEnterpriseProvider('6LcGnSUsAAAAAMIm1aYeWqoYNEmLphGIbwEfWJlc');
-      return initializeAppCheck(undefined, { provider, isTokenAutoRefreshEnabled: true });
-    }),
-    provideFirestore(() => getFirestore()),
-    provideDatabase(() => getDatabase()),
-    provideDataConnect(() => getDataConnect({ connector: 'example', location: 'asia-southeast1', service: 'ng-events' })),
-    provideFunctions(() => getFunctions()),
-    provideMessaging(() => getMessaging()),
-    providePerformance(() => getPerformance()),
-    provideStorage(() => getStorage()),
-    provideRemoteConfig(() => getRemoteConfig()),
-    provideVertexAI(() => getVertexAI())
-  ]
+  providers
 };
