@@ -10,6 +10,8 @@ interface DomainEvent<T = unknown> {
   id: string;                  // UUID
   type: string;                // Event type name
   aggregateId: string;         // Entity ID (taskId)
+  actorAccountId: string;      // WHO did this (Account ID)
+  workspaceId: string;         // WHERE this happened (Workspace ID)
   causedBy: string[];          // Predecessor event IDs
   correlationId: string;       // Process/workflow ID
   timestamp: number;           // Unix milliseconds
@@ -17,39 +19,44 @@ interface DomainEvent<T = unknown> {
 }
 ```
 
+**Key Principles** (from ✨✨✨.md):
+- `actorAccountId`: The Account is the **only business actor**. User/Organization/Bot are just identity sources.
+- `workspaceId`: Workspace is the logical container, defining the scope where the event occurred.
+- Events reference Accounts, not Users directly. This ensures clean causality tracking.
+
 ### Task Event Catalog
 
 **Lifecycle Events**:
 ```typescript
-TaskCreated         { title, description, createdBy }
-TaskStarted         { startedBy, startedAt }
-TaskPaused          { pausedBy, reason }
-TaskResumed         { resumedBy }
-TaskCompleted       { completedBy, completedAt }
-TaskArchived        { archivedBy, reason }
-TaskDeleted         { deletedBy, reason }
+TaskCreated         { title, description, createdByAccountId }
+TaskStarted         { startedByAccountId, startedAt }
+TaskPaused          { pausedByAccountId, reason }
+TaskResumed         { resumedByAccountId }
+TaskCompleted       { completedByAccountId, completedAt }
+TaskArchived        { archivedByAccountId, reason }
+TaskDeleted         { deletedByAccountId, reason }
 ```
 
 **Discussion Events**:
 ```typescript
-TaskCommentAdded    { commentId, content, authorId }
+TaskCommentAdded    { commentId, content, authorAccountId }
 TaskCommentEdited   { commentId, newContent }
-TaskCommentDeleted  { commentId, deletedBy }
+TaskCommentDeleted  { commentId, deletedByAccountId }
 TaskDiscussionStarted { discussionId, topic }
-TaskDiscussionClosed { discussionId, closedBy }
+TaskDiscussionClosed { discussionId, closedByAccountId }
 ```
 
 **Attachment Events**:
 ```typescript
 TaskAttachmentUploaded { attachmentId, filename, url }
-TaskAttachmentDeleted  { attachmentId, deletedBy }
+TaskAttachmentDeleted  { attachmentId, deletedByAccountId }
 ```
 
 **Assignment Events**:
 ```typescript
-TaskAssigned        { assigneeId, assignedBy }
-TaskUnassigned      { unassignedBy }
-TaskReassigned      { oldAssignee, newAssignee }
+TaskAssigned        { assigneeAccountId, assignedByAccountId }
+TaskUnassigned      { unassignedByAccountId }
+TaskReassigned      { oldAssigneeAccountId, newAssigneeAccountId }
 ```
 
 ---
@@ -93,8 +100,13 @@ function decideCreateTask(
   return approve([{
     type: 'TaskCreated',
     aggregateId: generateId(),
+    actorAccountId: command.actorAccountId,  // Account as actor
+    workspaceId: command.workspaceId,        // Workspace as scope
     causedBy: [],
-    data: { title: command.title, createdBy: command.userId }
+    data: { 
+      title: command.title, 
+      createdByAccountId: command.actorAccountId 
+    }
   }]);
 }
 ```
@@ -113,15 +125,17 @@ function decideStartTask(
   }
   
   // Business rule: Must have assignee
-  if (!state.assignee) {
+  if (!state.assigneeAccountId) {
     return reject('Task must be assigned before starting');
   }
   
   return approve([{
     type: 'TaskStarted',
     aggregateId: command.taskId,
+    actorAccountId: command.actorAccountId,
+    workspaceId: command.workspaceId,
     causedBy: [lastEvent.id],
-    data: { startedBy: command.userId }
+    data: { startedByAccountId: command.actorAccountId }
   }]);
 }
 ```
@@ -140,15 +154,17 @@ function decideCompleteTask(
   }
   
   // Business rule: Assignee only
-  if (command.userId !== state.assignee) {
+  if (command.actorAccountId !== state.assigneeAccountId) {
     return reject('Only assignee can complete task');
   }
   
   return approve([{
     type: 'TaskCompleted',
     aggregateId: command.taskId,
+    actorAccountId: command.actorAccountId,
+    workspaceId: command.workspaceId,
     causedBy: [lastEvent.id],
-    data: { completedBy: command.userId }
+    data: { completedByAccountId: command.actorAccountId }
   }]);
 }
 ```
@@ -326,23 +342,27 @@ const TaskCollaborationSaga = {
 interface CreateTaskCommand {
   title: string;
   description?: string;
-  userId: string;
+  actorAccountId: string;      // Account performing the action
+  workspaceId: string;          // Workspace context
 }
 
 interface StartTaskCommand {
   taskId: string;
-  userId: string;
+  actorAccountId: string;
+  workspaceId: string;
 }
 
 interface CompleteTaskCommand {
   taskId: string;
-  userId: string;
+  actorAccountId: string;
+  workspaceId: string;
 }
 
 interface AddCommentCommand {
   taskId: string;
   content: string;
-  userId: string;
+  actorAccountId: string;
+  workspaceId: string;
 }
 ```
 
@@ -356,7 +376,7 @@ interface TaskListItem {
   id: string;
   title: string;
   status: 'Todo' | 'Doing' | 'Done';
-  assignee?: string;
+  assigneeAccountId?: string;     // Account ID of assignee
   createdAt: number;
 }
 
@@ -365,8 +385,9 @@ interface TaskDetail {
   title: string;
   description: string;
   status: string;
-  assignee?: string;
-  createdBy: string;
+  assigneeAccountId?: string;
+  createdByAccountId: string;
+  workspaceId: string;
   createdAt: number;
   updatedAt: number;
   comments: Comment[];
@@ -375,7 +396,7 @@ interface TaskDetail {
 interface Comment {
   id: string;
   content: string;
-  authorId: string;
+  authorAccountId: string;        // Account ID of comment author
   createdAt: number;
 }
 ```
