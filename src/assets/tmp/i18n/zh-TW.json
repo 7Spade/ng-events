@@ -16,6 +16,7 @@
   "app.lock": "鎖屏",
   "app.login.message-invalid-credentials": "賬戶或密碼錯誤",
   "app.login.remember-me": "自動登錄",
+  "app.login.forgot-password": "忘記密碼？",
   "app.login.signup": "註冊賬戶",
   "app.login.login": "登錄",
   "app.register.register": "註冊",

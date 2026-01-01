@@ -16,6 +16,7 @@
   "app.lock": "Lock",
   "app.login.message-invalid-credentials": "Invalid email or password",
   "app.login.remember-me": "Remember me",
+  "app.login.forgot-password": "Forgot password?",
   "app.login.signup": "Sign up",
   "app.login.login": "Login",
   "app.register.register": "Register",

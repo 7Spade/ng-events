@@ -20,6 +20,7 @@
   "app.lock": "锁屏",
   "app.login.message-invalid-credentials": "账户或密码错误",
   "app.login.remember-me": "自动登录",
+  "app.login.forgot-password": "忘记密码？",
   "app.login.signup": "注册账户",
   "app.login.login": "登录",
   "app.register.register": "注册",
