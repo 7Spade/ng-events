@@ -16,14 +16,14 @@ import { HeaderI18nComponent } from '../basic/widgets/i18n.component';
         <div class="top">
           <div class="head">
             <img class="logo" src="./assets/logo-color.svg" />
-            <span class="title">NG-ALAIN</span>
+            <span class="title">NG-EVENTS</span>
           </div>
-          <div class="desc">武林中最有影响力的《葵花宝典》；欲练神功，挥刀自宫</div>
+          <div class="desc">Event management application</div>
         </div>
         <router-outlet />
         <global-footer [links]="links">
           Copyright
-          <i nz-icon nzType="copyright"></i> 2023 <a href="//github.com/cipchk" target="_blank">卡色</a>出品
+          <i nz-icon nzType="copyright"></i> 2025 NG-EVENTS
         </global-footer>
       </div>
     </div>
