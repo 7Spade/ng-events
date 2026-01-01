@@ -1,6 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { default as ngLang } from '@angular/common/locales/zh';
-import { ApplicationConfig, EnvironmentProviders, Provider } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, EnvironmentProviders, Provider } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   provideRouter,
@@ -22,6 +22,7 @@ import { CELL_WIDGETS, SF_WIDGETS, ST_WIDGETS } from '@shared';
 import { zhCN as dateLang } from 'date-fns/locale';
 import { NzConfig, provideNzConfig } from 'ng-zorro-antd/core/config';
 import { zh_CN as zorroLang } from 'ng-zorro-antd/i18n';
+import { FirebaseAuthBridgeService } from './core/auth/firebase-auth-bridge.service';
 
 import { ICONS } from '../style-icons';
 import { ICONS_AUTO } from '../style-icons-auto';
@@ -119,6 +120,14 @@ providers.push(
   provideRemoteConfig(() => getRemoteConfig()),
   provideVertexAI(() => getVertexAI())
 );
+
+// Firebase Auth Bridge - sync Firebase Auth to @delon/auth
+providers.push({
+  provide: APP_INITIALIZER,
+  useFactory: (bridge: FirebaseAuthBridgeService) => () => bridge.init(),
+  deps: [FirebaseAuthBridgeService],
+  multi: true
+});
 
 export const appConfig: ApplicationConfig = {
   providers
