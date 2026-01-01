@@ -4,11 +4,26 @@
 
 ---
 
+## ⚠️ IMPORTANT: Documentation Hierarchy (重要：文件層級)
+
+### 🎯 PRIMARY SOURCE OF TRUTH (主要真理來源)
+
+**FOR IMPLEMENTATION - ALWAYS FOLLOW THESE (實作時永遠遵循這些):**
+
+1. ✅ **Architecture Documents (架構文件)** - 定義目錄結構與系統架構
+2. ✅ **Constraints & Guidelines (約束文件)** - 開發約束與規則
+3. 🔵 **Consolidated Documents (整合文件)** - 技術參考，但 **NOT** 用於目錄結構決策
+
+**📋 Conflict Resolution (衝突解決):**  
+如有衝突，請參閱 [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).md)
+
+---
+
 ## 📚 Documentation Structure (文件結構)
 
-### 🏗️ Architecture Documents (架構文件)
+### 🏗️ Architecture Documents (架構文件) - ⭐ PRIMARY
 
-核心架構設計文件，定義系統整體架構與設計決策。
+核心架構設計文件，定義系統整體架構與設計決策。**實作時必須遵循**。
 
 | File | Purpose (用途) |
 |------|---------------|
@@ -40,11 +55,45 @@
 
 ### 📂 Supporting Directories (支援目錄)
 
-| Directory | Purpose (用途) |
-|-----------|---------------|
-| [system-config/](./system-config/) | System configuration guidelines (When to use, Optional features, Best practices)<br>系統配置指南（使用場景、可選功能、最佳實踐） |
-| [analysis/](./analysis/) | Project analysis documentation using Sequential-Thinking and Software-Planning tools<br>使用 Sequential-Thinking 與 Software-Planning 工具進行的專案分析文件 |
-| [consolidated/](./consolidated/) | Consolidated development documentation (零認知落地包)<br>整合開發文件（完整技術細節） |
+| Directory | Status | Purpose (用途) |
+|-----------|--------|---------------|
+| [system-config/](./system-config/) | ✅ Active | System configuration guidelines (When to use, Optional features, Best practices)<br>系統配置指南（使用場景、可選功能、最佳實踐） |
+| [analysis/](./analysis/) | 🔵 Reference | Project analysis documentation using Sequential-Thinking and Software-Planning tools<br>使用 Sequential-Thinking 與 Software-Planning 工具進行的專案分析文件 |
+| [consolidated/](./consolidated/) | 🔵 **LEGACY REFERENCE** | ⚠️ Technical patterns & DDD examples only. **DO NOT follow directory structure suggestions**<br>⚠️ 僅供技術模式參考，**不要遵循目錄結構建議** |
+
+---
+
+## ⚠️ KEY DECISION: Directory Structure (關鍵決策：目錄結構)
+
+### ✅ RECOMMENDED STRUCTURE (推薦結構)
+
+**Source (來源):** [Architecture-Specification(架構規範).md](./Architecture-Specification(架構規範).md)
+
+```
+src/app/
+├── saas/              # 🏢 SaaS Layer (業務功能層)
+├── platform/          # 🔧 Platform Layer (基礎設施層)
+└── core/              # ⚙️ Core Layer (核心層)
+    ├── causality/     # 因果驅動核心
+    ├── event-store/   # 事件溯源核心
+    ├── aggregate/     # 聚合根
+    └── projection/    # 投影
+```
+
+### ❌ DEPRECATED STRUCTURE (已廢棄結構)
+
+**Source (來源):** consolidated/00-專案結構索引.md (LEGACY - DO NOT USE)
+
+```
+src/app/
+├── core/              ❌ Different meaning than Architecture docs
+├── infrastructure/    ❌ Should be inside platform/
+├── platform/          ⚠️ Different contents
+└── features/          ❌ Should be named saas/
+```
+
+**⚠️ Why Deprecated (為何廢棄):**  
+See [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).md) for full explanation.
 
 ---
 

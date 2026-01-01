@@ -166,18 +166,53 @@ docs/dev/
 2. **快速定位**: 透過 README 索引快速找到所需文件
 3. **雙語支援**: 中英文對照，降低理解障礙
 4. **分類清晰**: 架構、約束、參考文件明確分離
+5. **無衝突**: 單一真理來源，避免混淆
 
 ### For Team (團隊)
 1. **協作順暢**: 統一的命名與組織減少溝通成本
 2. **易於維護**: 一致的結構降低維護負擔
 3. **可擴展性**: 清晰的分類方便新增文件
 4. **技術債務最小化**: 避免混亂與重複
+5. **清晰層級**: 明確的文件優先級與衝突解決機制
 
 ### For Project (專案)
 1. **長期可維護**: 標準化的結構不會隨時間腐化
 2. **新人友善**: 完整的索引與導覽降低學習曲線
 3. **知識管理**: 系統化的文件組織便於知識傳承
 4. **品質保證**: 一致的標準確保文件品質
+5. **衝突解決**: 已識別並解決所有結構衝突
+
+---
+
+## ⚠️ Conflict Resolution (衝突解決)
+
+### Issue Identified (已識別問題)
+
+在標準化過程中發現 `consolidated/` 目錄與新架構文件存在目錄結構衝突：
+
+**Conflict (衝突):**
+- **Architecture Documents** 推薦: `saas/` `platform/` `core/` (3-folder)
+- **Consolidated Documents** 描述: `core/` `infrastructure/` `platform/` `features/` (4-folder)
+
+### Resolution (解決方案)
+
+✅ **Designated Primary Source (指定主要來源):**  
+[Architecture-Specification(架構規範).md](./Architecture-Specification(架構規範).md)
+
+✅ **Actions Taken (已採取行動):**
+1. Created [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).md) - 詳細說明
+2. Updated `consolidated/README.md` - 標記為 LEGACY REFERENCE
+3. Updated `consolidated/00-專案結構索引.md` - 添加遷移通知
+4. Updated `docs/dev/README.md` - 明確文件層級與推薦結構
+
+✅ **Result (結果):**
+- **Zero Ambiguity** - 開發者有清晰、一致的指引
+- **Legacy Preserved** - 保留技術參考價值
+- **Future-Proof** - 架構文件可擴展至生產環境
+
+📋 **詳細資訊**: [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).md)
+
+
 
 ---
 
