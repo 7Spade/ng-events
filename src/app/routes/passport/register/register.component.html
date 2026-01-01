@@ -70,43 +70,6 @@
     </nz-form-control>
   </nz-form-item>
   <nz-form-item>
-    <nz-form-control [nzErrorTip]="mobileErrorTip">
-      <nz-input-group nzSize="large" [nzAddOnBefore]="addOnBeforeTemplate">
-        <ng-template #addOnBeforeTemplate>
-          <nz-select formControlName="mobilePrefix" style="width: 100px">
-            <nz-option [nzLabel]="'+86'" [nzValue]="'+86'" />
-            <nz-option [nzLabel]="'+87'" [nzValue]="'+87'" />
-          </nz-select>
-        </ng-template>
-        <input formControlName="mobile" nz-input placeholder="Phone number" />
-      </nz-input-group>
-      <ng-template #mobileErrorTip let-i>
-        @if (i.errors?.required) {
-          {{ 'validation.phone-number.required' | i18n }}
-        }
-        @if (i.errors?.pattern) {
-          {{ 'validation.phone-number.wrong-format' | i18n }}
-        }
-      </ng-template>
-    </nz-form-control>
-  </nz-form-item>
-  <nz-form-item>
-    <nz-form-control [nzErrorTip]="'validation.verification-code.required' | i18n">
-      <div nz-row [nzGutter]="8">
-        <div nz-col [nzSpan]="16">
-          <nz-input-group nzSize="large" nzAddonBeforeIcon="mail">
-            <input nz-input formControlName="captcha" placeholder="Captcha" />
-          </nz-input-group>
-        </div>
-        <div nz-col [nzSpan]="8">
-          <button type="button" nz-button nzSize="large" (click)="getCaptcha()" [disabled]="count > 0" nzBlock [nzLoading]="loading">
-            {{ count ? count + 's' : ('app.register.get-verification-code' | i18n) }}
-          </button>
-        </div>
-      </div>
-    </nz-form-control>
-  </nz-form-item>
-  <nz-form-item>
     <button nz-button nzType="primary" nzSize="large" type="submit" [nzLoading]="loading" class="submit">
       {{ 'app.register.register' | i18n }}
     </button>
