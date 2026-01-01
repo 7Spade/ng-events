@@ -26,6 +26,19 @@ import { zh_CN as zorroLang } from 'ng-zorro-antd/i18n';
 import { ICONS } from '../style-icons';
 import { ICONS_AUTO } from '../style-icons-auto';
 import { routes } from './routes/routes';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getAuth, provideAuth as provideAuth_alias } from '@angular/fire/auth';
+import { getAnalytics, provideAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, provideAppCheck } from '@angular/fire/app-check';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { getDatabase, provideDatabase } from '@angular/fire/database';
+import { getDataConnect, provideDataConnect } from '@angular/fire/data-connect';
+import { getFunctions, provideFunctions } from '@angular/fire/functions';
+import { getMessaging, provideMessaging } from '@angular/fire/messaging';
+import { getPerformance, providePerformance } from '@angular/fire/performance';
+import { getStorage, provideStorage } from '@angular/fire/storage';
+import { getRemoteConfig, provideRemoteConfig } from '@angular/fire/remote-config';
+import { getVertexAI, provideVertexAI } from '@angular/fire/vertexai';
 
 const defaultLang: AlainProvideLang = {
   abbr: 'zh-CN',
@@ -74,5 +87,10 @@ if (environment.api?.refreshTokenEnabled && environment.api.refreshTokenType ===
 }
 
 export const appConfig: ApplicationConfig = {
-  providers: providers
+  providers: providers,
+  providers: [provideFirebaseApp(() => initializeApp({ projectId: "elite-chiller-455712-c4", appId: "1:7807661688:web:0835c399c934321d1d1f8d", databaseURL: "https://elite-chiller-455712-c4-default-rtdb.asia-southeast1.firebasedatabase.app", storageBucket: "elite-chiller-455712-c4.firebasestorage.app", apiKey: "AIzaSyCJ-eayGjJwBKsNIh3oEAG2GjbfTrvAMEI", authDomain: "elite-chiller-455712-c4.firebaseapp.com", messagingSenderId: "7807661688", measurementId: "G-W6KXBTP3YD", projectNumber: "7807661688", version: "2" })), provideAuth_alias(() => getAuth()), provideAnalytics(() => getAnalytics()), ScreenTrackingService, UserTrackingService, provideAppCheck(() => {
+  // TODO get a reCAPTCHA Enterprise here https://console.cloud.google.com/security/recaptcha?project=_
+  const provider = new ReCaptchaEnterpriseProvider(/* reCAPTCHA Enterprise site key */);
+  return initializeAppCheck(undefined, { provider, isTokenAutoRefreshEnabled: true });
+}), provideFirestore(() => getFirestore()), provideDatabase(() => getDatabase()), provideDataConnect(() => getDataConnect({connector: "example",location: "asia-southeast1",service: "ng-events"})), provideFunctions(() => getFunctions()), provideMessaging(() => getMessaging()), providePerformance(() => getPerformance()), provideStorage(() => getStorage()), provideRemoteConfig(() => getRemoteConfig()), provideVertexAI(() => getVertexAI())]
 };
