@@ -231,7 +231,7 @@ All changes are backward compatible:
 
 ## Conclusion
 
-The project is now **100% Firebase-based** for authentication and user management. All mock data has been successfully migrated or identified for removal. The `app-data.json` file is no longer used and can be safely deleted. The `dataconnect-generated` directory should be kept as it's part of the Firebase tooling infrastructure.
+The project is now **100% Firebase-based** for authentication and user management. All mock data has been successfully migrated or identified for removal. The `app-data.json` file is no longer used and can be safely deleted. The auto-generated Firebase Data Connect SDK has been reorganized from `src/dataconnect-generated/` to `src/api/generated/` for better project structure, with `connector.yaml` updated accordingly.
 
 ### Migration Status: ✅ **COMPLETE**
 
