@@ -4,6 +4,19 @@
 
 ---
 
+## 🚨 CRITICAL DISTINCTION: Directory Structures (關鍵區別：目錄結構)
+
+### 📍 Current vs Recommended (當前 vs 推薦)
+
+| Document | Structure Type | Use When |
+|----------|---------------|----------|
+| [Directory-Tree-Structure(目錄樹結構).md](./Directory-Tree-Structure(目錄樹結構).md) | **CURRENT ACTUAL** (當前實際結構)<br>ng-alain based: `core/layout/routes/shared` | Understanding current codebase |
+| [Implementation-Directory-Tree(實作目錄樹).md](./Implementation-Directory-Tree(實作目錄樹).md) | **RECOMMENDED FUTURE** (推薦未來結構)<br>Event-Sourcing: `saas/platform/core` | Implementing new Event-Sourcing features |
+
+⚠️ **These are DIFFERENT structures!** Choose the right one for your task.
+
+---
+
 ## ⚠️ IMPORTANT: Documentation Hierarchy (重要：文件層級)
 
 ### 🎯 PRIMARY SOURCE OF TRUTH (主要真理來源)
@@ -51,13 +64,8 @@
 | File | Purpose (用途) |
 |------|---------------|
 | [Task-Hierarchy-Guide(任務階層指南).md](./Task-Hierarchy-Guide(任務階層指南).md) | Task hierarchy and organization guide<br>任務階層與組織指南 |
-| [Directory-Tree-Structure(目錄樹結構).md](./Directory-Tree-Structure(目錄樹結構).md) | Complete directory tree visualization<br>完整目錄樹視覺化 |
-| [Implementation-Directory-Tree(實作目錄樹).md](./Implementation-Directory-Tree(實作目錄樹).md) | **🌳 PRODUCTION-READY directory structure for implementation<br>生產就緒的實作目錄結構** |
-
-| File | Purpose (用途) |
-|------|---------------|
-| [Task-Hierarchy-Guide(任務階層指南).md](./Task-Hierarchy-Guide(任務階層指南).md) | Hierarchical task system implementation guide<br>階層化任務系統實作指南 |
-| [Directory-Tree-Structure(目錄樹結構).md](./Directory-Tree-Structure(目錄樹結構).md) | Complete directory tree structure reference<br>完整目錄樹結構參考 |
+| [Directory-Tree-Structure(目錄樹結構).md](./Directory-Tree-Structure(目錄樹結構).md) | **📍 CURRENT ACTUAL structure in repository (ng-alain based)**<br>**當前實際結構（基於 ng-alain）** |
+| [Implementation-Directory-Tree(實作目錄樹).md](./Implementation-Directory-Tree(實作目錄樹).md) | **🌳 RECOMMENDED FUTURE structure for Event-Sourcing implementation**<br>**推薦未來結構（事件溯源實作用）** |
 
 ### 📂 Supporting Directories (支援目錄)
 
