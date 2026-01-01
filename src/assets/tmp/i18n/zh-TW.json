@@ -33,5 +33,12 @@
   "validation.password.strength.strong": "強度：強",
   "validation.password.strength.medium": "強度：中",
   "validation.password.strength.short": "強度：太短",
-  "validation.confirm-password.required": "請確認密碼"
+  "validation.confirm-password.required": "請確認密碼",
+  "app.forgot-password.title": "忘記密碼",
+  "app.forgot-password.subtitle": "輸入您的郵箱地址，我們將發送重置密碼的鏈接",
+  "app.forgot-password.email.placeholder": "郵箱地址",
+  "app.forgot-password.send": "發送重置鏈接",
+  "app.forgot-password.back": "返回登錄",
+  "app.forgot-password.success": "密碼重置郵件已發送！請檢查您的收件箱。",
+  "app.forgot-password.error": "發送重置郵件失敗，請重試。"
 }

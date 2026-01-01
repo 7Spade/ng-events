@@ -33,5 +33,12 @@
   "validation.password.strength.strong": "Strength: strong",
   "validation.password.strength.medium": "Strength: medium",
   "validation.password.strength.short": "Strength: too short",
-  "validation.confirm-password.required": "Please confirm your password"
+  "validation.confirm-password.required": "Please confirm your password",
+  "app.forgot-password.title": "Forgot Password",
+  "app.forgot-password.subtitle": "Enter your email address and we'll send you a link to reset your password",
+  "app.forgot-password.email.placeholder": "Email address",
+  "app.forgot-password.send": "Send Reset Link",
+  "app.forgot-password.back": "Back to login",
+  "app.forgot-password.success": "Password reset email sent! Please check your inbox.",
+  "app.forgot-password.error": "Failed to send reset email. Please try again."
 }

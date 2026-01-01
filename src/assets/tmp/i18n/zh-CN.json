@@ -37,5 +37,12 @@
   "validation.password.strength.strong": "强度：强",
   "validation.password.strength.medium": "强度：中",
   "validation.password.strength.short": "强度：太短",
-  "validation.confirm-password.required": "请确认密码"
+  "validation.confirm-password.required": "请确认密码",
+  "app.forgot-password.title": "忘记密码",
+  "app.forgot-password.subtitle": "输入您的邮箱地址，我们将发送重置密码的链接",
+  "app.forgot-password.email.placeholder": "邮箱地址",
+  "app.forgot-password.send": "发送重置链接",
+  "app.forgot-password.back": "返回登录",
+  "app.forgot-password.success": "密码重置邮件已发送！请检查您的收件箱。",
+  "app.forgot-password.error": "发送重置邮件失败，请重试。"
 }
