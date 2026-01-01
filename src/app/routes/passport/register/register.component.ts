@@ -1,9 +1,9 @@
-import { HttpContext } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ALLOW_ANONYMOUS } from '@delon/auth';
-import { I18nPipe, _HttpClient } from '@delon/theme';
+import { Auth, createUserWithEmailAndPassword, updateProfile } from '@angular/fire/auth';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { I18nPipe } from '@delon/theme';
 import { MatchControl } from '@delon/util/form';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -12,7 +12,6 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
-import { finalize } from 'rxjs';
 
 @Component({
   selector: 'passport-register',
@@ -33,7 +32,8 @@ import { finalize } from 'rxjs';
 })
 export class UserRegisterComponent {
   private readonly router = inject(Router);
-  private readonly http = inject(_HttpClient);
+  private readonly auth = inject(Auth);
+  private readonly firestore = inject(Firestore);
   private readonly cdr = inject(ChangeDetectorRef);
 
   // #region fields
@@ -92,21 +92,58 @@ export class UserRegisterComponent {
       return;
     }
 
-    const data = this.form.value;
+    const formValue = this.form.value;
+    const mail = (formValue.mail as unknown as string) || '';
+    const password = (formValue.password as unknown as string) || '';
+    
+    if (!mail || !password) {
+      this.error = '請填寫所有必填欄位';
+      return;
+    }
+
     this.loading = true;
     this.cdr.detectChanges();
-    this.http
-      .post('/register', data, null, {
-        context: new HttpContext().set(ALLOW_ANONYMOUS, true)
+
+    // 使用 Firebase Auth 建立帳號
+    createUserWithEmailAndPassword(this.auth, mail, password)
+      .then(async (credential) => {
+        // 更新用戶 profile
+        await updateProfile(credential.user, {
+          displayName: mail.split('@')[0] // 使用 email 前綴作為顯示名稱
+        });
+
+        // 在 Firestore 建立用戶資料
+        await setDoc(doc(this.firestore, 'users', credential.user.uid), {
+          email: mail,
+          createdAt: new Date(),
+          role: 'user'
+        });
+
+        // 跳轉到註冊成功頁面
+        this.router.navigate(['passport', 'register-result'], { queryParams: { email: mail } });
       })
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe(() => {
-        this.router.navigate(['passport', 'register-result'], { queryParams: { email: data.mail } });
+      .catch((error) => {
+        this.loading = false;
+        this.error = this.getFirebaseErrorMessage(error.code);
+        this.cdr.detectChanges();
       });
   }
+
+  /**
+   * 將 Firebase 錯誤碼轉換為友善的訊息
+   */
+  private getFirebaseErrorMessage(errorCode: string): string {
+    const errorMessages: Record<string, string> = {
+      'auth/email-already-in-use': '此電子郵件已被使用',
+      'auth/invalid-email': '無效的電子郵件地址',
+      'auth/operation-not-allowed': '註冊功能未啟用',
+      'auth/weak-password': '密碼強度不足（至少 6 個字元）',
+      'auth/network-request-failed': '網路連線失敗',
+    };
+    
+    return errorMessages[errorCode] || '註冊失敗，請稍後再試';
+  }
 }
+
+// END OF FILE
+

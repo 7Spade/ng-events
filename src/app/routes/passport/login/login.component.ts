@@ -1,18 +1,17 @@
-import { HttpContext } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
 import { StartupService } from '@core';
 import { ReuseTabService } from '@delon/abc/reuse-tab';
-import { ALLOW_ANONYMOUS, DA_SERVICE_TOKEN } from '@delon/auth';
-import { I18nPipe, _HttpClient } from '@delon/theme';
+import { DA_SERVICE_TOKEN } from '@delon/auth';
+import { I18nPipe } from '@delon/theme';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { finalize } from 'rxjs';
 
 @Component({
   selector: 'passport-login',
@@ -33,15 +32,15 @@ import { finalize } from 'rxjs';
 })
 export class UserLoginComponent {
   private readonly router = inject(Router);
+  private readonly auth = inject(Auth);
   private readonly reuseTabService = inject(ReuseTabService, { optional: true });
   private readonly tokenService = inject(DA_SERVICE_TOKEN);
   private readonly startupSrv = inject(StartupService);
-  private readonly http = inject(_HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
 
   form = inject(FormBuilder).nonNullable.group({
-    userName: ['', [Validators.required, Validators.pattern(/^(admin|user)$/)]],
-    password: ['', [Validators.required, Validators.pattern(/^(ng-alain\.com)$/)]],
+    userName: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
     remember: [true]
   });
   error = '';
@@ -58,41 +57,17 @@ export class UserLoginComponent {
       return;
     }
 
-    // 默认配置中对所有HTTP请求都会强制 [校验](https://ng-alain.com/auth/getting-started) 用户 Token
-    // 然一般来说登录请求不需要校验，因此加上 `ALLOW_ANONYMOUS` 表示不触发用户 Token 校验
     this.loading = true;
     this.cdr.detectChanges();
-    this.http
-      .post(
-        '/login/account',
-        {
-          userName: this.form.value.userName,
-          password: this.form.value.password
-        },
-        null,
-        {
-          context: new HttpContext().set(ALLOW_ANONYMOUS, true)
-        }
-      )
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe(res => {
-        if (res.msg !== 'ok') {
-          this.error = res.msg;
-          this.cdr.detectChanges();
-          return;
-        }
-        // 清空路由复用信息
+
+    // 使用 Firebase Auth 登入
+    signInWithEmailAndPassword(this.auth, userName.value, password.value)
+      .then(async () => {
+        // 清空路由復用信息
         this.reuseTabService?.clear();
-        // 设置用户Token信息
-        // TODO: Mock expired value
-        res.user.expired = +new Date() + 1000 * 60 * 5;
-        this.tokenService.set(res.user);
-        // 重新获取 StartupService 内容，我们始终认为应用信息一般都会受当前用户授权范围而影响
+        
+        // Token 已經由 FirebaseAuthBridgeService 自動設定到 @delon/auth
+        // 重新載入 StartupService
         this.startupSrv.load().subscribe(() => {
           let url = this.tokenService.referrer!.url || '/';
           if (url.includes('/passport')) {
@@ -100,6 +75,31 @@ export class UserLoginComponent {
           }
           this.router.navigateByUrl(url);
         });
+      })
+      .catch((error) => {
+        this.loading = false;
+        this.error = this.getFirebaseErrorMessage(error.code);
+        this.cdr.detectChanges();
       });
   }
+
+  /**
+   * 將 Firebase 錯誤碼轉換為友善的訊息
+   */
+  private getFirebaseErrorMessage(errorCode: string): string {
+    const errorMessages: Record<string, string> = {
+      'auth/invalid-email': '無效的電子郵件地址',
+      'auth/user-disabled': '此帳號已被停用',
+      'auth/user-not-found': '找不到此帳號',
+      'auth/wrong-password': '密碼錯誤',
+      'auth/invalid-credential': '帳號或密碼錯誤',
+      'auth/too-many-requests': '登入嘗試次數過多，請稍後再試',
+      'auth/network-request-failed': '網路連線失敗',
+    };
+    
+    return errorMessages[errorCode] || '登入失敗，請稍後再試';
+  }
 }
+
+// END OF FILE
+

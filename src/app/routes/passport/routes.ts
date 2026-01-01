@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 
-import { CallbackComponent } from './callback.component';
 import { UserLockComponent } from './lock/lock.component';
 import { UserLoginComponent } from './login/login.component';
 import { UserRegisterComponent } from './register/register.component';
@@ -34,7 +33,9 @@ export const routes: Routes = [
         data: { title: '锁屏', titleI18n: 'app.lock' }
       }
     ]
-  },
-  // 单页不包裹Layout
-  { path: 'passport/callback/:type', component: CallbackComponent }
+  }
+  // ❌ 移除：{ path: 'passport/callback/:type', component: CallbackComponent }
 ];
+
+// END OF FILE
+
