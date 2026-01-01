@@ -19,6 +19,7 @@
   "app.login.forgot-password": "忘記密碼？",
   "app.login.signup": "註冊賬戶",
   "app.login.login": "登錄",
+  "app.login.register": "註冊",
   "app.register.register": "註冊",
   "app.register.sign-in": "使用已有賬戶登錄",
   "app.register-result.msg": "妳的賬戶：{{email}} 註冊成功",

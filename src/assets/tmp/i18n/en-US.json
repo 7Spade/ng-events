@@ -19,6 +19,7 @@
   "app.login.forgot-password": "Forgot password?",
   "app.login.signup": "Sign up",
   "app.login.login": "Login",
+  "app.login.register": "Register",
   "app.register.register": "Register",
   "app.register.sign-in": "Already have an account?",
   "app.register-result.msg": "Account registered: {{email}}",

@@ -25,13 +25,13 @@
     </nz-col>
   </nz-form-item>
   <nz-form-item>
-    <div class="text-center">
-      <a routerLink="/passport/register">{{ 'app.login.signup' | i18n }}</a>
-    </div>
-  </nz-form-item>
-  <nz-form-item>
     <button nz-button type="submit" nzType="primary" nzSize="large" [nzLoading]="loading" nzBlock>
       {{ 'app.login.login' | i18n }}
+    </button>
+  </nz-form-item>
+  <nz-form-item>
+    <button nz-button routerLink="/passport/register" nzType="default" nzSize="large" nzBlock>
+      {{ 'app.login.register' | i18n }}
     </button>
   </nz-form-item>
 </form>

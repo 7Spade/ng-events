@@ -23,6 +23,7 @@
   "app.login.forgot-password": "忘记密码？",
   "app.login.signup": "注册账户",
   "app.login.login": "登录",
+  "app.login.register": "注册",
   "app.register.register": "注册",
   "app.register.sign-in": "使用已有账户登录",
   "app.register-result.msg": "你的账户：{{email}} 注册成功",
