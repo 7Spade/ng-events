@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, APP_INITIALIZER } from '@angular/core';
 import { Observable, from, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Auth, onAuthStateChanged, User } from '@angular/fire/auth';
@@ -25,7 +25,7 @@ export function provideStartup() {
   return [
     StartupService,
     {
-      provide: 'APP_INITIALIZER',
+      provide: APP_INITIALIZER,
       useFactory: (startupService: StartupService) => () => startupService.load(),
       deps: [StartupService],
       multi: true
