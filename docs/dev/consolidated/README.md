@@ -1,4 +1,37 @@
-# 開發文件整合說明
+# 開發文件整合說明 (LEGACY TECHNICAL REFERENCE)
+
+## ⚠️ IMPORTANT NOTICE (重要說明)
+
+**STATUS (狀態)**: 🔵 **LEGACY REFERENCE ONLY** (僅供技術參考)
+
+本目錄文件為 **歷史技術參考** 與 **詳細實作模式**，提供深度技術細節與 DDD 實作範例。
+
+### 📌 Primary Documentation (主要文件)
+
+**FOR IMPLEMENTATION (實作時請遵循):**  
+請使用 **Architecture Documents** 作為主要依據：
+
+1. ✅ [Architecture-Guide(架構指南).md](../Architecture-Guide(架構指南).md) - START HERE
+2. ✅ [Architecture-Specification(架構規範).md](../Architecture-Specification(架構規範).md) - DIRECTORY STRUCTURE
+3. ✅ [Directory-Structure-Comparison(目錄結構比較).md](../Directory-Structure-Comparison(目錄結構比較).md)
+
+**Conflict Resolution (衝突解決):**  
+📋 [CONFLICT-RESOLUTION(衝突解決).md](../CONFLICT-RESOLUTION(衝突解決).md) - 詳細說明為何 Architecture Documents 為主要依據
+
+---
+
+## ⚠️ Key Differences (主要差異)
+
+| Aspect | This Directory (本目錄) | Architecture Docs (架構文件) |
+|--------|------------------------|------------------------------|
+| **Status** | Legacy Reference | ✅ **PRIMARY for Implementation** |
+| **Purpose** | Technical patterns & examples | Directory structure & architecture |
+| **Structure** | `core/` `infrastructure/` `platform/` `features/` | ✅ `saas/` `platform/` `core/` |
+| **Use Case** | Learn patterns & implementation details | **Follow for actual coding** |
+
+**⚠️ DO NOT use this directory's structure suggestions - They conflict with Architecture Documents**
+
+---
 
 ## 概述
 
