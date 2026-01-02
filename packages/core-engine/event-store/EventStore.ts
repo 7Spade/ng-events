@@ -14,7 +14,7 @@ import { CausalityMetadata } from '../causality';
  *
  * Every event MUST include causality metadata for audit and replay.
  */
-export interface DomainEvent<T = unknown> {
+export interface DomainEvent<TData = unknown, TId = string> {
   /**
    * Unique event identifier
    */
@@ -23,7 +23,7 @@ export interface DomainEvent<T = unknown> {
   /**
    * ID of the aggregate this event belongs to
    */
-  aggregateId: string;
+  aggregateId: TId;
 
   /**
    * Type of aggregate (e.g., 'Task', 'Payment', 'Issue')
@@ -38,7 +38,7 @@ export interface DomainEvent<T = unknown> {
   /**
    * Event payload data
    */
-  data: T;
+  data: TData;
 
   /**
    * Causality metadata for tracking event chains
@@ -54,14 +54,17 @@ export interface DomainEvent<T = unknown> {
  * ⚠️ Core-engine only defines the interface.
  * ✅ Platform-adapters provide the implementation.
  */
-export interface EventStore {
+export interface EventStore<
+  TId = string,
+  TEvent extends DomainEvent<unknown, TId> = DomainEvent<unknown, TId>
+> {
   /**
    * Append a new event to the event stream
    *
    * @param event - The domain event to store
    * @returns Promise that resolves when event is persisted
    */
-  append(event: DomainEvent): Promise<void>;
+  append(event: TEvent): Promise<void>;
 
   /**
    * Load all events for a specific stream (aggregate)
@@ -69,7 +72,7 @@ export interface EventStore {
    * @param streamId - The aggregate ID
    * @returns Promise with array of events in order
    */
-  load(streamId: string): Promise<DomainEvent[]>;
+  load(streamId: TId): Promise<TEvent[]>;
 
   /**
    * Load events by type
@@ -84,7 +87,7 @@ export interface EventStore {
       limit?: number;
       after?: string;
     }
-  ): Promise<DomainEvent[]>;
+  ): Promise<TEvent[]>;
 }
 
 /**
