@@ -41,8 +41,11 @@ export interface EventMetadata {
   /** 因果來源事件 ID */
   causedBy: string;
   
-  /** 觸發用戶 ID */
-  causedByUser: string;
+  /** 執行 Account ID (WHO - 業務主體) */
+  actorAccountId: string;
+  
+  /** Workspace ID (WHERE - 邏輯容器) */
+  workspaceId: string;
   
   /** 觸發動作 */
   causedByAction: string;
@@ -50,7 +53,7 @@ export interface EventMetadata {
   /** 時間戳記 */
   timestamp: Timestamp;
   
-  /** 多租戶邊界 (blueprintId) */
+  /** 多租戶邊界 (blueprintId - 向後相容) */
   blueprintId: string;
   
   /** 版本號 */
@@ -80,8 +83,9 @@ export class TaskCreatedEvent implements DomainEvent<TaskCreatedData> {
     title: string;
     description: string;
     assigneeId: string;
+    workspaceId: string;
     blueprintId: string;
-    causedByUser: string;
+    actorAccountId: string;
     causedBy?: string;
   }) {
     this.id = generateEventId();
@@ -95,7 +99,8 @@ export class TaskCreatedEvent implements DomainEvent<TaskCreatedData> {
     };
     this.metadata = {
       causedBy: params.causedBy || 'USER_ACTION',
-      causedByUser: params.causedByUser,
+      actorAccountId: params.actorAccountId,
+      workspaceId: params.workspaceId,
       causedByAction: 'CREATE_TASK',
       timestamp: Timestamp.now(),
       blueprintId: params.blueprintId,
@@ -134,8 +139,9 @@ export class TaskCompletedEvent implements DomainEvent<TaskCompletedData> {
     taskId: string;
     completedBy: string;
     completionNote: string;
+    workspaceId: string;
     blueprintId: string;
-    causedByUser: string;
+    actorAccountId: string;
     causedBy: string;  // 父事件 ID
   }) {
     this.id = generateEventId();
@@ -149,7 +155,8 @@ export class TaskCompletedEvent implements DomainEvent<TaskCompletedData> {
     };
     this.metadata = {
       causedBy: params.causedBy,
-      causedByUser: params.causedByUser,
+      actorAccountId: params.actorAccountId,
+      workspaceId: params.workspaceId,
       causedByAction: 'COMPLETE_TASK',
       timestamp: Timestamp.now(),
       blueprintId: params.blueprintId,
@@ -188,8 +195,9 @@ export class PaymentApprovedEvent implements DomainEvent<PaymentApprovedData> {
     paymentId: string;
     approvedBy: string;
     approvalNote: string;
+    workspaceId: string;
     blueprintId: string;
-    causedByUser: string;
+    actorAccountId: string;
     causedBy: string;  // 例如：TaskCompletedEvent.id
   }) {
     this.id = generateEventId();
@@ -203,7 +211,8 @@ export class PaymentApprovedEvent implements DomainEvent<PaymentApprovedData> {
     };
     this.metadata = {
       causedBy: params.causedBy,
-      causedByUser: params.causedByUser,
+      actorAccountId: params.actorAccountId,
+      workspaceId: params.workspaceId,
       causedByAction: 'APPROVE_PAYMENT',
       timestamp: Timestamp.now(),
       blueprintId: params.blueprintId,
@@ -239,11 +248,14 @@ export interface Command {
   /** 命令類型 */
   commandType: string;
   
-  /** 多租戶邊界 */
+  /** Workspace ID (WHERE - 邏輯容器) */
+  workspaceId: string;
+  
+  /** 多租戶邊界 (向後相容) */
   blueprintId: string;
   
-  /** 觸發用戶 */
-  issuedBy: string;
+  /** 執行 Account ID (WHO - 業務主體) */
+  actorAccountId: string;
   
   /** 發出時間 */
   issuedAt: Timestamp;
@@ -262,8 +274,9 @@ export interface Command {
 export class CreateTaskCommand implements Command {
   commandId: string;
   commandType = 'CreateTask';
+  workspaceId: string;
   blueprintId: string;
-  issuedBy: string;
+  actorAccountId: string;
   issuedAt: Timestamp;
 
   // 命令資料
@@ -277,14 +290,16 @@ export class CreateTaskCommand implements Command {
     title: string;
     description: string;
     assigneeId: string;
+    workspaceId: string;
     blueprintId: string;
-    issuedBy: string;
+    actorAccountId: string;
     dueDate?: Date;
     priority?: 'low' | 'medium' | 'high';
   }) {
     this.commandId = generateCommandId();
+    this.workspaceId = params.workspaceId;
     this.blueprintId = params.blueprintId;
-    this.issuedBy = params.issuedBy;
+    this.actorAccountId = params.actorAccountId;
     this.issuedAt = Timestamp.now();
     this.title = params.title;
     this.description = params.description;
@@ -307,8 +322,9 @@ export class CreateTaskCommand implements Command {
 export class CompleteTaskCommand implements Command {
   commandId: string;
   commandType = 'CompleteTask';
+  workspaceId: string;
   blueprintId: string;
-  issuedBy: string;
+  actorAccountId: string;
   issuedAt: Timestamp;
 
   // 命令資料
@@ -319,13 +335,15 @@ export class CompleteTaskCommand implements Command {
   constructor(params: {
     taskId: string;
     completionNote: string;
+    workspaceId: string;
     blueprintId: string;
-    issuedBy: string;
+    actorAccountId: string;
     causedBy?: string;
   }) {
     this.commandId = generateCommandId();
+    this.workspaceId = params.workspaceId;
     this.blueprintId = params.blueprintId;
-    this.issuedBy = params.issuedBy;
+    this.actorAccountId = params.actorAccountId;
     this.issuedAt = Timestamp.now();
     this.taskId = params.taskId;
     this.completionNote = params.completionNote;
@@ -346,8 +364,9 @@ export class CompleteTaskCommand implements Command {
 export class ApprovePaymentCommand implements Command {
   commandId: string;
   commandType = 'ApprovePayment';
+  workspaceId: string;
   blueprintId: string;
-  issuedBy: string;
+  actorAccountId: string;
   issuedAt: Timestamp;
 
   // 命令資料
@@ -358,13 +377,15 @@ export class ApprovePaymentCommand implements Command {
   constructor(params: {
     paymentId: string;
     approvalNote: string;
+    workspaceId: string;
     blueprintId: string;
-    issuedBy: string;
+    actorAccountId: string;
     causedBy: string;
   }) {
     this.commandId = generateCommandId();
+    this.workspaceId = params.workspaceId;
     this.blueprintId = params.blueprintId;
-    this.issuedBy = params.issuedBy;
+    this.actorAccountId = params.actorAccountId;
     this.issuedAt = Timestamp.now();
     this.paymentId = params.paymentId;
     this.approvalNote = params.approvalNote;
@@ -383,24 +404,26 @@ export class ApprovePaymentCommand implements Command {
  * Example: Task → Payment → Issue
  */
 
-// Step 1: 用戶建立任務
+// Step 1: Account 建立任務
 const taskCreatedEvent = new TaskCreatedEvent({
   taskId: 'task-001',
   title: '完成設計稿',
   description: '設計新功能的 UI',
-  assigneeId: 'user-001',
+  assigneeId: 'account-001',
+  workspaceId: 'workspace-001',
   blueprintId: 'blueprint-001',
-  causedByUser: 'user-admin',
+  actorAccountId: 'account-admin',
   causedBy: 'USER_ACTION'  // 根事件
 });
 
 // Step 2: 任務完成，觸發支付請求
 const taskCompletedEvent = new TaskCompletedEvent({
   taskId: 'task-001',
-  completedBy: 'user-001',
+  completedBy: 'account-001',
   completionNote: '已完成所有設計稿',
+  workspaceId: 'workspace-001',
   blueprintId: 'blueprint-001',
-  causedByUser: 'user-001',
+  actorAccountId: 'account-001',
   causedBy: taskCreatedEvent.id  // 指向父事件
 });
 
@@ -408,18 +431,20 @@ const taskCompletedEvent = new TaskCompletedEvent({
 const approvePaymentCommand = new ApprovePaymentCommand({
   paymentId: 'payment-001',
   approvalNote: '設計稿已驗收',
+  workspaceId: 'workspace-001',
   blueprintId: 'blueprint-001',
-  issuedBy: 'user-admin',
+  actorAccountId: 'account-admin',
   causedBy: taskCompletedEvent.id  // 因果鏈
 });
 
 // Step 4: 支付批准事件
 const paymentApprovedEvent = new PaymentApprovedEvent({
   paymentId: 'payment-001',
-  approvedBy: 'user-admin',
+  approvedBy: 'account-admin',
   approvalNote: '設計稿已驗收',
+  workspaceId: 'workspace-001',
   blueprintId: 'blueprint-001',
-  causedByUser: 'user-admin',
+  actorAccountId: 'account-admin',
   causedBy: taskCompletedEvent.id  // 因果鏈
 });
 
@@ -449,8 +474,9 @@ export class EventValidator {
     if (!event.id) errors.push('Event ID is required');
     if (!event.aggregateId) errors.push('Aggregate ID is required');
     if (!event.eventType) errors.push('Event type is required');
+    if (!event.metadata?.actorAccountId) errors.push('ActorAccountId is required');
+    if (!event.metadata?.workspaceId) errors.push('WorkspaceId is required');
     if (!event.metadata?.blueprintId) errors.push('Blueprint ID is required');
-    if (!event.metadata?.causedByUser) errors.push('CausedByUser is required');
     if (!event.metadata?.causedBy) errors.push('CausedBy is required');
 
     return {
@@ -485,8 +511,9 @@ export class CommandValidator {
     const errors: string[] = [];
 
     if (!command.commandId) errors.push('Command ID is required');
+    if (!command.actorAccountId) errors.push('ActorAccountId is required');
+    if (!command.workspaceId) errors.push('WorkspaceId is required');
     if (!command.blueprintId) errors.push('Blueprint ID is required');
-    if (!command.issuedBy) errors.push('IssuedBy is required');
 
     return {
       isValid: errors.length === 0,
@@ -509,31 +536,36 @@ export class CommandValidator {
 ## 最佳實踐
 
 ### ✅ DO
-- 明確的因果元數據 (causedBy, causedByUser)
+- 明確的因果元數據 (causedBy, actorAccountId, workspaceId)
 - 不可變事件（只能新增，不能修改）
 - 完整的類型定義
 - 版本控制
-- 多租戶隔離 (blueprintId)
+- 多租戶隔離 (blueprintId/workspaceId)
+- Account 作為唯一業務主體
+- Workspace 作為邏輯容器
 
 ### ❌ DON'T
 - 修改已發布的事件
-- 遺漏 blueprintId
+- 遺漏 actorAccountId 或 workspaceId
 - 缺少因果鏈資訊
 - 使用可變狀態
 - 忽略驗證
+- 將 User/Organization 作為業務主體（應使用 Account）
 
 ---
 
 ## 檢查清單
 
-- [ ] 事件包含完整元數據
-- [ ] 命令包含 blueprintId
+- [ ] 事件包含完整元數據 (actorAccountId, workspaceId, blueprintId)
+- [ ] 命令包含 actorAccountId 和 workspaceId
 - [ ] 因果鏈正確設定
 - [ ] 使用過去式命名事件
 - [ ] 使用不定式命名命令
 - [ ] 驗證邏輯完整
 - [ ] 不可變結構
 - [ ] 類型安全
+- [ ] Account 作為唯一業務主體
+- [ ] Workspace 作為邏輯容器
 
 ---
 
