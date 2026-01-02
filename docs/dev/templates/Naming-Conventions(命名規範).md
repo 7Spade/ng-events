@@ -71,11 +71,13 @@ list{EntityName}sFor{Context}(contextId: string): Promise<{EntityType}[]>
 // ✅ GOOD
 getTaskById(taskId: string): Promise<TaskAggregate> { }
 findTasksByBlueprint(blueprintId: string): Promise<TaskAggregate[]> { }
-listTasksForUser(userId: string): Promise<TaskProjection[]> { }
+listTasksForAccount(accountId: string): Promise<TaskProjection[]> { }
+listTasksInWorkspace(workspaceId: string): Promise<TaskProjection[]> { }
 
 // ❌ BAD
 getTasks(): Promise<any[]> { }  // 缺少上下文
 queryData(id: string): any { }  // 不明確
+listTasksForUser(userId: string): any { }  // 應使用 accountId
 ```
 
 ---
@@ -115,11 +117,13 @@ can{Action}({params}): boolean
 // ✅ GOOD
 validateTaskTitle(title: string): ValidationResult { }
 isValidBlueprint(blueprintId: string): boolean { }
-canApprovePayment(userId: string, paymentId: string): boolean { }
+canApprovePayment(accountId: string, paymentId: string): boolean { }
+hasAccessToWorkspace(accountId: string, workspaceId: string): boolean { }
 
 // ❌ BAD
 checkTask(t: any): boolean { }  // 不明確
 valid(x: any): any { }  // 太泛化
+canApprove(userId: string, id: string): boolean { }  // 應使用 accountId
 ```
 
 ---
@@ -151,22 +155,57 @@ validateChain(id: string): any { }  // 缺少上下文
 
 **模式 (Pattern):**
 ```typescript
-filterBy{TenantType}(data: {Type}[], tenantId: string): {Type}[]
-scopeTo{TenantType}(query: Query, tenantId: string): Query
-ensureTenantIsolation(aggregateId: string, tenantId: string): boolean
+filterByWorkspace(data: {Type}[], workspaceId: string): {Type}[]
+scopeToWorkspace(query: Query, workspaceId: string): Query
+filterByAccount(data: {Type}[], accountId: string): {Type}[]
+ensureTenantIsolation(aggregateId: string, workspaceId: string): boolean
 ```
 
 **範例 (Examples):**
 ```typescript
 // ✅ GOOD
-filterByBlueprint(tasks: TaskAggregate[], blueprintId: string): TaskAggregate[] { }
-scopeToOrganization(query: Query, orgId: string): Query { }
-ensureTenantIsolation(taskId: string, blueprintId: string): boolean { }
+filterByWorkspace(tasks: TaskAggregate[], workspaceId: string): TaskAggregate[] { }
+scopeToWorkspace(query: Query, workspaceId: string): Query { }
+filterByAccount(payments: PaymentAggregate[], accountId: string): PaymentAggregate[] { }
+ensureTenantIsolation(taskId: string, workspaceId: string): boolean { }
 
 // ❌ BAD
 filterData(d: any[], id: string): any[] { }  // 不明確
 applyFilter(q: any, id: any): any { }  // 缺少類型
+filterByBlueprint(tasks: any[], id: string): any[] { }  // 應使用 Workspace
+scopeToOrganization(query: any, orgId: string): any { }  // 應使用 Workspace
 ```
+
+---
+
+### 8. Account/Workspace 相關函數 (Account/Workspace Functions)
+
+**模式 (Pattern):**
+```typescript
+getAccountById(accountId: string): Promise<Account>
+getWorkspaceById(workspaceId: string): Promise<Workspace>
+getAccountWorkspaces(accountId: string): Promise<Workspace[]>
+getWorkspaceMembers(workspaceId: string): Promise<AccountWorkspaceMembership[]>
+hasWorkspaceAccess(accountId: string, workspaceId: string): Promise<boolean>
+switchWorkspace(accountId: string, workspaceId: string): Promise<void>
+```
+
+**範例 (Examples):**
+```typescript
+// ✅ GOOD
+getAccountById(accountId: string): Promise<Account> { }
+getAccountWorkspaces(accountId: string): Promise<Workspace[]> { }
+getWorkspaceMembers(workspaceId: string): Promise<AccountWorkspaceMembership[]> { }
+hasWorkspaceAccess(accountId: string, workspaceId: string): Promise<boolean> { }
+addAccountToWorkspace(accountId: string, workspaceId: string, role: WorkspaceRole): Promise<void> { }
+
+// ❌ BAD
+getUser(id: string): any { }  // 應使用 Account
+getUserOrganizations(id: string): any { }  // 應使用 AccountWorkspaces
+getTeamMembers(id: string): any { }  // 應使用 WorkspaceMembers
+checkAccess(userId: string, teamId: string): any { }  // 應使用 Account/Workspace
+```
+
 
 ---
 
