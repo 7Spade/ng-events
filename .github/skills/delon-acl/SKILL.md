@@ -1,5 +1,5 @@
 ---
-description: '@delon/acl skill - Access Control List for role-based permissions and UI element visibility. For ng-lin construction site progress tracking system.'
+description: '@delon/acl skill - Access Control List for role-based permissions and UI element visibility. For ng-events construction site progress tracking system.'
 ---
 
 # @delon/acl - Access Control List
@@ -185,7 +185,7 @@ export const routes: Routes = [
 
 ## Real-World Blueprint Integration
 
-### Permission Structure for GigHub
+### Permission Structure for ng-events(GigHub)
 
 ```typescript
 import { Injectable, inject } from '@angular/core';
@@ -194,7 +194,7 @@ import { AuthService } from '@core/services/auth.service';
 import { BlueprintMemberRepository } from '@core/data-access/blueprint-member.repository';
 
 /**
- * GigHub permission format:
+ * ng-events(GigHub) permission format:
  * - Roles: 'owner', 'admin', 'member', 'viewer'
  * - Abilities: 'module:action' format
  *   Examples: 'task:create', 'task:edit', 'task:delete'
@@ -460,10 +460,10 @@ allow delete: if hasPermission('task:delete');
 - **delon-auth** - Authentication integration
 - **firestore-security-rules** - Server-side validation
 - **blueprint-integration** - Multi-tenant permissions
-- `.github/instructions/ng-gighub-architecture.instructions.md` - Permission architecture
+- `.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md` - Permission architecture
 
 ---
 
 **Version**: 1.0  
 **Created**: 2025-12-25  
-**Maintainer**: GigHub Development Team
+**Maintainer**: ng-events(GigHub) Development Team

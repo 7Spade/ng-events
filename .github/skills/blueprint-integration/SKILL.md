@@ -443,6 +443,6 @@ When integrating Blueprint pattern:
 
 ## References
 
-- [Architecture Guide](.github/instructions/ng-gighub-architecture.instructions.md)
-- [Security Rules](.github/instructions/ng-gighub-security-rules.instructions.md)
+- [Architecture Guide](.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md)
+- [Security Rules](.github/instructions/ng-ng-events(GigHub)-security-rules.instructions.md)
 - [Event Bus Integration](./event-bus-integration/SKILL.md)

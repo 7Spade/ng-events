@@ -1,5 +1,5 @@
 ---
-description: '@delon/util skill - Utility functions library for array, string, date, number manipulation. For ng-lin construction site progress tracking system.'
+description: '@delon/util skill - Utility functions library for array, string, date, number manipulation. For ng-events construction site progress tracking system.'
 ---
 
 # @delon/util - Utility Functions Library
@@ -465,4 +465,4 @@ const copy: Task = deepCopy<Task>(originalTask);
 
 **Version**: 1.0  
 **Created**: 2025-12-25  
-**Maintainer**: GigHub Development Team
+**Maintainer**: ng-events(GigHub) Development Team

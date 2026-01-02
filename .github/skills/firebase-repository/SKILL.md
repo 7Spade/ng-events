@@ -6,7 +6,7 @@ license: "MIT"
 
 # Firebase Repository Pattern Skill
 
-This skill helps create Firebase Repository classes that follow the ng-lin project's architectural standards.
+This skill helps create Firebase Repository classes that follow the ng-events project's architectural standards.
 
 ## Core Principles
 
@@ -231,6 +231,6 @@ When creating a repository:
 
 ## References
 
-- [Repository Pattern Instructions](.github/instructions/ng-gighub-firestore-repository.instructions.md)
-- [Architecture Guide](.github/instructions/ng-gighub-architecture.instructions.md)
-- [Security Rules](.github/instructions/ng-gighub-security-rules.instructions.md)
+- [Repository Pattern Instructions](.github/instructions/ng-ng-events(GigHub)-firestore-repository.instructions.md)
+- [Architecture Guide](.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md)
+- [Security Rules](.github/instructions/ng-ng-events(GigHub)-security-rules.instructions.md)

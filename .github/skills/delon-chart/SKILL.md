@@ -1,5 +1,5 @@
 ---
-description: '@delon/chart skill - G2Plot enterprise charting components with @delon/chart. For ng-lin construction site progress tracking system.'
+description: '@delon/chart skill - G2Plot enterprise charting components with @delon/chart. For ng-events construction site progress tracking system.'
 ---
 
 # @delon/chart - Enterprise Chart Components
@@ -390,4 +390,4 @@ completedTasksData = computed(() =>
 
 **Version**: 1.0  
 **Created**: 2025-12-25  
-**Maintainer**: GigHub Development Team
+**Maintainer**: ng-events(GigHub) Development Team

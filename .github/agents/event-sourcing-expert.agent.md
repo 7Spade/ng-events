@@ -7,7 +7,7 @@ tools: ['read', 'search', 'Context7/*', 'grep', 'glob']
 # Event-Sourcing Expert Agent
 
 ## Mission
-Provide intelligent suggestions for Event-Sourcing patterns in ng-lin system.
+Provide intelligent suggestions for Event-Sourcing patterns in ng-events system.
 
 ## Passive Detection Patterns
 

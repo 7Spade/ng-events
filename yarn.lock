@@ -4270,6 +4270,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"account-domain-539996@workspace:packages/account-domain":
+  version: 0.0.0-use.local
+  resolution: "account-domain-539996@workspace:packages/account-domain"
+  languageName: unknown
+  linkType: soft
+
 "acorn-jsx@npm:^5.3.2":
   version: 5.3.2
   resolution: "acorn-jsx@npm:5.3.2"

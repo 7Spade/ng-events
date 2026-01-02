@@ -1,12 +1,12 @@
 ---
 name: Angular CDK Integration
-description: Create components using Angular CDK utilities including drag-drop, overlay, portal, scrolling, a11y, clipboard, and platform detection for ng-lin project
+description: Create components using Angular CDK utilities including drag-drop, overlay, portal, scrolling, a11y, clipboard, and platform detection for ng-events project
 license: MIT
 ---
 
 # Angular CDK Integration Skill
 
-This skill guides the creation of components and features using Angular CDK (@angular/cdk) utilities in the ng-lin construction site management system.
+This skill guides the creation of components and features using Angular CDK (@angular/cdk) utilities in the ng-events construction site management system.
 
 ## When to Use This Skill
 
@@ -266,7 +266,7 @@ import { Clipboard, ClipboardModule } from '@angular/cdk/clipboard';
 })
 export class ShareLinkComponent {
   private clipboard = inject(Clipboard);
-  shareLink = 'https://ng-lin.com/blueprints/123';
+  shareLink = 'https://ng-events.com/blueprints/123';
   copied = false;
   
   onCopied(success: boolean): void {

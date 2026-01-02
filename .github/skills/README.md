@@ -1,6 +1,6 @@
-# GitHub Copilot Skills for ng-lin
+# GitHub Copilot Skills for ng-events
 
-This directory contains GitHub Copilot Agent Skills designed specifically for the ng-lin project. These skills help Copilot understand and generate code following the project's architectural patterns, conventions, and best practices.
+This directory contains GitHub Copilot Agent Skills designed specifically for the ng-events project. These skills help Copilot understand and generate code following the project's architectural patterns, conventions, and best practices.
 
 ## What are Skills?
 
@@ -414,10 +414,10 @@ Always review generated code against:
 
 ### Core Instructions
 - [Angular 20 Guidelines](.github/instructions/angular.instructions.md)
-- [Architecture Principles](.github/instructions/ng-gighub-architecture.instructions.md)
-- [Repository Pattern](.github/instructions/ng-gighub-firestore-repository.instructions.md)
-- [Security Rules](.github/instructions/ng-gighub-security-rules.instructions.md)
-- [Signals State](.github/instructions/ng-gighub-signals-state.instructions.md)
+- [Architecture Principles](.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md)
+- [Repository Pattern](.github/instructions/ng-ng-events(GigHub)-firestore-repository.instructions.md)
+- [Security Rules](.github/instructions/ng-ng-events(GigHub)-security-rules.instructions.md)
+- [Signals State](.github/instructions/ng-ng-events(GigHub)-signals-state.instructions.md)
 - [ng-alain Guide](.github/instructions/ng-alain-delon.instructions.md)
 
 ### Character Profiles
