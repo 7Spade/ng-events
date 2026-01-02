@@ -1,1 +1,4 @@
-User request: Organize docs (focus on docs only), introduce generic core, handle conflicts with existing docs; files: 001.md, 002.md, 002-1.md, 002-2.md, 003.md, 004.md, 005.md. Persona: Momo Markdown Pixie (cute, playful, structured). Goal: clean markdown with headings/TOC/formatting, tag TODO/FIXME/NOTE, summaries, address conflicts with generic core.
+# Request Details
+- Goal: Align generics for DomainEvent and AggregateRoot and add T/I/S aliases for account-domain aggregates per prompt.
+- Files: packages/core-engine/event-store/EventStore.ts; packages/core-engine/aggregates/AggregateRoot.ts; account-domain aggregates (Account, Workspace, Membership, ModuleRegistry) and index exports if needed.
+- Constraints: Type-only changes, keep comments, no runtime behavior changes, maintain // END OF FILE markers.

@@ -12,13 +12,18 @@ import { DomainEvent } from '../event-store';
  *
  * Aggregates maintain internal state through event replay.
  */
-export abstract class AggregateRoot {
-  protected uncommittedEvents: DomainEvent[] = [];
+export abstract class AggregateRoot<
+  TEvent extends DomainEvent = DomainEvent,
+  TId = TEvent['aggregateId'],
+  TState = unknown
+> {
+  protected state?: TState;
+  protected uncommittedEvents: TEvent[] = [];
 
   /**
    * Aggregate identifier
    */
-  abstract readonly id: string;
+  abstract readonly id: TId;
 
   /**
    * Aggregate type name
@@ -28,7 +33,7 @@ export abstract class AggregateRoot {
   /**
    * Get uncommitted events to be persisted
    */
-  getUncommittedEvents(): DomainEvent[] {
+  getUncommittedEvents(): TEvent[] {
     return [...this.uncommittedEvents];
   }
 
@@ -44,14 +49,14 @@ export abstract class AggregateRoot {
    *
    * @param event - Event to apply
    */
-  protected abstract applyEvent(event: DomainEvent): void;
+  protected abstract applyEvent(event: TEvent): void;
 
   /**
    * Raise a new domain event
    *
    * @param event - Event to raise
    */
-  protected raiseEvent(event: DomainEvent): void {
+  protected raiseEvent(event: TEvent): void {
     this.applyEvent(event);
     this.uncommittedEvents.push(event);
   }
@@ -61,7 +66,7 @@ export abstract class AggregateRoot {
    *
    * @param events - Historical events
    */
-  replay(events: DomainEvent[]): void {
+  replay(events: TEvent[]): void {
     events.forEach(event => this.applyEvent(event));
   }
 }
