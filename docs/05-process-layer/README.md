@@ -89,13 +89,13 @@ class TaskLifecycleProcess {
         };
         commands.push({
           type: 'NotifyReporter',
-          userId: event.data.createdBy
+          accountId: event.metadata.actorAccountId  // Account (WHO)
         });
         break;
         
       case 'TaskStarted':
         this.state.status = 'InProgress';
-        this.state.assignee = event.data.startedBy;
+        this.state.assigneeAccountId = event.metadata.actorAccountId;  // WHO started
         
         // Schedule timeout check (3 days)
         const timeoutId = await this.scheduleTimeout(
@@ -106,7 +106,7 @@ class TaskLifecycleProcess {
         
         commands.push({
           type: 'NotifyAssignee',
-          userId: event.data.startedBy
+          accountId: event.metadata.actorAccountId  // Account (WHO)
         });
         break;
         
@@ -120,7 +120,7 @@ class TaskLifecycleProcess {
         
         commands.push({
           type: 'NotifyReporter',
-          userId: event.data.createdBy
+          accountId: event.metadata.actorAccountId  // Account (WHO)
         });
         
         // Close process
