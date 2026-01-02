@@ -20,7 +20,10 @@ export interface IProjection {
   /** 聚合根 ID */
   aggregateId: string;
   
-  /** 多租戶邊界 */
+  /** Workspace ID (WHERE - 邏輯容器) */
+  workspaceId: string;
+  
+  /** 多租戶邊界 (向後相容) */
   blueprintId: string;
   
   /** 最後更新時間 */
@@ -28,6 +31,28 @@ export interface IProjection {
   
   /** 版本號 */
   version: number;
+}
+```
+
+### Account Summary (Account 摘要介面)
+
+```typescript
+/**
+ * Account Summary
+ * Account 摘要資訊 (用於投影)
+ */
+export interface AccountSummary {
+  /** Account ID (WHO - 業務主體) */
+  accountId: string;
+  
+  /** 顯示名稱 */
+  displayName: string;
+  
+  /** 頭像 URL */
+  avatar?: string;
+  
+  /** Account 類型 */
+  type: 'individual' | 'organization' | 'bot';
 }
 ```
 
@@ -45,6 +70,7 @@ export interface IProjection {
 export class TaskListProjection implements IProjection {
   id: string;
   aggregateId: string;
+  workspaceId: string;
   blueprintId: string;
   lastUpdated: Timestamp;
   version: number;
@@ -53,14 +79,11 @@ export class TaskListProjection implements IProjection {
   title: string;
   description: string;
   status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  assignee: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
+  assignee: AccountSummary;  // Account (WHO) 而非 User
   priority: 'low' | 'medium' | 'high';
   dueDate?: Date;
   createdAt: Timestamp;
+  createdByAccountId: string;  // WHO created
   completedAt?: Timestamp;
   tags: string[];
 
@@ -73,11 +96,13 @@ export class TaskListProjection implements IProjection {
    */
   updateFromTaskCreated(event: TaskCreatedEvent): void {
     this.aggregateId = event.aggregateId;
+    this.workspaceId = event.metadata.workspaceId;
     this.blueprintId = event.metadata.blueprintId;
     this.title = event.data.title;
     this.description = event.data.description;
     this.status = 'pending';
     this.createdAt = event.metadata.timestamp;
+    this.createdByAccountId = event.metadata.actorAccountId;
     this.lastUpdated = Timestamp.now();
     this.version = 1;
   }
@@ -115,6 +140,7 @@ export class TaskListProjection implements IProjection {
 export class TaskDetailProjection implements IProjection {
   id: string;
   aggregateId: string;
+  workspaceId: string;
   blueprintId: string;
   lastUpdated: Timestamp;
   version: number;
@@ -125,9 +151,10 @@ export class TaskDetailProjection implements IProjection {
   status: string;
   priority: string;
   
-  // 人員資訊
-  assignee: UserSummary;
-  reporter: UserSummary;
+  // 人員資訊 (Account, not User)
+  assignee: AccountSummary;
+  reporter: AccountSummary;
+  createdByAccountId: string;
   
   // 時間資訊
   createdAt: Timestamp;
@@ -193,7 +220,7 @@ export class TaskDetailProjection implements IProjection {
     
     this.activities.push({
       type: 'created',
-      userId: event.metadata.causedByUser,
+      actorAccountId: event.metadata.actorAccountId,
       timestamp: event.metadata.timestamp,
       description: 'Task created'
     });
@@ -205,7 +232,7 @@ export class TaskDetailProjection implements IProjection {
     
     this.activities.push({
       type: 'completed',
-      userId: event.metadata.causedByUser,
+      actorAccountId: event.metadata.actorAccountId,
       timestamp: event.metadata.timestamp,
       description: `Task completed: ${event.data.completionNote}`
     });
@@ -214,7 +241,7 @@ export class TaskDetailProjection implements IProjection {
 
 interface TaskActivity {
   type: string;
-  userId: string;
+  actorAccountId: string;  // WHO performed this activity
   timestamp: Timestamp;
   description: string;
 }
