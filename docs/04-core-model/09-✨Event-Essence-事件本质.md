@@ -29,11 +29,11 @@ export interface DomainEvent<T = any> {
 
   // ❗ 因果元資料（靈魂所在）
   metadata: {
-    causedBy?: string;        // 父事件 ID（根事件可 undefined）
-    causedByUser?: string;    // Actor（AccountId 或系統）
-    causedByAction?: string;  // 觸發動作（Command Name）
-    timestamp: number;        // Unix timestamp
-    workspaceId: string;      // 範圍 / 多租戶隔離
+    causedBy?: string;           // 父事件 ID（根事件可 undefined）
+    actorAccountId: string;      // Actor（Account ID，WHO 做的）
+    causedByAction?: string;     // 觸發動作（Command Name）
+    timestamp: number;           // Unix timestamp
+    workspaceId: string;         // 範圍 / 多租戶隔離
   };
 
   // ❗ 業務資料（事件 payload）
@@ -54,8 +54,8 @@ const taskAssignedEvent: DomainEvent<{ assigneeId: string }> = {
   aggregateId: 'task_123',
   aggregateType: 'TaskAggregate',
   metadata: {
-    causedBy: 'evt_001',   // TaskCreated
-    causedByUser: 'acc_123',
+    causedBy: 'evt_001',         // TaskCreated
+    actorAccountId: 'acc_123',   // WHO did this (Account)
     causedByAction: 'AssignTask',
     timestamp: Date.now(),
     workspaceId: 'ws_abc',
@@ -72,16 +72,19 @@ const taskAssignedEvent: DomainEvent<{ assigneeId: string }> = {
 
 ---
 
-### 2️⃣ `causedByUser`（誰觸發）
+### 2️⃣ `actorAccountId`（誰觸發）
 
-* 永遠是 AccountId 或系統自動操作
+* 永遠是 Account ID（非 User ID）
+* Account 是唯一業務主體（參見 07-✨Account-Model）
 * 可跨 UI / API / Bot
 
 ```ts
 metadata: {
-  causedByUser: 'acc_123'
+  actorAccountId: 'acc_123'  // Account ID, not User ID
 }
 ```
+
+**注意**: 舊版使用 `causedByUser`，已統一為 `actorAccountId`
 
 ---
 
@@ -140,7 +143,7 @@ const taskCompletedEvent: DomainEvent<{ taskId: string }> = {
   aggregateType: 'TaskAggregate',
   metadata: {
     causedBy: 'evt_002',
-    causedByUser: 'acc_456',
+    actorAccountId: 'acc_456',   // Account is the actor
     causedByAction: 'CompleteTask',
     timestamp: Date.now(),
     workspaceId: 'ws_abc',

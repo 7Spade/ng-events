@@ -120,7 +120,7 @@ const pastState = TaskAggregate.replayFrom(targetEvents).getState();
 
 ```ts
 for await (const e of eventStore.replay()) {
-  console.log(`${e.eventType} by ${e.metadata.causedByUser} at ${e.metadata.timestamp}`);
+  console.log(`${e.eventType} by ${e.metadata.actorAccountId} at ${e.metadata.timestamp}`);
 }
 ```
 
@@ -140,45 +140,16 @@ for await (const event of eventStore.replay()) {
 
 ---
 
-## ❌ 常見錯誤（會毀系統）
+## ❌ 常見錯誤
 
-### ❌ 修改已存 Event
-
-```ts
-await eventStore.update(eventId, { ... }); // ❌ NO!!!
-```
-
-👉 **Event immutable，只能 append**
-
----
-
-### ❌ 刪除 Event
-
-```ts
-await eventStore.delete(eventId); // ❌ NO!!!
-```
-
-👉 **要撤銷就發 Compensation Event**
-
-```ts
-TaskCompleted → TaskReopened
-```
-
----
-
-### ❌ 把 Event Store 當 Query DB
-
-```ts
-await eventStore.findTasksByStatus('completed'); // ❌ NO!!!
-```
-
-👉 **查詢請用 Read Model / Projection**
+❌ 修改/刪除已存 Event → Event immutable，只能 append  
+❌ 把 Event Store 當 Query DB → 查詢請用 Read Model
 
 ---
 
 ## 🧠 儲存策略
 
-### 選項 1：關聯式 DB
+### 選項 1：關聯式 DB (Postgres/MySQL)
 
 ```sql
 CREATE TABLE events (
@@ -189,25 +160,16 @@ CREATE TABLE events (
   metadata JSONB,
   version INT
 );
-
-CREATE INDEX idx_aggregate 
-  ON events(aggregate_id, version);
+CREATE INDEX idx_aggregate ON events(aggregate_id, version);
 ```
 
-✅ 交易保證、版本控制
-❌ 大量寫入效能較差
+✅ 交易保證 ❌ 大量寫入效能較差
 
----
+### 選項 2：Event Store DB
 
-### 選項 2：Event Store 專用 DB
+EventStoreDB / Apache Kafka / AWS EventBridge
 
-* EventStoreDB
-* Apache Kafka
-* AWS EventBridge
-
-✅ 為 Event Sourcing 設計
-✅ 高效能 append
-❌ 額外學習成本
+✅ 為 Event Sourcing 設計 ✅ 高效能 append
 
 ---
 
@@ -216,11 +178,10 @@ CREATE INDEX idx_aggregate
 ### Snapshot（快照）
 
 ```ts
-interface Snapshot<T = any> {
+interface Snapshot<T> {
   aggregateId: string;
   version: number;
   state: T;
-  timestamp: number;
 }
 ```
 
