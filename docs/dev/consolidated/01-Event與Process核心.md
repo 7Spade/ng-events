@@ -16,9 +16,33 @@ interface DomainEvent {
   readonly eventId: string;
   readonly eventType: string;
   readonly aggregateId: string;
+  readonly aggregateType: string;
   readonly timestamp: Date;
-  readonly causedBy: string[];  // 因果關係
   readonly data: unknown;
+  readonly metadata: EventMetadata;
+}
+
+interface EventMetadata {
+  /** 因果關係 - 父事件 ID */
+  readonly causedBy: string;
+  
+  /** 執行 Account ID (WHO - 業務主體) */
+  readonly actorAccountId: string;
+  
+  /** Workspace ID (WHERE - 邏輯容器) */
+  readonly workspaceId: string;
+  
+  /** 觸發動作 */
+  readonly causedByAction: string;
+  
+  /** 時間戳記 */
+  readonly timestamp: Timestamp;
+  
+  /** 多租戶邊界 (向後相容) */
+  readonly blueprintId: string;
+  
+  /** 版本號 */
+  readonly version: number;
 }
 ```
 
