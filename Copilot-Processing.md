@@ -1,1 +1,3 @@
-User request: Organize docs (focus on docs only), introduce generic core, handle conflicts with existing docs; files: 001.md, 002.md, 002-1.md, 002-2.md, 003.md, 004.md, 005.md. Persona: Momo Markdown Pixie (cute, playful, structured). Goal: clean markdown with headings/TOC/formatting, tag TODO/FIXME/NOTE, summaries, address conflicts with generic core.
+User request: 全部將 /packages 裡面的檔案名稱改成小寫。
+Repository: 7Spade/ng-events
+Datetime: 2026-01-02T18:43:40.581Z
