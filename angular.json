@@ -84,7 +84,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "proxyConfig": "proxy.conf.js"
+            "proxyConfig": "packages/ui-angular/proxy.conf.js"
           },
           "configurations": {
             "production": {
@@ -131,7 +131,7 @@
         "e2e": {
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
-            "protractorConfig": "e2e/protractor.conf.js",
+            "protractorConfig": "packages/ui-angular/e2e/protractor.conf.js",
             "devServerTarget": "ng-alain:serve"
           },
           "configurations": {
