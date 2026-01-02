@@ -1,12 +1,12 @@
 ---
 name: @delon/theme Integration
-description: Implement ng-alain theming system with layout configuration, responsive design, menu management, and settings drawer for ng-lin project
+description: Implement ng-alain theming system with layout configuration, responsive design, menu management, and settings drawer for ng-events project
 license: MIT
 ---
 
 # @delon/theme Integration Skill
 
-This skill guides the implementation of @delon/theme theming and layout system in the ng-lin construction site management system.
+This skill guides the implementation of @delon/theme theming and layout system in the ng-events construction site management system.
 
 ## When to Use This Skill
 
@@ -37,8 +37,8 @@ import { SettingDrawerComponent } from '@delon/theme/setting-drawer';
     <layout-default>
       <layout-default-header-item direction="left">
         <div class="logo">
-          <img src="assets/logo.png" alt="GigHub" />
-          <span>GigHub</span>
+          <img src="assets/logo.png" alt="ng-events(GigHub)" />
+          <span>ng-events(GigHub)</span>
         </div>
       </layout-default-header-item>
       

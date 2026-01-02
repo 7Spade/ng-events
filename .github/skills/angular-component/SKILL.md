@@ -364,5 +364,5 @@ When creating a component:
 ## References
 
 - [Angular Instructions](.github/instructions/angular.instructions.md)
-- [Signals State Management](.github/instructions/ng-gighub-signals-state.instructions.md)
-- [Architecture Guide](.github/instructions/ng-gighub-architecture.instructions.md)
+- [Signals State Management](.github/instructions/ng-ng-events(GigHub)-signals-state.instructions.md)
+- [Architecture Guide](.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md)

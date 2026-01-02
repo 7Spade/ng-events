@@ -1,6 +1,6 @@
 # 專案架構上下文
 project:
-  name: 'ng-lin (GigHub)'
+  name: 'ng-events (ng-events(GigHub))'
   type: 'Causality-Driven Event-Sourced Process System'
   domain: 'Construction Site Progress Tracking'
 

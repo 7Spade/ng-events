@@ -1,12 +1,12 @@
 ---
 name: Screenfull Fullscreen API
-description: Implement fullscreen functionality using screenfull library for cross-browser fullscreen support in ng-lin project
+description: Implement fullscreen functionality using screenfull library for cross-browser fullscreen support in ng-events project
 license: MIT
 ---
 
 # Screenfull Fullscreen API Skill
 
-This skill guides the implementation of fullscreen functionality using the screenfull library in the ng-lin construction site management system.
+This skill guides the implementation of fullscreen functionality using the screenfull library in the ng-events construction site management system.
 
 ## When to Use This Skill
 

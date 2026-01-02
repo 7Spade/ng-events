@@ -548,6 +548,6 @@ When integrating EventBus:
 
 ## References
 
-- [Architecture Guide](.github/instructions/ng-gighub-architecture.instructions.md)
+- [Architecture Guide](.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md)
 - [Blueprint Integration](./blueprint-integration/SKILL.md)
 - [Global Event Bus Documentation](docs/⭐️/Global Event Bus.md)

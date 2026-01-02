@@ -1,5 +1,5 @@
 ---
-description: 'UUID generation skill - Universally Unique Identifiers v4 and v7 for entity IDs. For ng-lin construction site progress tracking system.'
+description: 'UUID generation skill - Universally Unique Identifiers v4 and v7 for entity IDs. For ng-events construction site progress tracking system.'
 ---
 
 # UUID - Universally Unique Identifiers
@@ -468,4 +468,4 @@ const token = await auth.currentUser.getIdToken();
 
 **Version**: 1.0  
 **Created**: 2025-12-25  
-**Maintainer**: GigHub Development Team
+**Maintainer**: ng-events(GigHub) Development Team

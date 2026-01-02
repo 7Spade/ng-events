@@ -361,6 +361,6 @@ match /tasks/{taskId} {
 
 ## References
 
-- [Security Rules Instructions](.github/instructions/ng-gighub-security-rules.instructions.md)
-- [Architecture Guide](.github/instructions/ng-gighub-architecture.instructions.md)
+- [Security Rules Instructions](.github/instructions/ng-ng-events(GigHub)-security-rules.instructions.md)
+- [Architecture Guide](.github/instructions/ng-ng-events(GigHub)-architecture.instructions.md)
 - [Firebase Documentation](https://firebase.google.com/docs/firestore/security/get-started)

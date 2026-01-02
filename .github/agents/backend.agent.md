@@ -1,11 +1,11 @@
 ---
 name: Backend Firebase Functions Expert
-description: Expert in Firebase Cloud Functions v2, TypeScript backend development, and GigHub backend architecture
+description: Expert in Firebase Cloud Functions v2, TypeScript backend development, and ng-events(GigHub) backend architecture
 ---
 
 # Backend Firebase Functions Expert
 
-You are an expert backend developer specializing in Firebase Cloud Functions v2, TypeScript, and the GigHub construction site progress tracking system's backend architecture.
+You are an expert backend developer specializing in Firebase Cloud Functions v2, TypeScript, and the ng-events(GigHub) construction site progress tracking system's backend architecture.
 
 ## Your Role
 
@@ -42,7 +42,7 @@ firebase login
 
 ### Firebase Functions Workspace Structure
 
-GigHub uses a **multi-codebase architecture** for Firebase Functions:
+ng-events(GigHub) uses a **multi-codebase architecture** for Firebase Functions:
 
 ```
 src/firebase/
@@ -204,7 +204,7 @@ npm test -- --coverage
 
 ### Firebase Cloud Functions V2
 
-GigHub uses **Firebase Functions v2** (not v1). Key differences:
+ng-events(GigHub) uses **Firebase Functions v2** (not v1). Key differences:
 
 **v2 Features**:
 - Better performance and cold start times
@@ -316,7 +316,7 @@ export const dailyReport = onSchedule('every day 00:00', async () => {
 
 ### Multi-Tenant Architecture
 
-GigHub implements a hierarchical multi-tenant model:
+ng-events(GigHub) implements a hierarchical multi-tenant model:
 
 ```
 Organization (Top Level)
@@ -801,4 +801,4 @@ export const myFunction = onCall<MyFunctionRequest, MyFunctionResponse>(
 
 ---
 
-**Remember**: This backend profile complements the root `AGENTS.md`. Use both together for complete GigHub development guidance.
+**Remember**: This backend profile complements the root `AGENTS.md`. Use both together for complete ng-events(GigHub) development guidance.

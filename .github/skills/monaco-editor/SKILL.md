@@ -1,5 +1,5 @@
 ---
-description: 'Monaco Editor skill - VS Code code editor for Angular with @ng-util/monaco-editor. For ng-lin construction site progress tracking system.'
+description: 'Monaco Editor skill - VS Code code editor for Angular with @ng-util/monaco-editor. For ng-events construction site progress tracking system.'
 ---
 
 # Monaco Editor - VS Code Code Editor
@@ -12,7 +12,7 @@ Monaco Editor is the code editor that powers VS Code, providing syntax highlight
 
 **Package**: @ng-util/monaco-editor@20.0.1  
 **Wrapper**: Angular wrapper for microsoft/monaco-editor  
-**Use Case**: Code editing, JSON editing, template editing in ng-lin
+**Use Case**: Code editing, JSON editing, template editing in ng-events
 
 ## Installation & Setup
 
@@ -27,7 +27,7 @@ npm install @ng-util/monaco-editor@20.0.1
 ```json
 {
   "projects": {
-    "ng-lin": {
+    "ng-events": {
       "architect": {
         "build": {
           "options": {
@@ -102,7 +102,7 @@ export class CodeEditorComponent {
 
 ## Supported Languages
 
-Common languages for ng-lin:
+Common languages for ng-events:
 
 | Language | Use Case |
 |----------|----------|
@@ -536,4 +536,4 @@ onCodeChange(code: string): void {
 
 **Version**: 1.0  
 **Created**: 2025-12-25  
-**Maintainer**: GigHub Development Team
+**Maintainer**: ng-events(GigHub) Development Team
