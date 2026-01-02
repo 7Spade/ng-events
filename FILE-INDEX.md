@@ -103,6 +103,13 @@
 - [時間模型 V2](docs/04-core-model/04-Time-Model-时间模型V2.md)
 - [Account 模型詳解](docs/04-core-model/05-Account-Model-Detailed-账户模型详解.md)
 - [Workspace 模型詳解](docs/04-core-model/06-Workspace-Model-Detailed-工作空间模型详解.md)
+- [Kernel Primitives（泛型核心速查）](docs/04-core-model/20-Kernel-Primitives(泛型核心速查).md)
+- [泛型決策指南](docs/04-core-model/21-Generic-Engine-Decision-Guide(引擎泛型語意具體指南).md)
+- [Kernel Quick Reference](docs/04-core-model/22-Kernel-Quick-Reference(核心速查補充).md)
+- [Kernel 檔案與不變條款](docs/04-core-model/23-Kernel-Files-Invariants(核心檔案與不變條款).md)
+- [泛型化後的結構變化](docs/04-core-model/24-Post-Generic-Structure(泛型化後結構變化).md)
+- [核心三層心智模型](docs/04-core-model/25-Core-Three-Layer-Mental-Model(三層心智模型).md)
+- [心智模型補遺](docs/04-core-model/26-Core-Notes-Addendum(心智模型補遺).md)
 
 ### 05-process-layer/ - 流程層
 - [Saga 流程管理器](docs/05-process-layer/01-Saga-Process-Manager-Saga流程管理器.md)

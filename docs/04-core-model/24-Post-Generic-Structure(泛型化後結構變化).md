@@ -1,0 +1,70 @@
+## 泛型化後的結構變化（不推倒，強化邊界）
+
+🧭 摘要
+
+- 泛型化不會推翻現有結構，只會讓邊界更硬、更清楚。
+- 三個層的責任：core-engine（冷）、saas-domain（胖一點，語意回來）、platform-adapters（幾乎不動）。
+- Replay / Determinism 更佳：Saga 純函數，重播 = 重跑。
+
+### Table of Contents
+
+- [現況結構](#現況結構)
+- [角色分工會變什麼](#角色分工會變什麼)
+- [可能新增的 Router 層](#可能新增的-router-層)
+- [為什麼安全](#為什麼安全)
+- [邊界警戒](#邊界警戒)
+- [一句話總結](#一句話總結)
+
+### 現況結構
+
+```
+packages/
+├─ core-engine/          ← 事件 / Saga / 流程引擎（無業務）
+├─ saas-domain/          ← 業務事件、Aggregate、Saga 實作
+├─ platform-adapters/    ← Firebase / PubSub / Scheduler
+├─ ui-angular/           ← Projection / Query / View
+```
+
+### 角色分工會變什麼
+
+1) **core-engine 更冷**：  
+   - `Event<TType, TPayload>`、`Saga<TContext, TEvent>`、`SagaEngine`。  
+   - 不知道 Task / Workspace / Billing。
+2) **saas-domain 稍胖**：  
+   - 事件與語意回到 domain，Saga 也回到 domain。  
+   - 沒有重構痛，只有「該講話的人講話」。
+3) **platform-adapters 幾乎不動**：  
+   - Event 泛型、Context 泛型，Firebase / PubSub 無感。  
+   - 仍然負責 EventStore、MessageBus、Scheduler。
+
+### 可能新增的 Router 層
+
+```
+core-engine
+├─ EventDispatcher
+│    └─ SagaRouter
+│          └─ WorkspaceProvisionSaga
+│          └─ BillingSaga
+```
+
+Router 僅做事件 → Saga 訂閱映射，沒有業務判斷。  
+條件：不要把 Router 寫成 policy engine。
+
+### 為什麼安全
+
+- Saga = 純函數 → Replay / Projection rebuild / Debug time-travel 都更穩。  
+- 引擎層「物理法則」清楚，domain 語言歸位。  
+- 只要不讓 core-engine 知道 enum 或 domain noun，就不會崩。
+
+### 邊界警戒
+
+- ❌ core-engine 不能出現：事件 enum、Workspace/Task/Billing 名詞、Firebase 型別。  
+- ❌ saas-domain 不直接碰：Event Store 實作、Message Bus SDK。  
+- ✅ platform-adapters 只實作 ports，不偷塞語意。
+
+### 一句話總結
+
+> 引擎層不是業務的抽象，它是「因果流動的物理定律」。  
+> 把語言還給 Domain，把力學還給 Engine，結構更直也更穩。
+
+// END OF FILE
