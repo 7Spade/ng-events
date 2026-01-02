@@ -2,6 +2,40 @@
 
 > **Layered structure from immutable events to observable UI.**
 
+---
+
+## 📂 File Organization (本目錄文件組織)
+
+本目錄包含三類文件，遵循專案文件政策 (見 `docs/DOCUMENTATION-POLICY.md`):
+
+### ✨ Knowledge Essence Files (知識精華，01-06)
+快速參考，≤4000 bytes，核心概念：
+- `01-✨Core-Not-Angular-核心不属于Angular.md` - Core 獨立原則
+- `02-✨Authorization-Layers-权限分层.md` - 三層權限架構
+- `03-✨Packages-Structure-目录结构.md` - packages/ 結構
+- `04-✨Firebase-SDK-Separation-SDK分离.md` - SDK 隔離模式
+- `06-✨Event-Projection-Angular-Flow-事件投影流程.md` - Event→UI 流程
+
+### Detailed Guide Files (詳解文件，05, 07-14)
+深入實作指南，包含範例：
+- `05-Authorization-Layers-Detailed-权限分层详解.md` - 權限層詳解
+- `07-Overview-Architecture-架构概述.md` - 架構總覽
+- `08-Architecture-Rules-架构规则.md` - 架構規則
+- `09-Anti-Corruption-Layer-防腐层.md` - 防腐層設計
+- `10-Data-Flow-数据流.md` - 資料流向
+- `11-Features-Layer-功能层.md` - 功能層組織
+- `12-Layering-Model-分层模型.md` - 分層模型詳解
+- `13-Responsibility-Boundaries-职责边界.md` - 職責邊界
+- `14-Tech-Stack-技术栈.md` - 技術棧選擇
+
+### 建議閱讀順序
+1. ✨ 文件 (快速理解核心概念，30 分鐘)
+2. Detailed 文件 (深入學習實作，2-3 小時)
+
+**詳細說明**: 見 `docs/00-index/01-✨Knowledge-Index-知识索引.md`
+
+---
+
 ## Architecture Layers
 
 ```

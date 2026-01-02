@@ -2,6 +2,50 @@
 
 > **Events, Decisions, Projections, Processes - the building blocks.**
 
+---
+
+## 📂 File Organization (本目錄文件組織)
+
+本目錄包含三類文件，遵循專案文件政策 (見 `docs/DOCUMENTATION-POLICY.md`):
+
+### V2 Canonical Definitions (規範定義，01-04)
+當前權威的技術定義：
+- `01-Event-Model-事件模型V2.md` - Event 結構與規範
+- `02-Causality-Model-因果模型V2.md` - 因果鏈模型
+- `03-Determinism-确定性V2.md` - 確定性原則
+- `04-Time-Model-时间模型V2.md` - 時間模型
+
+**註**: V2 文件已替代舊版本 (18-21 已刪除)
+
+### Detailed Guide Files (詳解文件，05-06)
+深入實作指南：
+- `05-Account-Model-Detailed-账户模型详解.md` - Account 完整指南
+- `06-Workspace-Model-Detailed-工作空间模型详解.md` - Workspace 完整指南
+
+### ✨ Knowledge Essence Files (知識精華，07-17)
+快速參考，≤4000 bytes：
+- `07-✨Account-Model-账户模型.md` - Account 核心概念
+- `08-✨Workspace-Concept-工作空间概念.md` - Workspace 核心概念
+- `09-✨Event-Essence-事件本质.md` - Event 本質
+- `10-✨Event-Projection-ReadModel-事件投影读模型.md` - Projection 概念
+- `11-✨Event-Store-Responsibility-事件存储职责.md` - Event Store 職責
+- `12-✨Correlation-Causation-关联与因果.md` - Correlation vs Causation
+- `13-✨Logical-Container-逻辑容器.md` - 邏輯容器概念
+- `14-✨Business-Module-业务模块.md` - 業務模組定義
+- `15-✨Workspace-Module-Account-Event-关系模型.md` - 完整依賴鏈
+- `16-✨Naming-Principles-命名原则.md` - 命名規範
+- `17-✨Causality-Belongs-Where-因果归属.md` - 因果歸屬
+
+### 建議閱讀順序
+1. ✨ 文件 07-08 (Account/Workspace 概念，10 分鐘)
+2. V2 文件 01-02 (Event/Causality 定義，20 分鐘)
+3. Detailed 文件 05-06 (深入學習，1 小時)
+4. 其餘 ✨ 文件 (進階概念，40 分鐘)
+
+**詳細說明**: 見 `docs/00-index/01-✨Knowledge-Index-知识索引.md`
+
+---
+
 ## Event Structure
 
 ### Domain Event Interface
