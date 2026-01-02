@@ -2,10 +2,10 @@
   "name": "@ng-events/core-engine",
   "version": "1.0.0",
   "description": "Pure domain core with event sourcing and causality tracking - ZERO framework dependencies",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [
@@ -17,7 +17,6 @@
   ],
   "author": "ng-events team",
   "license": "MIT",
-  "peerDependencies": {},
   "devDependencies": {
     "typescript": "^5.0.0"
   }

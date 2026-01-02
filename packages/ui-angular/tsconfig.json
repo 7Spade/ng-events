@@ -1,0 +1,35 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../dist/ui-angular",
+    "baseUrl": "src",
+    "lib": ["ES2022", "dom"],
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "types": [],
+    "paths": {
+      "@core": ["app/core/index.ts"],
+      "@core/*": ["app/core/*"],
+      "@shared": ["app/shared/index.ts"],
+      "@shared/*": ["app/shared/*"],
+      "@env/*": ["environments/*"],
+      "@core-engine": ["../../../packages/core-engine/index.ts"],
+      "@core-engine/*": ["../../../packages/core-engine/*"],
+      "@saas-domain": ["../../../packages/saas-domain/index.ts"],
+      "@saas-domain/*": ["../../../packages/saas-domain/*"],
+      "@platform-adapters": ["../../../packages/platform-adapters/index.ts"],
+      "@platform-adapters/*": ["../../../packages/platform-adapters/*"]
+    }
+  },
+  "files": [
+    "src/main.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ],
+  "references": [
+    { "path": "../platform-adapters" }
+  ]
+}
+

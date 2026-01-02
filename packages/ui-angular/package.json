@@ -14,8 +14,8 @@
   "author": "ng-events team",
   "license": "MIT",
   "peerDependencies": {
-    "@ng-events/platform-adapters": "^1.0.0",
     "@angular/core": "^20.0.0",
-    "@angular/fire": "^20.0.0"
+    "@angular/fire": "^20.0.0",
+    "@ng-events/platform-adapters": "^1.0.0"
   }
 }

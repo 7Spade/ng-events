@@ -2,10 +2,10 @@
   "name": "@ng-events/platform-adapters",
   "version": "1.0.0",
   "description": "Platform adapters for Firebase, auth, notifications, analytics, and AI - Strict SDK separation",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [
@@ -17,15 +17,17 @@
   ],
   "author": "ng-events team",
   "license": "MIT",
+  "dependencies": {
+    "@ng-events/core-engine": "*",
+    "@ng-events/saas-domain": "*"
+  },
   "peerDependencies": {
-    "@ng-events/core-engine": "^1.0.0",
-    "@ng-events/saas-domain": "^1.0.0",
     "@angular/core": "^20.0.0",
     "@angular/fire": "^20.0.0",
     "firebase-admin": "^12.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   }
 }

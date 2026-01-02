@@ -2,10 +2,10 @@
   "name": "@ng-events/saas-domain",
   "version": "1.0.0",
   "description": "SaaS business domain models - Pure TypeScript with core-engine",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [
@@ -16,8 +16,8 @@
   ],
   "author": "ng-events team",
   "license": "MIT",
-  "peerDependencies": {
-    "@ng-events/core-engine": "^1.0.0"
+  "dependencies": {
+    "@ng-events/core-engine": "*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
