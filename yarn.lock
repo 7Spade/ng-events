@@ -3046,6 +3046,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ng-events/account-domain@workspace:packages/account-domain":
+  version: 0.0.0-use.local
+  resolution: "@ng-events/account-domain@workspace:packages/account-domain"
+  dependencies:
+    "@ng-events/core-engine": "npm:*"
+    typescript: "npm:^5.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@ng-events/core-engine@npm:*, @ng-events/core-engine@workspace:packages/core-engine":
   version: 0.0.0-use.local
   resolution: "@ng-events/core-engine@workspace:packages/core-engine"
@@ -4269,12 +4278,6 @@ __metadata:
   checksum: 10c0/3a35c5f5586cfb9a21163ca47a5f77ac34fa8ceb5d17d2fa2c0d81f41cbd7f8c6fa52c77e2c039acc0f4d09e71abdc51144246900f6bef5e3c4b333f77d89362
   languageName: node
   linkType: hard
-
-"account-domain-539996@workspace:packages/account-domain":
-  version: 0.0.0-use.local
-  resolution: "account-domain-539996@workspace:packages/account-domain"
-  languageName: unknown
-  linkType: soft
 
 "acorn-jsx@npm:^5.3.2":
   version: 5.3.2

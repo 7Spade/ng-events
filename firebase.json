@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "packages/ui-angular/dist/ng-alain/browser",
+    "public": "dist/ng-alain/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
