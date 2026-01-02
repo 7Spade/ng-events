@@ -1,0 +1,24 @@
+{
+  "name": "@ng-events/core-engine",
+  "version": "1.0.0",
+  "description": "Pure domain core with event sourcing and causality tracking - ZERO framework dependencies",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts"
+  },
+  "keywords": [
+    "ddd",
+    "event-sourcing",
+    "causality",
+    "domain-driven-design",
+    "cqrs"
+  ],
+  "author": "ng-events team",
+  "license": "MIT",
+  "peerDependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
