@@ -14,7 +14,11 @@ import { CausalityMetadata } from '../causality';
  *
  * Every event MUST include causality metadata for audit and replay.
  */
-export interface DomainEvent<T = unknown> {
+export interface DomainEvent<
+  TPayload = unknown,
+  TId = string,
+  TMetadata extends CausalityMetadata = CausalityMetadata
+> {
   /**
    * Unique event identifier
    */
@@ -23,7 +27,7 @@ export interface DomainEvent<T = unknown> {
   /**
    * ID of the aggregate this event belongs to
    */
-  aggregateId: string;
+  aggregateId: TId;
 
   /**
    * Type of aggregate (e.g., 'Task', 'Payment', 'Issue')
@@ -38,12 +42,12 @@ export interface DomainEvent<T = unknown> {
   /**
    * Event payload data
    */
-  data: T;
+  data: TPayload;
 
   /**
    * Causality metadata for tracking event chains
    */
-  metadata: CausalityMetadata;
+  metadata: TMetadata;
 }
 
 /**
