@@ -241,14 +241,17 @@ describe('TaskAggregate', () => {
 3. [多租戶模板](docs/🧩-Dev-Templates/Multi-Tenant-Templates(多租戶模板).md)
 
 #### 後端開發者
-1. [Core Engine](packages/core-engine/README.md)
-2. [Platform Adapters](packages/platform-adapters/README.md)
-3. [因果模型](docs/04-core-model/02-Causality-Model-因果模型V2.md)
+1. [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) ⭐ **必讀**
+2. [Core Engine](packages/core-engine/README.md)
+3. [Platform Adapters](packages/platform-adapters/README.md)
+4. [因果模型](docs/04-core-model/02-Causality-Model-因果模型V2.md)
+5. [泛型 Quick Reference](docs/🧬-Generic/Quick-Reference(快速參考).md)
 
 #### 架構師
-1. [架構概覽](docs/03-architecture/01-Overview(概覽).md)
-2. [決策記錄](docs/08-governance/01-decision-records/)
-3. [分層模型](docs/03-architecture/12-Layering-Model-分层模型.md)
+1. [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) ⭐ **必讀**
+2. [架構概覽](docs/03-architecture/01-Overview(概覽).md)
+3. [決策記錄](docs/08-governance/01-decision-records/)
+4. [分層模型](docs/03-architecture/12-Layering-Model-分层模型.md)
 
 ### 完整索引
 
@@ -262,6 +265,9 @@ describe('TaskAggregate', () => {
 
 **Q: 事件和命令有什麼差別？**  
 A: 事件是過去式（已發生），命令是意圖（要做）。閱讀 [事件模型](docs/04-core-model/01-Event-Model-事件模型V2.md)
+
+**Q: 如何實作新的聚合 (Aggregate)？**  
+A: 使用 T/I/S 泛型模式，參考 [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) 和 [AggregateRoot Template](docs/🧬-Generic/AggregateRoot-Template.ts)
 
 **Q: 為什麼不能在 core-engine 用 Firebase?**  
 A: 核心必須與框架無關，才能重用。閱讀 [Packages 架構](packages/README.md)
