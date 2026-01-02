@@ -9,7 +9,7 @@
  * Builds projection (read models) from domain events.
  */
 
-import { DomainEvent } from '@core-engine/event-store';
+import type { DomainEvent } from '../../core-engine/event-store';
 
 // TODO: Import firebase-admin
 // import * as admin from 'firebase-admin';

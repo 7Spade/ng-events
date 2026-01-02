@@ -9,7 +9,7 @@
  * Implements the EventStore interface from @core-engine
  */
 
-import { DomainEvent, EventStore } from '@core-engine/event-store';
+import type { DomainEvent, EventStore } from '../../core-engine/event-store';
 
 // TODO: Import firebase-admin (NOT @angular/fire)
 // import * as admin from 'firebase-admin';

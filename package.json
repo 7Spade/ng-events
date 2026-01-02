@@ -30,7 +30,7 @@
     "analyze:view": "source-map-explorer dist/**/*.js",
     "lint": "npm run lint:ts && npm run lint:style",
     "lint:ts": "npx eslint --cache --fix",
-    "lint:style": "npx stylelint 'src/**/*.less'",
+    "lint:style": "npx stylelint 'packages/ui-angular/src/**/*.less'",
     "e2e": "ng e2e",
     "test": "ng test --watch",
     "test-coverage": "ng test --code-coverage --watch=false",
@@ -112,10 +112,10 @@
     "typescript-eslint": "^8.44.0"
   },
   "lint-staged": {
-    "(src)/**/*.{html,ts}": [
+    "(packages/ui-angular/src)/**/*.{html,ts}": [
       "eslint --cache"
     ],
-    "(src)/**/*.less": [
+    "(packages/ui-angular/src)/**/*.less": [
       "npm run lint:style"
     ]
   },
