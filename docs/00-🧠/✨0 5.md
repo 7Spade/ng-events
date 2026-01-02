@@ -1,0 +1,316 @@
+---
+
+# 🔐 一、Firestore Security Rules（對應 Membership）
+
+## 🎯 設計核心心法（超重要）
+
+請先記住這一句（真的要記）：
+
+> **Firestore Rules 不做商業邏輯
+> 只做「你是不是這個 Workspace 的人」**
+
+* ❌ 不判斷 Saga
+* ❌ 不判斷 Module 啟用流程
+* ✅ 只根據 **Membership Projection**
+
+---
+
+## 🔑 基本前提
+
+假設：
+
+* 使用 Firebase Auth
+* `request.auth.uid` = userId
+* Membership 存在於
+  `/memberships/{workspaceId}_{userId}`
+
+---
+
+## 🧱 Rules 檔案結構（概念）
+
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function membership(workspaceId) {
+      return get(
+        /databases/$(database)/documents/memberships/$(workspaceId + "_" + request.auth.uid)
+      );
+    }
+
+    function hasMembership(workspaceId) {
+      return membership(workspaceId).exists();
+    }
+
+    function role(workspaceId) {
+      return membership(workspaceId).data.role;
+    }
+```
+
+---
+
+## 🧩 Workspace Rules
+
+```rules
+match /workspaces/{workspaceId} {
+  allow read: if isSignedIn() && hasMembership(workspaceId);
+
+  // ❌ 前端永遠不能寫 Workspace
+  allow write: if false;
+}
+```
+
+👉 Workspace 是 **Saga / Admin** 的事
+👉 前端只讀，非常乾淨
+
+---
+
+## 👤 Membership Rules（只讀自己）
+
+```rules
+match /memberships/{id} {
+  allow read: if isSignedIn()
+    && id == request.resource.id;
+
+  // ❌ 不允許前端改角色
+  allow write: if false;
+}
+```
+
+👉 成員變動 = Domain Command
+👉 不給前端碰，避免災難 😌
+
+---
+
+## 🧩 Module Projection Rules
+
+```rules
+match /modules/{id} {
+  allow read: if isSignedIn()
+    && hasMembership(resource.data.workspaceId);
+
+  allow write: if false;
+}
+```
+
+👉 前端只能「看世界長怎樣」
+👉 不能改世界規則
+
+---
+
+## 🧠 Saga Instance Rules（可讀進度）
+
+```rules
+match /saga-instances/{sagaId} {
+  allow read: if isSignedIn()
+    && hasMembership(resource.data.workspaceId);
+
+  allow write: if false;
+}
+```
+
+👉 UI 可以顯示「初始化中 / 失敗」
+👉 但不能操控 Saga
+
+---
+
+## 🧾 Task Projection Rules（SaaS Domain）
+
+```rules
+match /tasks/{taskId} {
+  allow read: if isSignedIn()
+    && hasMembership(resource.data.workspaceId);
+
+  allow create: if isSignedIn()
+    && hasMembership(request.resource.data.workspaceId)
+    && role(request.resource.data.workspaceId) in ['Owner', 'Admin', 'Member'];
+
+  allow update, delete: if false;
+}
+```
+
+🔥 重點：
+
+* 建立 Task：前端可以（受 Membership 控制）
+* 更新 / 刪除：**交給 Command / Function**
+
+---
+
+## 🧷 小結（Security Rules）
+
+> **Rules 是牆，不是腦袋**
+> 腦袋在 Domain / Saga
+> 牆只管「你能不能進來」
+
+你這樣寫，系統會：
+
+* 不被前端玩壞
+* 不被角色繞過
+* 好 Debug
+
+---
+
+# 🔄 二、Projection 重建策略（Replay Events）
+
+這一段是 **Event-Sourced 系統的「復活術」** 🧙‍♂️
+我會講三層，不會空談。
+
+---
+
+## 🎯 為什麼一定要能 Replay？
+
+因為你一定會遇到：
+
+* Projection schema 改了
+* UI 新需求
+* Bug 修掉後要重算
+* 新 Module 要補舊資料
+
+👉 **不能 Replay = 不敢改系統**
+
+---
+
+## 🧠 事件儲存前提（你已經有）
+
+```txt
+event-store/
+└── events/
+    ├── AccountCreated
+    ├── WorkspaceCreated
+    ├── MemberJoinedWorkspace
+    ├── ModuleEnabled
+    ├── TaskCreated
+```
+
+每個 Event 都有：
+
+```ts
+{
+  eventId,
+  type,
+  payload,
+  occurredAt,
+  causationId,
+  correlationId
+}
+```
+
+---
+
+## 🔁 Projection Builder（核心概念）
+
+> **Projection = fold(events[])**
+
+```ts
+function buildWorkspaceProjection(events: DomainEvent[]) {
+  let state = initialWorkspaceState;
+
+  for (const event of events) {
+    state = apply(event, state);
+  }
+
+  return state;
+}
+```
+
+👉 這是**純函數**
+👉 不碰 Firestore
+👉 不碰 SDK
+
+---
+
+## 🧱 Replay 策略（三種層級）
+
+---
+
+### 1️⃣ 全量重建（災後重生）
+
+```txt
+1. 清空 Firestore projection collections
+2. 從 Event Store 讀取全部事件
+3. 依序 apply
+4. 寫回 Projection
+```
+
+✔ 適合：
+
+* Schema 大改
+* 上線前
+* 緊急修復
+
+---
+
+### 2️⃣ 單 Aggregate 重建（最常用）
+
+```txt
+ReplayWorkspace(workspaceId)
+```
+
+流程：
+
+```txt
+Fetch events where payload.workspaceId == wsId
+→ rebuild
+→ overwrite:
+  /workspaces/{wsId}
+  /modules/{wsId}_*
+  /memberships/{wsId}_*
+```
+
+🔥 **這個你之後一定會常用**
+
+---
+
+### 3️⃣ 增量重放（正常運作）
+
+```txt
+lastProcessedEventId
+→ 只處理新的事件
+```
+
+Projection 文件加一個欄位：
+
+```json
+{
+  "_meta": {
+    "lastEventId": "evt_999"
+  }
+}
+```
+
+👉 Saga / Projection Handler 每次只吃新事件
+👉 快又穩
+
+---
+
+## 🧪 Replay 的安全技巧（很重要）
+
+### ✔ Projection 永遠可被刪
+
+* 不存「唯一真相」
+* 真相只在 Event Store
+
+### ✔ Projection 寫入要 idempotent
+
+```ts
+if (eventId <= lastEventId) return;
+```
+
+---
+
+## 🧷 最後一句（請你真的記住）
+
+> **Security Rules 保護現在
+> Replay 能修復過去
+> Event Store 才是永恆**
+
+你現在這套系統已經是：
+
+* 真正安全
+* 真正可重建
+* 真正敢改
