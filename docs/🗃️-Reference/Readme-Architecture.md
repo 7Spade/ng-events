@@ -8,9 +8,9 @@ This architecture documentation provides comprehensive guidance for implementing
 
 | Document | Purpose | Lines | Audience |
 |----------|---------|-------|----------|
-| **ng-events_Architecture.md** | Complete architectural specification | 566 | Architects, Senior Engineers |
-| **ARCHITECTURE_SUMMARY.md** | Quick reference guide (中英對照) | 175 | All team members |
-| **DIRECTORY_STRUCTURE_COMPARISON.md** | Detailed structure comparison | 305 | Developers, Team Leads |
+| **Ng-Events-Architecture.md** | Complete architectural specification | 566 | Architects, Senior Engineers |
+| **Architecture-Summary.md** | Quick reference guide (中英對照) | 175 | All team members |
+| **Directory-Structure-Comparison.md** | Detailed structure comparison | 305 | Developers, Team Leads |
 
 **Total**: 1,046 lines of comprehensive architectural guidance
 
@@ -40,7 +40,7 @@ src/app/
 
 ## 📖 Documentation Overview
 
-### 1. ng-events_Architecture.md (Comprehensive)
+### 1. Ng-Events-Architecture.md (Comprehensive)
 
 **What's Inside:**
 - 📊 System Context Diagram
@@ -76,7 +76,7 @@ src/app/
 12. Next Steps
 ```
 
-### 2. ARCHITECTURE_SUMMARY.md (Quick Reference)
+### 2. Architecture-Summary.md (Quick Reference)
 
 **What's Inside:**
 - 🎯 Problem statement and solution (中英對照)
@@ -95,7 +95,7 @@ src/app/
 **Languages:**
 - English and Traditional Chinese (繁體中文)
 
-### 3. DIRECTORY_STRUCTURE_COMPARISON.md (Detailed Comparison)
+### 3. Directory-Structure-Comparison.md (Detailed Comparison)
 
 **What's Inside:**
 - 📊 Side-by-side structure comparison
@@ -119,13 +119,13 @@ src/app/
 
 ```bash
 # For complete understanding
-cat ng-events_Architecture.md
+cat Ng-Events-Architecture.md
 
 # For quick reference
-cat ARCHITECTURE_SUMMARY.md
+cat Architecture-Summary.md
 
 # For structure details
-cat DIRECTORY_STRUCTURE_COMPARISON.md
+cat Directory-Structure-Comparison.md
 ```
 
 ### Step 2: Create Directory Structure (2 minutes)
@@ -179,7 +179,7 @@ export interface DomainEvent<T> {
 
 ### Step 5: Begin Phase 1 Implementation (4-6 weeks)
 
-See detailed checklist in `ng-events_Architecture.md` → "Phased Development" section.
+See detailed checklist in `Ng-Events-Architecture.md` → "Phased Development" section.
 
 ---
 
@@ -288,19 +288,19 @@ All diagrams are created using **Mermaid** syntax and can be viewed in:
 
 ### Q: Can I start with Option 2 (combined core)?
 
-**A**: Yes, for rapid prototyping. But plan to refactor to Option 1 before production. The migration path is documented in `DIRECTORY_STRUCTURE_COMPARISON.md`.
+**A**: Yes, for rapid prototyping. But plan to refactor to Option 1 before production. The migration path is documented in `Directory-Structure-Comparison.md`.
 
 ### Q: Is Firebase required?
 
-**A**: No, but recommended for MVP. The architecture can work with other backends (PostgreSQL + EventStoreDB, AWS DynamoDB + Lambda, etc.). See `ng-events_Architecture.md` → "Technology Stack" → "Alternatives Considered".
+**A**: No, but recommended for MVP. The architecture can work with other backends (PostgreSQL + EventStoreDB, AWS DynamoDB + Lambda, etc.). See `Ng-Events-Architecture.md` → "Technology Stack" → "Alternatives Considered".
 
 ### Q: What if I need to support millions of events?
 
-**A**: Use aggregate snapshots (Phase 2 feature) to avoid replaying all events. See `ng-events_Architecture.md` → "Scalability" section.
+**A**: Use aggregate snapshots (Phase 2 feature) to avoid replaying all events. See `Ng-Events-Architecture.md` → "Scalability" section.
 
 ### Q: How do I handle schema evolution?
 
-**A**: Version all event schemas from day one. See `ng-events_Architecture.md` → "Risks" → "Event Schema Evolution".
+**A**: Version all event schemas from day one. See `Ng-Events-Architecture.md` → "Risks" → "Event Schema Evolution".
 
 ---
 
@@ -312,12 +312,12 @@ All diagrams are created using **Mermaid** syntax and can be viewed in:
 - Review existing issue tickets (123.md, 456.md)
 
 ### Implementation Questions
-1. Start with `ARCHITECTURE_SUMMARY.md` (quick reference)
-2. Deep dive in `ng-events_Architecture.md` (comprehensive)
-3. Check structure details in `DIRECTORY_STRUCTURE_COMPARISON.md`
+1. Start with `Architecture-Summary.md` (quick reference)
+2. Deep dive in `Ng-Events-Architecture.md` (comprehensive)
+3. Check structure details in `Directory-Structure-Comparison.md`
 
 ### Architecture Decisions
-- All major decisions documented in `ng-events_Architecture.md`
+- All major decisions documented in `Ng-Events-Architecture.md`
 - Design rationale explained with trade-offs
 - Alternative approaches considered and compared
 
@@ -327,10 +327,10 @@ All diagrams are created using **Mermaid** syntax and can be viewed in:
 
 | Document | Status | Last Updated |
 |----------|--------|--------------|
-| ng-events_Architecture.md | ✅ Complete | 2026-01-01 |
-| ARCHITECTURE_SUMMARY.md | ✅ Complete | 2026-01-01 |
-| DIRECTORY_STRUCTURE_COMPARISON.md | ✅ Complete | 2026-01-01 |
-| README_ARCHITECTURE.md | ✅ Complete | 2026-01-01 |
+| Ng-Events-Architecture.md | ✅ Complete | 2026-01-01 |
+| Architecture-Summary.md | ✅ Complete | 2026-01-01 |
+| Directory-Structure-Comparison.md | ✅ Complete | 2026-01-01 |
+| Readme-Architecture.md | ✅ Complete | 2026-01-01 |
 
 **Review Status**: ✅ Ready for Team Review and Implementation
 
@@ -339,9 +339,9 @@ All diagrams are created using **Mermaid** syntax and can be viewed in:
 ## 🎯 Next Steps
 
 1. **Review Documentation** (1-2 hours)
-   - Read ARCHITECTURE_SUMMARY.md first
-   - Then dive into ng-events_Architecture.md
-   - Reference DIRECTORY_STRUCTURE_COMPARISON.md as needed
+   - Read Architecture-Summary.md first
+   - Then dive into Ng-Events-Architecture.md
+   - Reference Directory-Structure-Comparison.md as needed
 
 2. **Team Discussion** (1 hour)
    - Review recommended structure

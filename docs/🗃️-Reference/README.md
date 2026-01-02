@@ -133,11 +133,11 @@ See [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).m
 ## 📊 Documentation Quality Standards (文件品質標準)
 
 ### Naming Convention (命名規範)
-所有文件遵循 `English(中文).md` 雙語命名格式：
+所有文件遵循 `English(中文).md` 雙語命名格式或英文 Title-Case-hyphen 版本：
 - ✅ `Architecture-Guide(架構指南).md`
 - ✅ `Constraints-Task-Domain(任務領域).md`
-- ❌ `README_ARCHITECTURE.md` (舊格式)
-- ❌ `ng-events_Architecture.md` (舊格式)
+- ✅ `Ng-Events-Architecture.md`
+- ✅ `Readme-Architecture.md`
 
 ### Organization Principles (組織原則)
 1. **清晰分類**: 架構文件、約束文件、分析文件分別放置
@@ -162,10 +162,10 @@ See [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).m
 
 ### Deprecated Files (已廢棄檔案)
 以下檔案已整合或重命名，不再維護：
-- ❌ `README_ARCHITECTURE.md` → `Architecture-Guide(架構指南).md`
-- ❌ `ng-events_Architecture.md` → `Architecture-Specification(架構規範).md`
-- ❌ `ARCHITECTURE_SUMMARY.md` → `Architecture-Summary(架構摘要).md`
-- ❌ `DIRECTORY_STRUCTURE_COMPARISON.md` → `Directory-Structure-Comparison(目錄結構比較).md`
+- ❌ `README_ARCHITECTURE.md` → `Readme-Architecture.md`
+- ❌ `ng-events_Architecture.md` → `Ng-Events-Architecture.md`
+- ❌ `ARCHITECTURE_SUMMARY.md` → `Architecture-Summary.md`
+- ❌ `DIRECTORY_STRUCTURE_COMPARISON.md` → `Directory-Structure-Comparison.md`
 
 ---
 
