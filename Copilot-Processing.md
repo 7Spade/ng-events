@@ -1,4 +1,1 @@
-User request: Fix invalid path errors by renaming files with special characters in docs directory causing Git path issues.
-Repository: 7Spade/ng-events at /home/runner/work/ng-events/ng-events.
-Date: 2026-01-02T08:57:29.188Z
-Goal: Adjust filenames to resolve invalid path errors listed in problem statement.
+User request: 根據docs\new\✨0 2.md 把結構做出來,空資料夾內放.gitkeep 並根據 docs\new\✨0 0.md docs\new\✨0 1.md docs\new\✨0 2.md docs\new\✨0 3.md docs\new\✨0 4.md docs\new\✨0 5.md docs\new\✨0 6.md 撰寫 packages\account-domain\AGENTS.md packages\account-domain\index.ts packages\account-domain\package.json packages\account-domain\README.md packages\account-domain\tsconfig.json packages\account-domain\.gitignore
