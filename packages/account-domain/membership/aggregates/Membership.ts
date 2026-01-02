@@ -21,7 +21,7 @@ export type MembershipEvent<TPayload = MembershipState> = DomainEvent<TPayload, 
 export type MembershipAggregate<
   TEvent extends DomainEvent<unknown, MemberId> = MembershipEvent,
   SState extends MembershipState = MembershipState
-> = AggregateRoot<MemberId, TEvent, SState>;
+> = AggregateRoot<TEvent, MemberId, SState>;
 
 // Backward compatibility alias
 export type Membership = MembershipState;

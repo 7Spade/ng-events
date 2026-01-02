@@ -26,7 +26,7 @@ export type WorkspaceEvent<TPayload = WorkspaceState> = DomainEvent<TPayload, Wo
 export type WorkspaceAggregate<
   TEvent extends DomainEvent<unknown, WorkspaceId> = WorkspaceEvent,
   SState extends WorkspaceState = WorkspaceState
-> = AggregateRoot<WorkspaceId, TEvent, SState>;
+> = AggregateRoot<TEvent, WorkspaceId, SState>;
 
 // Backward compatibility alias
 export type Workspace = WorkspaceState;

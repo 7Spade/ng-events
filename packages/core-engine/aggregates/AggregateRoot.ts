@@ -3,6 +3,11 @@
  *
  * Base class for all domain aggregates.
  * Aggregates are consistency boundaries in DDD.
+ *
+ * Generics follow the T / I / S pattern from docs/泛型縮寫清單.md:
+ * - TEvent: Event type for this aggregate
+ * - TId: Aggregate identifier type
+ * - SState: Internal state snapshot type
  */
 
 import { DomainEvent } from '../event-store';
@@ -13,8 +18,8 @@ import { DomainEvent } from '../event-store';
  * Aggregates maintain internal state through event replay.
  */
 export abstract class AggregateRoot<
-  TId = string,
-  TEvent extends DomainEvent<unknown, TId> = DomainEvent<unknown, TId>,
+  TEvent extends DomainEvent = DomainEvent,
+  TId = TEvent extends DomainEvent<unknown, infer A, any> ? A : string,
   SState = unknown
 > {
   protected uncommittedEvents: TEvent[] = [];

@@ -25,7 +25,7 @@ export type ModuleRegistryEvent<TPayload = ModuleRegistryState> = DomainEvent<
 export type ModuleRegistryAggregate<
   TEvent extends DomainEvent<unknown, WorkspaceId> = ModuleRegistryEvent,
   SState extends ModuleRegistryState = ModuleRegistryState
-> = AggregateRoot<WorkspaceId, TEvent, SState>;
+> = AggregateRoot<TEvent, WorkspaceId, SState>;
 
 // Backward compatibility alias
 export type ModuleRegistry = ModuleRegistryState;

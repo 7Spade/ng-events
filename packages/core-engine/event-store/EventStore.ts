@@ -14,7 +14,11 @@ import { CausalityMetadata } from '../causality';
  *
  * Every event MUST include causality metadata for audit and replay.
  */
-export interface DomainEvent<TData = unknown, TId = string> {
+export interface DomainEvent<
+  TData = unknown,
+  TId = string,
+  TMetadata extends CausalityMetadata = CausalityMetadata
+> {
   /**
    * Unique event identifier
    */
@@ -43,7 +47,7 @@ export interface DomainEvent<TData = unknown, TId = string> {
   /**
    * Causality metadata for tracking event chains
    */
-  metadata: CausalityMetadata;
+  metadata: TMetadata;
 }
 
 /**
@@ -53,10 +57,13 @@ export interface DomainEvent<TData = unknown, TId = string> {
  *
  * ⚠️ Core-engine only defines the interface.
  * ✅ Platform-adapters provide the implementation.
+ *
+ * Generics align to TEvent (event shape) and TId (aggregate identifier)
+ * per docs/泛型縮寫清單.md.
  */
 export interface EventStore<
-  TId = string,
-  TEvent extends DomainEvent<unknown, TId> = DomainEvent<unknown, TId>
+  TEvent extends DomainEvent = DomainEvent,
+  TId = TEvent extends DomainEvent<unknown, infer A, any> ? A : string
 > {
   /**
    * Append a new event to the event stream

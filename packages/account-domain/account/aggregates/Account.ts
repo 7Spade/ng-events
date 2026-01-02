@@ -20,7 +20,7 @@ export type AccountEvent<TPayload = AccountState> = DomainEvent<TPayload, Accoun
 export type AccountAggregate<
   TEvent extends DomainEvent<unknown, AccountId> = AccountEvent,
   SState extends AccountState = AccountState
-> = AggregateRoot<AccountId, TEvent, SState>;
+> = AggregateRoot<TEvent, AccountId, SState>;
 
 // Backward compatibility alias
 export type Account = AccountState;
