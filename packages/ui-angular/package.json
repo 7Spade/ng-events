@@ -1,0 +1,21 @@
+{
+  "name": "@ng-events/ui-angular",
+  "version": "1.0.0",
+  "description": "Angular UI layer - Uses platform-adapters for backend integration",
+  "private": true,
+  "scripts": {
+    "lint": "eslint src/app --ext .ts"
+  },
+  "keywords": [
+    "angular",
+    "ui",
+    "frontend"
+  ],
+  "author": "ng-events team",
+  "license": "MIT",
+  "peerDependencies": {
+    "@ng-events/platform-adapters": "^1.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/fire": "^20.0.0"
+  }
+}

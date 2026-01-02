@@ -5,8 +5,8 @@
   "projects": {
     "ng-alain": {
       "projectType": "application",
-      "root": "",
-      "sourceRoot": "src",
+      "root": "packages/ui-angular",
+      "sourceRoot": "packages/ui-angular/src",
       "prefix": "app",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "src/main.ts",
+            "browser": "packages/ui-angular/src/main.ts",
             "polyfills": [
               "zone.js"
             ],
@@ -30,11 +30,11 @@
                 "glob": "**/*",
                 "input": "public"
               },
-              "src/assets",
-              "src/favicon.ico"
+              "packages/ui-angular/src/assets",
+              "packages/ui-angular/src/favicon.ico"
             ],
             "styles": [
-              "src/styles.less"
+              "packages/ui-angular/src/styles.less"
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [

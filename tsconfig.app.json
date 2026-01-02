@@ -7,9 +7,9 @@
     "types": []
   },
   "files": [
-    "src/main.ts"
+    "packages/ui-angular/src/main.ts"
   ],
   "include": [
-    "src/**/*.d.ts"
+    "packages/ui-angular/src/**/*.d.ts"
   ]
 }

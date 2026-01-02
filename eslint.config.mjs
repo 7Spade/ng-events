@@ -17,9 +17,9 @@ export default tseslint.config(
       'junit/',
       'ng-alain/',
       'schematics/**/files/**/*',
-      'src/dist/**/*',
-      'src/templates/**/*',
-      'src/app/routes/gen/**/*',
+      'packages/ui-angular/src/dist/**/*',
+      'packages/ui-angular/src/templates/**/*',
+      'packages/ui-angular/src/app/routes/gen/**/*',
       'packages/**/node_modules/'
     ]
   },
@@ -210,7 +210,7 @@ export default tseslint.config(
     }
   },
   {
-    files: ['src/app/**/*.ts'],
+    files: ['packages/ui-angular/src/app/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
