@@ -76,58 +76,28 @@ export interface EventStore {
 
 ---
 
-## 三、你現在這個結構「是對的」，只是要註解清楚 👀
-
-我幫你改成**未來三年都不會混淆**的版本👇
+## 三、標準目錄結構
 
 ```txt
 packages/
-├── core-engine/                     # 💎 純核心（零框架、零 Firebase）
-│   ├── causality/                   # 因果鏈、Correlation / Causation
-│   ├── event-store/                 # Event Store 抽象（interface only）
-│   ├── aggregates/                  # Aggregate Root（業務規則）
-│   ├── projection/                  # Read Model 定義（不是實作）
-│   └── index.ts
+├── core-engine/           # 💎 純核心（零框架、零 Firebase）
+│   ├── causality/
+│   ├── event-store/       # Event Store 抽象（interface only）
+│   └── aggregates/
 │
-├── saas-domain/                     # 🏢 SaaS 業務模型（純 TS）
+├── saas-domain/           # 🏢 SaaS 業務模型（純 TS）
 │   ├── task/
-│   ├── payment/
-│   └── issue/
+│   └── payment/
 │
-├── platform-adapters/               # 🔧 技術實作（唯一能碰 SDK 的地方）
+├── platform-adapters/     # 🔧 技術實作（唯一能碰 SDK）
 │   ├── firebase/
-│   │   ├── admin/                   # 🛠️【後端】firebase-admin
-│   │   │   ├── event-store.adapter.ts   # 實作 EventStore（admin SDK）
-│   │   │   ├── projection.adapter.ts    # Projection Builder
-│   │   │   └── index.ts
-│   │   │
-│   │   └── angular-fire/             # 🌐【前端】@angular/fire
-│   │       ├── task.query.adapter.ts # Read Model 查詢
-│   │       ├── auth.adapter.ts       # 使用者登入狀態
-│   │       └── index.ts
-│   │
+│   │   ├── admin/         # 🛠️ firebase-admin（後端）
+│   │   └── angular-fire/  # 🌐 @angular/fire（前端）
 │   ├── auth/
-│   │   ├── firebase-admin.adapter.ts # SaaS 權限 / Role / Claim
-│   │   └── angular-fire.adapter.ts   # Client-side auth state
-│   │
-│   ├── notification/
-│   │   ├── fcm.adapter.ts
-│   │   └── email.adapter.ts
-│   │
-│   ├── analytics/
-│   │   └── ga.adapter.ts
-│   │
-│   └── ai/
-│       ├── genai.adapter.ts
-│       └── vertex.adapter.ts
+│   └── notification/
 │
-└── ui-angular/                      # 💅 Angular UI（只能碰 angular-fire）
-    └── src/app/
-        ├── features/
-        │   ├── task/
-        │   └── payment/
-        └── adapters/
-            └── core-engine.facade.ts # 用「Facade」呼叫核心
+└── ui-angular/            # 💅 Angular UI（只能碰 angular-fire）
+    └── src/app/features/
 ```
 
 ---
