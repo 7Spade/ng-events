@@ -165,7 +165,7 @@ memory-create_relations({
 
 ## 📖 完整文檔
 
-詳細使用說明請參閱：**[docs/COPILOT_MEMORY_GUIDE.md](../docs/COPILOT_MEMORY_GUIDE.md)**
+詳細使用說明請參閱：**[Copilot-Memory-Guide.md](./Copilot-Memory-Guide.md)**
 
 ## 📞 需要幫助？
 

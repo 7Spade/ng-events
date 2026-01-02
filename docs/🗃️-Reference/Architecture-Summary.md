@@ -126,7 +126,7 @@ src/app/
 
 ## 📚 Full Documentation
 
-詳細的架構文檔請參閱：`ng-events_Architecture.md`
+詳細的架構文檔請參閱：`Ng-Events-Architecture.md`
 
 包含：
 - ✅ 系統上下文圖
@@ -151,7 +151,7 @@ mkdir -p core/{causality,event-store,aggregate,projection}
 firebase projects:create ng-events-dev
 
 # 3. 定義事件模式
-# 參見 ng-events_Architecture.md 中的事件架構
+# 參見 Ng-Events-Architecture.md 中的事件架構
 
 # 4. 配置 Firestore 安全規則
 # 參見架構文檔中的安全部分

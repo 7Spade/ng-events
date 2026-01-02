@@ -1,7 +1,7 @@
 00-知識提取索引.md
 Deployment(部署指南).md
 Documentation-Policy(文檔政策).md
-ng-events_Architecture.md
+Ng-Events-Architecture.md
 Readme(讀我).md
 
 00-index
@@ -119,7 +119,7 @@ README.md
 03-Policy-Enforcement-策略执行(政策強制執行).md
 04-Security-Tamper-Evidence-安全防篡改(安全性與防篡改).md
 05-Decision-Records-决策记录(決策記錄).md
-copilot_processing.md
+Copilot-Processing.md
 README.md
 
 01-decision-records
@@ -261,7 +261,7 @@ README.md
 Architecture-Guide(架構指南).md
 Architecture-Specification(架構規範).md
 Architecture-Summary(架構摘要).md
-ARCHITECTURE_SUMMARY.md
+Architecture-Summary.md
 CONFLICT-RESOLUTION(衝突解決).md
 Constraints-Architecture-Layers(架構分層).md
 Constraints-Causality-System(因果驅動系統).md
@@ -272,19 +272,19 @@ Constraints-SaaS-Platform(多租戶平台).md
 Constraints-Task-Domain(任務領域).md
 Directory-Structure-Comparison(目錄結構比較).md
 Directory-Tree-Structure(目錄樹結構).md
-DIRECTORY_STRUCTURE_COMPARISON.md
+Directory-Structure-Comparison.md
 FINAL-VERIFICATION(最終驗證).md
 Implementation-Directory-Tree(實作目錄樹).md
-ng-events_Architecture.md
+Ng-Events-Architecture.md
 README.md
-README_ARCHITECTURE.md
+Readme-Architecture.md
 STANDARDIZATION-REPORT.md
 Task-Hierarchy-Guide(任務階層指南).md
 
 🤖-copilot
-COPILOT_MEMORY_GUIDE.md
-COPILOT_MEMORY_QUICK_REFERENCE.md
-COPILOT_MEMORY_STORAGE_LOG.md
+Copilot-Memory-Guide.md
+Copilot-Memory-Quick-Reference.md
+Copilot-Memory-Storage-Log.md
 
 🧠-Event-Flows
 ✨0 0.md

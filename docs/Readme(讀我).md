@@ -8,7 +8,7 @@
 
 **NEW!** 學習如何使用 GitHub Copilot 的記憶功能來儲存和查詢專案重要資訊：
 
-📖 **[Copilot Memory 使用指南](./COPILOT_MEMORY_GUIDE.md)** - 完整的 `store_memory` 和相關指令教學
+📖 **[Copilot Memory 使用指南](./🤖-copilot/Copilot-Memory-Guide.md)** - 完整的 `store_memory` 和相關指令教學
 
 已儲存的專案核心資訊包括：
 - ✅ 專案定義與核心目標

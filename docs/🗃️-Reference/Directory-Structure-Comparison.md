@@ -294,8 +294,8 @@ touch src/app/saas/task/components/task-list/task-list.component.ts
 
 ## 📚 Related Documentation
 
-- **Complete Architecture**: See `ng-events_Architecture.md`
-- **Quick Start**: See `ARCHITECTURE_SUMMARY.md`
+- **Complete Architecture**: See `Ng-Events-Architecture.md`
+- **Quick Start**: See `Architecture-Summary.md`
 - **Event Design**: See `123.md` and `456.md`
 
 ---

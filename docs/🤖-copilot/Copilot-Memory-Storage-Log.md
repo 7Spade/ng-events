@@ -79,8 +79,8 @@ memory-read_graph()
 
 ## 📚 相關文件
 
-- [完整使用指南](./COPILOT_MEMORY_GUIDE.md)
-- [快速參考卡](./COPILOT_MEMORY_QUICK_REFERENCE.md)
+- [完整使用指南](./Copilot-Memory-Guide.md)
+- [快速參考卡](./Copilot-Memory-Quick-Reference.md)
 - [範例腳本](../scripts/store-project-memories.js)
 
 ## 💡 使用建議
