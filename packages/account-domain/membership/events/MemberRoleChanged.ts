@@ -10,5 +10,9 @@ export interface MemberRoleChanged {
   workspaceId: WorkspaceId;
   previousRole: Role;
   newRole: Role;
-  changedAt: string;
+  occurredAt: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

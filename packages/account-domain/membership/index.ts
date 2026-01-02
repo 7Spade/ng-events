@@ -10,3 +10,5 @@ export * from './value-objects/MemberId';
 export * from './value-objects/Role';
 export * from './events/MemberJoinedWorkspace';
 export * from './events/MemberRoleChanged';
+
+// END OF FILE

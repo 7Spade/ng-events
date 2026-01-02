@@ -9,4 +9,8 @@ export interface AccountCreated {
   ownerId: string;
   status: AccountStatus;
   occurredAt: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

@@ -5,3 +5,5 @@
  * This mirrors membership roles but scoped to workspace operations.
  */
 export type WorkspaceRole = 'Owner' | 'Admin' | 'Member' | 'Viewer';
+
+// END OF FILE

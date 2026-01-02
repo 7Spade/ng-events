@@ -9,5 +9,9 @@ export interface MemberJoinedWorkspace {
   memberId: MemberId;
   workspaceId: WorkspaceId;
   role: Role;
-  joinedAt: string;
+  occurredAt: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

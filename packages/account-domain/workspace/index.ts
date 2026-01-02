@@ -12,3 +12,5 @@ export * from './value-objects/WorkspaceId';
 export * from './value-objects/WorkspaceRole';
 export * from './events/WorkspaceCreated';
 export * from './events/WorkspaceArchived';
+
+// END OF FILE

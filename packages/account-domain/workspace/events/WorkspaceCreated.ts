@@ -10,4 +10,8 @@ export interface WorkspaceCreated {
   accountId: AccountId;
   status: WorkspaceStatus;
   occurredAt: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

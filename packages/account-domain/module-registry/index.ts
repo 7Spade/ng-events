@@ -11,3 +11,5 @@ export * from './value-objects/ModuleStatus';
 export * from './value-objects/Capability';
 export * from './events/ModuleEnabled';
 export * from './events/ModuleDisabled';
+
+// END OF FILE

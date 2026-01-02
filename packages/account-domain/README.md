@@ -22,6 +22,11 @@ Each domain module contains `aggregates/`, `value-objects/`, `events/`, and `__t
 - **Membership**: Binds a user to a workspace with a role (`Owner | Admin | Member | Viewer`).
 - **Module Registry**: Lists capabilities (task/issue/payment, etc.) enabled per workspace.
 
+## Event & Time Conventions
+
+- Aggregates record `createdAt` (string) as their creation time.
+- Events use `occurredAt` (string) and may carry `causationId` / `correlationId` for causality tracking.
+
 ## Event Flow Alignment
 
 The onboarding flow follows the saga described in `docs/new/✨0 3.md`:

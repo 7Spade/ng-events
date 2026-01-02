@@ -7,5 +7,9 @@ import { WorkspaceStatus } from '../aggregates/Workspace';
 export interface WorkspaceArchived {
   workspaceId: WorkspaceId;
   previousStatus: WorkspaceStatus;
-  archivedAt: string;
+  occurredAt: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

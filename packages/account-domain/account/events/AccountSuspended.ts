@@ -9,4 +9,8 @@ export interface AccountSuspended {
   previousStatus: AccountStatus;
   reason?: string;
   occurredAt: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

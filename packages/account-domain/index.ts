@@ -19,3 +19,5 @@ export * from './account';
 export * from './workspace';
 export * from './membership';
 export * from './module-registry';
+
+// END OF FILE

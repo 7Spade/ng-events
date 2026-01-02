@@ -12,4 +12,7 @@ export interface ModuleRegistry {
   workspaceId: WorkspaceId;
   modules: Record<ModuleId, ModuleStatus>;
   capabilities?: Record<ModuleId, Capability[]>;
+  createdAt: string;
 }
+
+// END OF FILE

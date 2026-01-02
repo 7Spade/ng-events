@@ -8,6 +8,10 @@ import { Capability } from '../value-objects/Capability';
 export interface ModuleEnabled {
   workspaceId: WorkspaceId;
   moduleId: ModuleId;
-  enabledAt: string;
+  occurredAt: string;
   capabilities?: Capability[];
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

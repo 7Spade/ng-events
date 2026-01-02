@@ -16,5 +16,7 @@ export interface Workspace {
   workspaceId: WorkspaceId;
   accountId: AccountId;
   status: WorkspaceStatus;
-  createdAt?: string;
+  createdAt: string;
 }
+
+// END OF FILE

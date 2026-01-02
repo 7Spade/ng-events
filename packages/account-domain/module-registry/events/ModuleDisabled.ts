@@ -7,6 +7,10 @@ import { ModuleId } from '../value-objects/ModuleId';
 export interface ModuleDisabled {
   workspaceId: WorkspaceId;
   moduleId: ModuleId;
-  disabledAt: string;
+  occurredAt: string;
   reason?: string;
+  causationId?: string;
+  correlationId?: string;
 }
+
+// END OF FILE

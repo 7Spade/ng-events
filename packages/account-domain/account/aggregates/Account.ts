@@ -4,11 +4,13 @@ import { AccountStatus } from '../value-objects/AccountStatus';
 /**
  * Account Aggregate
  *
-+ Represents a SaaS account that owns workspaces and module capabilities.
+ * Represents a SaaS account that owns workspaces and module capabilities.
  */
 export interface Account {
   accountId: AccountId;
   ownerId: string;
   status: AccountStatus;
-  createdAt?: string;
+  createdAt: string;
 }
+
+// END OF FILE

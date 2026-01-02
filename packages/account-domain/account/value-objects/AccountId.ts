@@ -4,3 +4,5 @@
  * Unique identifier for an Account aggregate.
  */
 export type AccountId = string;
+
+// END OF FILE

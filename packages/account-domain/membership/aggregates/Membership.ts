@@ -11,5 +11,7 @@ export interface Membership {
   memberId: MemberId;
   workspaceId: WorkspaceId;
   role: Role;
-  joinedAt?: string;
+  createdAt: string;
 }
+
+// END OF FILE
