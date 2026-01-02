@@ -37,6 +37,24 @@
       ],
       "@_mock": [
         "_mock/index"
+      ],
+      "@core-engine": [
+        "packages/core-engine/index"
+      ],
+      "@core-engine/*": [
+        "packages/core-engine/*"
+      ],
+      "@saas-domain": [
+        "packages/saas-domain/index"
+      ],
+      "@saas-domain/*": [
+        "packages/saas-domain/*"
+      ],
+      "@platform-adapters": [
+        "packages/platform-adapters/index"
+      ],
+      "@platform-adapters/*": [
+        "packages/platform-adapters/*"
       ]
     }
   },

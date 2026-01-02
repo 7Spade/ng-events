@@ -19,7 +19,8 @@ export default tseslint.config(
       'schematics/**/files/**/*',
       'src/dist/**/*',
       'src/templates/**/*',
-      'src/app/routes/gen/**/*'
+      'src/app/routes/gen/**/*',
+      'packages/**/node_modules/'
     ]
   },
   {
@@ -141,6 +142,87 @@ export default tseslint.config(
       "no-empty-function": "off",
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-explicit-any': 'warn'
+    }
+  },
+  // DDD Architecture: Prevent SDK mixing in packages
+  {
+    files: ['packages/core-engine/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['*firebase*', '@angular/*'],
+              message: '❌ Core-engine must be framework-agnostic! No Firebase or Angular imports allowed.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ['packages/saas-domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['*firebase*', '@angular/*'],
+              message: '❌ SaaS-domain must be framework-agnostic! No Firebase or Angular imports allowed.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ['packages/platform-adapters/firebase/admin/**/*.ts', 'packages/platform-adapters/auth/firebase-admin*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@angular/fire*'],
+              message: '❌ Backend adapters cannot use @angular/fire! Use firebase-admin only.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ['packages/platform-adapters/firebase/angular-fire/**/*.ts', 'packages/platform-adapters/auth/angular-fire*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['firebase-admin'],
+              message: '❌ Frontend adapters cannot use firebase-admin! Use @angular/fire only.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ['src/app/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['firebase-admin'],
+              message: '❌ Angular app cannot use firebase-admin! Use @angular/fire or platform-adapters only.'
+            }
+          ]
+        }
+      ]
     }
   },
   {
