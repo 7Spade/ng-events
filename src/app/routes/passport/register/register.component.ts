@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
-import { AbstractControl, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
 import { Auth, createUserWithEmailAndPassword, updateProfile } from '@angular/fire/auth';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { AbstractControl, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { I18nPipe } from '@delon/theme';
 import { MatchControl } from '@delon/util/form';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -95,7 +95,7 @@ export class UserRegisterComponent {
     const formValue = this.form.value;
     const mail = (formValue.mail as unknown as string) || '';
     const password = (formValue.password as unknown as string) || '';
-    
+
     if (!mail || !password) {
       this.error = '請填寫所有必填欄位';
       return;
@@ -106,7 +106,7 @@ export class UserRegisterComponent {
 
     // 使用 Firebase Auth 建立帳號
     createUserWithEmailAndPassword(this.auth, mail, password)
-      .then(async (credential) => {
+      .then(async credential => {
         // 更新用戶 profile
         await updateProfile(credential.user, {
           displayName: mail.split('@')[0] // 使用 email 前綴作為顯示名稱
@@ -122,7 +122,7 @@ export class UserRegisterComponent {
         // 跳轉到註冊成功頁面
         this.router.navigate(['passport', 'register-result'], { queryParams: { email: mail } });
       })
-      .catch((error) => {
+      .catch(error => {
         this.loading = false;
         this.error = this.getFirebaseErrorMessage(error.code);
         this.cdr.detectChanges();
@@ -138,12 +138,11 @@ export class UserRegisterComponent {
       'auth/invalid-email': '無效的電子郵件地址',
       'auth/operation-not-allowed': '註冊功能未啟用',
       'auth/weak-password': '密碼強度不足（至少 6 個字元）',
-      'auth/network-request-failed': '網路連線失敗',
+      'auth/network-request-failed': '網路連線失敗'
     };
-    
+
     return errorMessages[errorCode] || '註冊失敗，請稍後再試';
   }
 }
 
 // END OF FILE
-

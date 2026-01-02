@@ -1,11 +1,11 @@
 /**
  * Firebase Admin Auth Adapter
- * 
+ *
  * 🛠️ Backend SaaS permissions and role management
- * 
+ *
  * ⚠️ IMPORTANT: This file should ONLY run in Node.js (Cloud Run / Functions)
  * ⚠️ NEVER import this in Angular/browser code
- * 
+ *
  * Handles SaaS-level auth operations:
  * - User role management
  * - Custom claims (permissions)
@@ -17,18 +17,18 @@
 
 /**
  * Firebase Admin Auth Adapter
- * 
+ *
  * Manages user permissions and roles using admin SDK.
  * Has full control over user accounts.
  */
 export class FirebaseAdminAuthAdapter {
   // private auth: admin.auth.Auth;
-  
+
   constructor() {
     // TODO: Initialize firebase-admin
     // this.auth = admin.auth();
   }
-  
+
   /**
    * Set custom claims for SaaS permissions
    * e.g., blueprintId, role, tier
@@ -38,7 +38,7 @@ export class FirebaseAdminAuthAdapter {
     // await this.auth.setCustomUserClaims(uid, claims);
     console.log('FirebaseAdminAuthAdapter.setCustomClaims:', uid, claims);
   }
-  
+
   /**
    * Get user by UID (admin access)
    */
@@ -49,7 +49,7 @@ export class FirebaseAdminAuthAdapter {
     console.log('FirebaseAdminAuthAdapter.getUserByUid:', uid);
     return null;
   }
-  
+
   /**
    * Create user (admin operation)
    */
@@ -60,7 +60,7 @@ export class FirebaseAdminAuthAdapter {
     console.log('FirebaseAdminAuthAdapter.createUser:', email);
     return 'mock-uid';
   }
-  
+
   /**
    * Delete user (admin operation)
    */

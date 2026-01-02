@@ -1,8 +1,8 @@
 /**
  * Firebase Admin Adapters
- * 
+ *
  * 🛠️ Backend / Server-side adapters using firebase-admin
- * 
+ *
  * ⚠️ CRITICAL RULES:
  * - ONLY runs in Node.js (Cloud Run / Functions / Server)
  * - Uses firebase-admin SDK (NOT @angular/fire)

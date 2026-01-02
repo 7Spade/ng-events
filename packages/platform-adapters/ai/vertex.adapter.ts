@@ -1,6 +1,6 @@
 /**
  * Google Vertex AI Adapter
- * 
+ *
  * 🛠️ Backend AI service (enterprise)
  */
 

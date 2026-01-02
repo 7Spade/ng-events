@@ -7,9 +7,6 @@ export type UUIDString = string;
 export type Int64String = string;
 export type DateString = string;
 
-
-
-
 export interface AddReviewData {
   review_upsert: Review_Key;
 }
@@ -49,15 +46,15 @@ export interface GetMovieByIdData {
       releaseYear?: number | null;
       description?: string | null;
     };
-      reviews: ({
-        reviewText?: string | null;
-        reviewDate: DateString;
-        rating?: number | null;
-        user: {
-          id: string;
-          username: string;
-        } & User_Key;
-      })[];
+    reviews: Array<{
+      reviewText?: string | null;
+      reviewDate: DateString;
+      rating?: number | null;
+      user: {
+        id: string;
+        username: string;
+      } & User_Key;
+    }>;
   } & Movie_Key;
 }
 
@@ -66,19 +63,21 @@ export interface GetMovieByIdVariables {
 }
 
 export interface ListMoviesData {
-  movies: ({
-    id: UUIDString;
-    title: string;
-    imageUrl: string;
-    genre?: string | null;
-  } & Movie_Key)[];
+  movies: Array<
+    {
+      id: UUIDString;
+      title: string;
+      imageUrl: string;
+      genre?: string | null;
+    } & Movie_Key
+  >;
 }
 
 export interface ListUserReviewsData {
   user?: {
     id: string;
     username: string;
-    reviews: ({
+    reviews: Array<{
       rating?: number | null;
       reviewDate: DateString;
       reviewText?: string | null;
@@ -86,15 +85,17 @@ export interface ListUserReviewsData {
         id: UUIDString;
         title: string;
       } & Movie_Key;
-    })[];
+    }>;
   } & User_Key;
 }
 
 export interface ListUsersData {
-  users: ({
-    id: string;
-    username: string;
-  } & User_Key)[];
+  users: Array<
+    {
+      id: string;
+      username: string;
+    } & User_Key
+  >;
 }
 
 export interface MovieMetadata_Key {
@@ -114,12 +115,14 @@ export interface Review_Key {
 }
 
 export interface SearchMovieData {
-  movies: ({
-    id: UUIDString;
-    title: string;
-    genre?: string | null;
-    imageUrl: string;
-  } & Movie_Key)[];
+  movies: Array<
+    {
+      id: UUIDString;
+      title: string;
+      genre?: string | null;
+      imageUrl: string;
+    } & Movie_Key
+  >;
 }
 
 export interface SearchMovieVariables {
@@ -247,4 +250,3 @@ export const searchMovieRef: SearchMovieRef;
 
 export function searchMovie(vars?: SearchMovieVariables): QueryPromise<SearchMovieData, SearchMovieVariables>;
 export function searchMovie(dc: DataConnect, vars?: SearchMovieVariables): QueryPromise<SearchMovieData, SearchMovieVariables>;
-

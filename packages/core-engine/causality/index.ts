@@ -1,6 +1,6 @@
 /**
  * Causality Module
- * 
+ *
  * Exports causality tracking types for event-sourcing.
  */
 

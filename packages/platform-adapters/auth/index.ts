@@ -1,6 +1,6 @@
 /**
  * Auth Adapters
- * 
+ *
  * Separate adapters for admin vs client auth operations
  */
 

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth, onAuthStateChanged, User } from '@angular/fire/auth';
-import { DA_SERVICE_TOKEN, ITokenService } from '@delon/auth';
 import { Router } from '@angular/router';
+import { DA_SERVICE_TOKEN, ITokenService } from '@delon/auth';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseAuthBridgeService {
@@ -19,7 +19,7 @@ export class FirebaseAuthBridgeService {
         // 用戶已登入
         const token = await user.getIdToken();
         const tokenExpiration = await this.getTokenExpiration(user);
-        
+
         this.tokenService.set({
           token,
           uid: user.uid,

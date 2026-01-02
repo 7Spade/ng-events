@@ -1,8 +1,8 @@
 /**
  * Task Domain Module
- * 
+ *
  * SaaS business logic for task management.
- * 
+ *
  * This module contains:
  * - Task aggregate
  * - Task domain events

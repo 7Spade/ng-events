@@ -1,6 +1,6 @@
 /**
  * Causality Tracking Types
- * 
+ *
  * Provides correlation and causation tracking for event chains.
  * Ensures complete audit trail and enables event replay.
  */
@@ -29,28 +29,28 @@ export interface CausalityMetadata {
    * ID of the parent event that caused this event
    */
   causedBy: CausationId;
-  
+
   /**
    * User who triggered the action
    */
   causedByUser: string;
-  
+
   /**
    * Action/command that caused this event
    */
   causedByAction: string;
-  
+
   /**
    * When this event occurred
    */
   timestamp: Timestamp;
-  
+
   /**
    * Multi-tenant boundary identifier
    * In SaaS context, typically the organization/workspace ID
    */
   blueprintId: string;
-  
+
   /**
    * Correlation ID for tracking related events
    */
@@ -70,7 +70,7 @@ export class CausalityMetadataFactory {
   }): CausalityMetadata {
     return {
       ...params,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
   }
 }

@@ -1,8 +1,8 @@
 /**
  * Payment Domain Module
- * 
+ *
  * SaaS business logic for payment processing.
- * 
+ *
  * This module contains:
  * - Payment aggregate
  * - Payment domain events

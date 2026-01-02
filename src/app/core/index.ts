@@ -7,4 +7,3 @@ export * from './start-page.guard';
 // Original: './auth/firebase-auth-bridge.service'
 // New location: '@platform-adapters/firebase/angular-fire'
 export { FirebaseAuthAdapter as FirebaseAuthBridgeService } from '@platform-adapters/firebase/angular-fire';
-

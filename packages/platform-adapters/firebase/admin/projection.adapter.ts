@@ -1,11 +1,11 @@
 /**
  * Firebase Admin Projection Adapter
- * 
+ *
  * 🛠️ Backend implementation for building read models
- * 
+ *
  * ⚠️ IMPORTANT: This file should ONLY run in Node.js (Cloud Run / Functions)
  * ⚠️ NEVER import this in Angular/browser code
- * 
+ *
  * Builds projection (read models) from domain events.
  */
 
@@ -16,13 +16,13 @@ import { DomainEvent } from '@core-engine/event-store';
 
 /**
  * Firebase Admin Projection Builder
- * 
+ *
  * Subscribes to domain events and builds read models.
  * Uses firebase-admin for unrestricted access.
  */
 export class FirebaseAdminProjectionBuilder<T> {
   // private firestore: admin.firestore.Firestore;
-  
+
   constructor(
     private collectionName: string,
     private buildFromEvent: (event: DomainEvent) => Partial<T>
@@ -30,7 +30,7 @@ export class FirebaseAdminProjectionBuilder<T> {
     // TODO: Initialize firebase-admin
     // this.firestore = admin.firestore();
   }
-  
+
   /**
    * Handle a domain event and update the read model
    */
@@ -41,10 +41,10 @@ export class FirebaseAdminProjectionBuilder<T> {
     //   .collection(this.collectionName)
     //   .doc(event.aggregateId)
     //   .set(projection, { merge: true });
-    
+
     console.log('FirebaseAdminProjectionBuilder.handleEvent:', event.eventType);
   }
-  
+
   /**
    * Rebuild projection from event stream
    */
@@ -57,7 +57,7 @@ export class FirebaseAdminProjectionBuilder<T> {
     //   batch.set(docRef, projection, { merge: true });
     // });
     // await batch.commit();
-    
+
     console.log('FirebaseAdminProjectionBuilder.rebuild:', streamId, events.length);
   }
 }

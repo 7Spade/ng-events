@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
 import { StartupService } from '@core';
 import { ReuseTabService } from '@delon/abc/reuse-tab';
 import { DA_SERVICE_TOKEN } from '@delon/auth';
@@ -65,7 +65,7 @@ export class UserLoginComponent {
       .then(async () => {
         // 清空路由復用信息
         this.reuseTabService?.clear();
-        
+
         // Token 已經由 FirebaseAuthBridgeService 自動設定到 @delon/auth
         // 重新載入 StartupService
         this.startupSrv.load().subscribe(() => {
@@ -76,7 +76,7 @@ export class UserLoginComponent {
           this.router.navigateByUrl(url);
         });
       })
-      .catch((error) => {
+      .catch(error => {
         this.loading = false;
         this.error = this.getFirebaseErrorMessage(error.code);
         this.cdr.detectChanges();
@@ -94,12 +94,11 @@ export class UserLoginComponent {
       'auth/wrong-password': '密碼錯誤',
       'auth/invalid-credential': '帳號或密碼錯誤',
       'auth/too-many-requests': '登入嘗試次數過多，請稍後再試',
-      'auth/network-request-failed': '網路連線失敗',
+      'auth/network-request-failed': '網路連線失敗'
     };
-    
+
     return errorMessages[errorCode] || '登入失敗，請稍後再試';
   }
 }
 
 // END OF FILE
-

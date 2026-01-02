@@ -1,19 +1,19 @@
 /**
  * Firebase Angular Auth Adapter
- * 
+ *
  * 🌐 Frontend implementation using @angular/fire SDK
- * 
+ *
  * ✅ IMPORTANT: This file ONLY runs in Angular/browser
  * ✅ Uses @angular/fire (Client SDK wrapper)
  * ❌ NEVER use firebase-admin in this file
- * 
+ *
  * Bridges Firebase Auth with @delon/auth token service
  */
 
 import { Injectable, inject } from '@angular/core';
 import { Auth, onAuthStateChanged, User } from '@angular/fire/auth';
-import { DA_SERVICE_TOKEN, ITokenService } from '@delon/auth';
 import { Router } from '@angular/router';
+import { DA_SERVICE_TOKEN, ITokenService } from '@delon/auth';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseAuthAdapter {
@@ -31,7 +31,7 @@ export class FirebaseAuthAdapter {
         // 用戶已登入
         const token = await user.getIdToken();
         const tokenExpiration = await this.getTokenExpiration(user);
-        
+
         this.tokenService.set({
           token,
           uid: user.uid,

@@ -1,12 +1,11 @@
 import { Injectable, inject, APP_INITIALIZER } from '@angular/core';
-import { Observable, from, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { Auth, onAuthStateChanged, User } from '@angular/fire/auth';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { MenuService, SettingsService, TitleService } from '@delon/theme';
-import { ACLService } from '@delon/acl';
-import { ALAIN_I18N_TOKEN } from '@delon/theme';
 import { Router } from '@angular/router';
+import { ACLService } from '@delon/acl';
+import { MenuService, SettingsService, TitleService, ALAIN_I18N_TOKEN } from '@delon/theme';
+import { Observable, from, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { I18NService } from '../i18n/i18n.service';
 
@@ -46,7 +45,7 @@ export class StartupService {
 
   load(): Observable<void> {
     return from(this.loadAsync()).pipe(
-      catchError((error) => {
+      catchError(error => {
         console.error('Startup service failed:', error);
         setTimeout(() => this.router.navigateByUrl(`/exception/500`));
         return of(void 0);
@@ -88,8 +87,8 @@ export class StartupService {
    * 等待 Firebase Auth 初始化完成
    */
   private waitForAuthState(): Promise<User | null> {
-    return new Promise((resolve) => {
-      const unsubscribe = onAuthStateChanged(this.auth, (user) => {
+    return new Promise(resolve => {
+      const unsubscribe = onAuthStateChanged(this.auth, user => {
         unsubscribe();
         resolve(user);
       });
@@ -135,11 +134,11 @@ export class StartupService {
   private async getUserProfile(uid: string): Promise<UserProfile> {
     const docRef = doc(this.firestore, 'users', uid);
     const docSnap = await getDoc(docRef);
-    
+
     if (docSnap.exists()) {
       return docSnap.data() as UserProfile;
     }
-    
+
     return {};
   }
 
@@ -180,4 +179,3 @@ export class StartupService {
 }
 
 // END OF FILE
-

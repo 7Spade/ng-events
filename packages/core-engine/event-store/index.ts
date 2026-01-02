@@ -1,6 +1,6 @@
 /**
  * Event Store Module
- * 
+ *
  * Exports event store abstractions.
  */
 

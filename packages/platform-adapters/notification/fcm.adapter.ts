@@ -1,8 +1,8 @@
 /**
  * FCM (Firebase Cloud Messaging) Adapter
- * 
+ *
  * 🛠️ Backend push notification service
- * 
+ *
  * ⚠️ Uses firebase-admin (server-side only)
  */
 

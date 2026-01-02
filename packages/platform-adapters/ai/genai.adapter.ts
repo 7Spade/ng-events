@@ -1,6 +1,6 @@
 /**
  * Google Generative AI Adapter
- * 
+ *
  * 🛠️ Backend AI service
  */
 

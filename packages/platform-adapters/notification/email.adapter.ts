@@ -1,6 +1,6 @@
 /**
  * Email Notification Adapter
- * 
+ *
  * 🛠️ Backend email service
  */
 

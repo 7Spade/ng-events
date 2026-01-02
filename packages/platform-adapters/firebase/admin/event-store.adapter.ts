@@ -1,11 +1,11 @@
 /**
  * Firebase Admin Event Store Adapter
- * 
+ *
  * 🛠️ Backend implementation using firebase-admin SDK
- * 
+ *
  * ⚠️ IMPORTANT: This file should ONLY run in Node.js (Cloud Run / Functions)
  * ⚠️ NEVER import this in Angular/browser code
- * 
+ *
  * Implements the EventStore interface from @core-engine
  */
 
@@ -16,18 +16,18 @@ import { DomainEvent, EventStore } from '@core-engine/event-store';
 
 /**
  * Firebase Admin Event Store Implementation
- * 
+ *
  * Uses firebase-admin to write events to Firestore.
  * Runs with Service Account credentials (god mode 👑).
  */
 export class FirebaseAdminEventStore implements EventStore {
   // private firestore: admin.firestore.Firestore;
-  
+
   constructor() {
     // TODO: Initialize firebase-admin
     // this.firestore = admin.firestore();
   }
-  
+
   /**
    * Append event to Firestore using admin SDK
    * Bypasses all Security Rules
@@ -41,10 +41,10 @@ export class FirebaseAdminEventStore implements EventStore {
     //     ...event,
     //     createdAt: admin.firestore.FieldValue.serverTimestamp()
     //   });
-    
+
     console.log('FirebaseAdminEventStore.append:', event.eventType);
   }
-  
+
   /**
    * Load events by stream ID using admin SDK
    */
@@ -55,9 +55,9 @@ export class FirebaseAdminEventStore implements EventStore {
     //   .where('aggregateId', '==', streamId)
     //   .orderBy('metadata.timestamp', 'asc')
     //   .get();
-    
+
     // return snapshot.docs.map(doc => doc.data() as DomainEvent);
-    
+
     console.log('FirebaseAdminEventStore.load:', streamId);
     return [];
   }

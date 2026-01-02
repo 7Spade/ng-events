@@ -1,8 +1,8 @@
 /**
  * Issue Domain Module
- * 
+ *
  * SaaS business logic for issue tracking.
- * 
+ *
  * This module contains:
  * - Issue aggregate
  * - Issue domain events
