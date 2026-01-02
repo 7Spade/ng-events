@@ -14,9 +14,11 @@
  * - Causality tracking
  * - Aggregate Root patterns
  * - Projection (Read Model) definitions
+ * - Utility functions for ID generation
  */
 
 export * from './causality';
 export * from './event-store';
 export * from './aggregates';
 export * from './projection';
+export * from './utils/id-generator';

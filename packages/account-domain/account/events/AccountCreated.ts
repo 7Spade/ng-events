@@ -1,16 +1,25 @@
+import { DomainEvent, CausalityMetadata } from '@ng-events/core-engine';
 import { AccountId } from '../value-objects/AccountId';
 import { AccountStatus } from '../value-objects/AccountStatus';
 
 /**
- * Emitted when an account is provisioned.
+ * Payload for AccountCreated event
  */
-export interface AccountCreated {
-  accountId: AccountId;
+export interface AccountCreatedPayload {
   ownerId: string;
   status: AccountStatus;
-  occurredAt: string;
-  causationId?: string;
-  correlationId?: string;
 }
+
+/**
+ * Emitted when an account is provisioned.
+ */
+export type AccountCreated = DomainEvent<
+  AccountCreatedPayload,
+  AccountId,
+  CausalityMetadata
+> & {
+  eventType: 'AccountCreated';
+  aggregateType: 'Account';
+};
 
 // END OF FILE
