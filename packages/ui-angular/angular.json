@@ -20,6 +20,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "../../dist/ng-alain",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
@@ -47,7 +48,7 @@
             "inlineStyleLanguage": "less",
             "stylePreprocessorOptions": {
               "includePaths": [
-                "node_modules/"
+                "../../node_modules/"
               ]
             }
           },
