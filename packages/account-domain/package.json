@@ -1,0 +1,26 @@
+{
+  "name": "@ng-events/account-domain",
+  "version": "1.0.0",
+  "description": "Account / Workspace / Membership / Module registry domain models (pure TypeScript)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "lint": "eslint . --ext .ts"
+  },
+  "keywords": [
+    "ddd",
+    "account",
+    "workspace",
+    "membership",
+    "module-registry"
+  ],
+  "author": "ng-events team",
+  "license": "MIT",
+  "dependencies": {
+    "@ng-events/core-engine": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
