@@ -36,12 +36,15 @@
 #### 後端開發者 (Backend Developer)
 → [Core Engine](packages/core-engine/README.md)  
 → [Platform Adapters](packages/platform-adapters/README.md)  
-→ [事件模型](docs/04-core-model/01-Event-Model-事件模型V2.md)
+→ [事件模型](docs/04-core-model/01-Event-Model-事件模型V2.md)  
+→ [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) ⭐ **必讀**  
+→ [泛型模式 Quick Reference](docs/🧬-Generic/Quick-Reference(快速參考).md)
 
 #### 架構師 (Architect)
 → [架構概覽](docs/03-architecture/01-Overview(概覽).md)  
 → [決策記錄 (ADR)](docs/08-governance/01-decision-records/)  
-→ [治理文件](docs/08-governance/)
+→ [治理文件](docs/08-governance/)  
+→ [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) ⭐ **必讀**
 
 ---
 
@@ -223,6 +226,17 @@ ui-angular → platform-adapters → saas-domain → core-engine
 
 ## 🔧 工具與模板 (Tools & Templates)
 
+### 🧬 泛型模式 (Generic Patterns) ⭐ 推薦
+- [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) - **完整實作指南**
+- [Quick Reference](docs/🧬-Generic/Quick-Reference(快速參考).md) - 5分鐘速查
+- [泛型縮寫清單](docs/泛型縮寫清單.md) - T/I/S/P/E 完整對照
+
+#### 程式碼範本
+- [AggregateRoot Template](docs/🧬-Generic/AggregateRoot-Template.ts) - 聚合根範本
+- [DomainEvent Template](docs/🧬-Generic/DomainEvent-Template.ts) - 領域事件範本
+- [Repository Template](docs/🧬-Generic/Repository-Template.ts) - 倉儲範本
+- [Saga Template](docs/🧬-Generic/Saga-Template.ts) - Saga 範本
+
 ### 決策記錄 (ADR)
 - [ADR 模板](docs/08-governance/01-decision-records/Adr-Template.md)
 - [所有 ADR](docs/08-governance/01-decision-records/) - 完整決策記錄
@@ -260,6 +274,7 @@ ui-angular → platform-adapters → saas-domain → core-engine
 ### 找不到文件？試試這些關鍵字：
 
 - **事件 (Event)** → `04-core-model/` 或 `Event` 開頭的文件
+- **泛型 (Generic)** → `🧬-Generic/` 或 `泛型骨架實施計畫.md` ⭐
 - **Saga / 流程** → `05-process-layer/`
 - **投影 (Projection)** → `06-projection-decision/`
 - **反模式** → `09-anti-patterns/`
@@ -271,6 +286,8 @@ ui-angular → platform-adapters → saas-domain → core-engine
 
 - **為什麼用 Event Sourcing?** → [02-Why-Not-Crud](docs/02-paradigm/02-Why-Not-Crud(為何不用CRUD).md)
 - **如何設計事件?** → [Event-Model](docs/04-core-model/01-Event-Model-事件模型V2.md)
+- **如何實作聚合?** → [泛型骨架實施計畫](docs/📌-plans/泛型骨架實施計畫.md) ⭐
+- **泛型縮寫是什麼?** → [Quick Reference](docs/🧬-Generic/Quick-Reference(快速參考).md) ⭐
 - **如何避免錯誤?** → [Anti-Patterns](docs/09-anti-patterns/)
 - **如何組織程式碼?** → [Packages README](packages/README.md)
 - **如何部署?** → [Deployment](docs/Deployment(部署指南).md)

@@ -41,6 +41,12 @@
       "@app/*": [
         "packages/ui-angular/src/app/*"
       ],
+      "@account-domain": [
+        "packages/account-domain/index"
+      ],
+      "@account-domain/*": [
+        "packages/account-domain/*"
+      ],
       "@core-engine": [
         "packages/core-engine/index"
       ],
@@ -58,6 +64,12 @@
       ],
       "@platform-adapters/*": [
         "packages/platform-adapters/*"
+      ],
+      "@ui-angular": [
+        "packages/ui-angular/src/app/index"
+      ],
+      "@ui-angular/*": [
+        "packages/ui-angular/src/app/*"
       ]
     }
   },

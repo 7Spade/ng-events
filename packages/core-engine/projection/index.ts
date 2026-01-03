@@ -8,25 +8,62 @@
  */
 
 /**
- * Base interface for projection builders
+ * Domain event interface (minimal definition for projection layer)
  */
-export interface ProjectionBuilder<T> {
+export interface DomainEvent {
+  readonly id: string;
+  readonly aggregateId: string;
+  readonly aggregateType: string;
+  readonly eventType: string;
+  readonly data: any;
+  readonly metadata: {
+    timestamp: string;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Base interface for projection builders
+ * 
+ * Projection builders transform domain events into query-optimized read models.
+ * They listen to events and update Firestore projections accordingly.
+ * 
+ * @example
+ * ```typescript
+ * class WorkspaceProjectionBuilder implements ProjectionBuilder {
+ *   async handleEvent(event: DomainEvent): Promise<void> {
+ *     switch (event.eventType) {
+ *       case 'WorkspaceCreated':
+ *         await this.handleWorkspaceCreated(event);
+ *         break;
+ *       case 'WorkspaceArchived':
+ *         await this.handleWorkspaceArchived(event);
+ *         break;
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export interface ProjectionBuilder {
   /**
-   * Project events into a read model
-   *
-   * @param events - Events to project
-   * @returns The projected read model
+   * Handle a domain event and update the projection
+   * 
+   * This is the main entry point for projection updates.
+   * Implementations should dispatch to specific event handlers.
+   * 
+   * @param event - Domain event to handle
    */
-  project(events: any[]): T;
+  handleEvent(event: DomainEvent): Promise<void>;
 
   /**
-   * Handle a single event update
-   *
-   * @param model - Current read model state
-   * @param event - New event to apply
-   * @returns Updated read model
+   * Rebuild projection from event stream (optional)
+   * 
+   * Useful for fixing corrupted projections or adding new projection types.
+   * 
+   * @param aggregateId - Aggregate ID to rebuild
+   * @param events - Complete event stream for the aggregate
    */
-  handleEvent(model: T, event: any): T;
+  rebuild?(aggregateId: string, events: DomainEvent[]): Promise<void>;
 }
 
 /**
