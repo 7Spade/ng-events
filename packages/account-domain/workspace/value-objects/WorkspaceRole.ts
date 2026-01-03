@@ -15,6 +15,8 @@ export type WorkspaceRole = 'Owner' | 'Admin' | 'Member' | 'Viewer';
 export class WorkspaceRoleVO {
   readonly value: WorkspaceRole;
 
+  private static readonly VALID_ROLES: WorkspaceRole[] = ['Owner', 'Admin', 'Member', 'Viewer'];
+
   private constructor(value: WorkspaceRole) {
     this.value = value;
   }
@@ -23,19 +25,22 @@ export class WorkspaceRoleVO {
    * Factory method to create WorkspaceRole instance
    * @param value - The workspace role value
    * @returns WorkspaceRoleVO instance
+   * @throws Error if value is invalid
    */
-  static create(value: WorkspaceRole): WorkspaceRoleVO {
-    // TODO: Implement validation logic (valid role check)
-    throw new Error('Not implemented - skeleton only');
+  static create(value: string): WorkspaceRoleVO {
+    if (!this.validate(value)) {
+      throw new Error(`Invalid WorkspaceRole: must be one of ${this.VALID_ROLES.join(', ')}`);
+    }
+    return new WorkspaceRoleVO(value as WorkspaceRole);
   }
 
   /**
    * Validates the workspace role
-   * @throws Error if validation fails
+   * @param value - The workspace role to validate
+   * @returns true if valid role
    */
-  validate(): void {
-    // TODO: Implement validation rules (must be one of allowed values)
-    throw new Error('Not implemented - skeleton only');
+  static validate(value: string): boolean {
+    return typeof value === 'string' && this.VALID_ROLES.includes(value as WorkspaceRole);
   }
 
   /**
@@ -52,8 +57,25 @@ export class WorkspaceRoleVO {
    * @returns true if values are equal
    */
   equals(other: WorkspaceRoleVO): boolean {
-    // TODO: Implement equality check
-    throw new Error('Not implemented - skeleton only');
+    if (!other || !(other instanceof WorkspaceRoleVO)) {
+      return false;
+    }
+    return this.value === other.value;
+  }
+
+  /**
+   * Check if role has higher or equal permission level
+   * @param other - Another WorkspaceRoleVO instance
+   * @returns true if this role has higher or equal permission
+   */
+  hasHigherOrEqualPermission(other: WorkspaceRoleVO): boolean {
+    const roleHierarchy: Record<WorkspaceRole, number> = {
+      'Owner': 4,
+      'Admin': 3,
+      'Member': 2,
+      'Viewer': 1
+    };
+    return roleHierarchy[this.value] >= roleHierarchy[other.value];
   }
 }
 

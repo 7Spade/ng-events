@@ -20,21 +20,26 @@ export class WorkspaceIdVO {
 
   /**
    * Factory method to create WorkspaceId instance
-   * @param value - The workspace identifier string
+   * @param value - The workspace identifier string (UUID format)
    * @returns WorkspaceIdVO instance
+   * @throws Error if value is invalid
    */
   static create(value: string): WorkspaceIdVO {
-    // TODO: Implement validation logic (non-empty, format check, etc.)
-    throw new Error('Not implemented - skeleton only');
+    if (!this.validate(value)) {
+      throw new Error('Invalid WorkspaceId format: must be a valid UUID');
+    }
+    return new WorkspaceIdVO(value);
   }
 
   /**
    * Validates the workspace identifier
-   * @throws Error if validation fails
+   * @param value - The workspace identifier to validate
+   * @returns true if valid UUID format
    */
-  validate(): void {
-    // TODO: Implement validation rules
-    throw new Error('Not implemented - skeleton only');
+  static validate(value: string): boolean {
+    // UUID v4 format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return typeof value === 'string' && value.length > 0 && uuidRegex.test(value);
   }
 
   /**
@@ -51,8 +56,10 @@ export class WorkspaceIdVO {
    * @returns true if values are equal
    */
   equals(other: WorkspaceIdVO): boolean {
-    // TODO: Implement equality check
-    throw new Error('Not implemented - skeleton only');
+    if (!other || !(other instanceof WorkspaceIdVO)) {
+      return false;
+    }
+    return this.value === other.value;
   }
 }
 
