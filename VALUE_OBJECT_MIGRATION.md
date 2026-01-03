@@ -1,105 +1,210 @@
-# Value Object Pattern (Future Migration)
+# Value Object Pattern Migration
 
-## Current State
-Currently, all Value Objects in the domain layer are simple TypeScript type aliases:
+## Overview
 
-```typescript
-export type AccountId = string;
-export type AccountStatus = 'active' | 'suspended' | 'closed';
-```
+This document tracks the migration from type aliases to class-based Value Objects across all domain packages. Each Value Object now has both a type alias (for compatibility) and a class skeleton (for future implementation).
 
-## Future Pattern (Class-Based Value Objects)
+## Current State (Phase 1.5: Skeleton Complete)
 
-Value Objects should eventually be migrated to classes with factory methods and validation:
+All Value Objects now exist in **dual form**:
+1. **Type Alias** - Original, currently used by aggregates (e.g., `export type AccountId = string;`)
+2. **Class Skeleton** - New class with `create()`, `validate()`, `getValue()`, and `equals()` methods (all throw "Not implemented")
+
+## Value Object Inventory
+
+### Account Domain
+
+#### Account Aggregate (`packages/account-domain/account/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `AccountId.ts` | `AccountId` | `AccountIdVO` | Unique identifier for Account aggregate |
+| `AccountStatus.ts` | `AccountStatus` | `AccountStatusVO` | Account lifecycle state ('active' \| 'suspended' \| 'closed') |
+
+#### Workspace Aggregate (`packages/account-domain/workspace/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `WorkspaceId.ts` | `WorkspaceId` | `WorkspaceIdVO` | Unique identifier for Workspace aggregate (multi-tenant boundary) |
+| `WorkspaceRole.ts` | `WorkspaceRole` | `WorkspaceRoleVO` | Workspace-level role ('Owner' \| 'Admin' \| 'Member' \| 'Viewer') |
+
+#### Membership Aggregate (`packages/account-domain/membership/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `MemberId.ts` | `MemberId` | `MemberIdVO` | User identity inside a workspace |
+| `Role.ts` | `Role` | `RoleVO` | Membership role within workspace ('Owner' \| 'Admin' \| 'Member' \| 'Viewer') |
+
+#### ModuleRegistry Aggregate (`packages/account-domain/module-registry/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `ModuleId.ts` | `ModuleId` | `ModuleIdVO` | Identifies a capability module within workspace |
+| `ModuleStatus.ts` | `ModuleStatus` | `ModuleStatusVO` | Module availability ('enabled' \| 'disabled') |
+| `Capability.ts` | `Capability` | `CapabilityVO` | Module capability exposed to workspace |
+
+### SaaS Domain
+
+#### Task Aggregate (`packages/saas-domain/task/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `TaskId.ts` | `TaskId` | `TaskIdVO` | Unique identifier for Task aggregate |
+| `TaskStatus.ts` | `TaskStatus` | `TaskStatusVO` | Task state ('pending' \| 'in_progress' \| 'completed' \| 'cancelled') |
+| `TaskPriority.ts` | `TaskPriority` | `TaskPriorityVO` | Task priority level ('low' \| 'medium' \| 'high' \| 'urgent') |
+
+#### Payment Aggregate (`packages/saas-domain/payment/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `PaymentId.ts` | `PaymentId` | `PaymentIdVO` | Unique identifier for Payment aggregate |
+| `PaymentStatus.ts` | `PaymentStatus` | `PaymentStatusVO` | Payment state ('pending' \| 'processed' \| 'refunded' \| 'failed') |
+| `Currency.ts` | `Currency` | `CurrencyVO` | ISO 4217 currency codes ('USD' \| 'EUR' \| 'GBP' \| 'JPY' \| 'CNY' \| 'TWD') |
+
+#### Issue Aggregate (`packages/saas-domain/issue/value-objects/`)
+| File | Type Alias | Class Skeleton | Purpose |
+|------|------------|----------------|---------|
+| `IssueId.ts` | `IssueId` | `IssueIdVO` | Unique identifier for Issue aggregate |
+| `IssueType.ts` | `IssueType` | `IssueTypeVO` | Issue classification ('bug' \| 'feature' \| 'enhancement' \| 'task') |
+| `IssuePriority.ts` | `IssuePriority` | `IssuePriorityVO` | Issue priority ('low' \| 'medium' \| 'high' \| 'critical') |
+| `IssueStatus.ts` | `IssueStatus` | `IssueStatusVO` | Issue state ('open' \| 'in_progress' \| 'closed' \| 'reopened') |
+
+## Class Skeleton Pattern
+
+All VO classes follow this consistent pattern:
 
 ```typescript
 /**
- * Example: AccountId as Value Object Class
+ * Example Value Object Class Skeleton
  */
-export class AccountId {
-  private constructor(private readonly value: string) {}
+export class ExampleVO {
+  readonly value: ExampleType;
 
-  /**
-   * Factory method - Create AccountId with validation
-   */
-  static create(value: string): AccountId {
-    if (!value || value.trim().length === 0) {
-      throw new Error('AccountId cannot be empty');
-    }
-    if (!/^[a-zA-Z0-9-_]+$/.test(value)) {
-      throw new Error('AccountId must contain only alphanumeric characters, hyphens, and underscores');
-    }
-    return new AccountId(value);
+  private constructor(value: ExampleType) {
+    this.value = value;
   }
 
   /**
-   * Validate AccountId format
+   * Factory method to create instance with validation
+   * @param value - The raw value
+   * @returns ExampleVO instance
    */
-  validate(): boolean {
-    return this.value.length > 0 && /^[a-zA-Z0-9-_]+$/.test(this.value);
+  static create(value: ExampleType): ExampleVO {
+    // TODO: Implement validation logic
+    throw new Error('Not implemented - skeleton only');
   }
 
   /**
-   * Get underlying value
+   * Validates the value
+   * @throws Error if validation fails
    */
-  getValue(): string {
+  validate(): void {
+    // TODO: Implement validation rules
+    throw new Error('Not implemented - skeleton only');
+  }
+
+  /**
+   * Gets the raw value
+   * @returns The underlying value
+   */
+  getValue(): ExampleType {
     return this.value;
   }
 
   /**
-   * Compare with another AccountId
+   * Checks equality with another instance
+   * @param other - Another ExampleVO instance
+   * @returns true if values are equal
    */
-  equals(other: AccountId): boolean {
-    return this.value === other.value;
+  equals(other: ExampleVO): boolean {
+    // TODO: Implement equality check
+    throw new Error('Not implemented - skeleton only');
   }
 }
 ```
 
-## Migration Strategy
+## Migration Strategy (Future Implementation Phases)
 
-1. **Keep existing type aliases** for backward compatibility
-2. **Create new class-based VOs** alongside type aliases
-3. **Gradually migrate aggregates** to use new VOs
-4. **Update tests** to cover validation logic
-5. **Remove type aliases** once migration is complete
+### Phase 1: Current State ✅
+- [x] Type aliases exist and are used by all aggregates
+- [x] Class skeletons created alongside type aliases
+- [x] All 19 Value Objects documented
+
+### Phase 2: Implementation (Future)
+- [ ] Implement `create()` factory methods with validation logic
+- [ ] Implement `validate()` business rules
+- [ ] Implement `getValue()` accessor
+- [ ] Implement `equals()` value comparison
+
+### Phase 3: Aggregate Migration (Future)
+- [ ] Update Aggregate constructors to accept VO classes
+- [ ] Update Aggregate factory methods (`create()`, `fromEvents()`)
+- [ ] Update Event handlers to use VO classes
+- [ ] Add comprehensive VO unit tests
+
+### Phase 4: Cleanup (Future)
+- [ ] Remove type aliases once all aggregates migrated
+- [ ] Update all imports to use VO classes
+- [ ] Verify no remaining type alias usage
 
 ## Benefits of Class-Based Value Objects
 
-- ✅ **Validation**: Enforce business rules at VO creation
-- ✅ **Encapsulation**: Hide internal representation
-- ✅ **Immutability**: Prevent accidental mutation
-- ✅ **Equality**: Proper value-based comparison
-- ✅ **Type Safety**: Stronger compile-time guarantees
+- ✅ **Validation**: Enforce business rules at VO creation time
+- ✅ **Encapsulation**: Hide internal representation, expose only behavior
+- ✅ **Immutability**: Private constructor + readonly fields prevent mutation
+- ✅ **Equality**: Proper value-based comparison via `equals()`
+- ✅ **Type Safety**: Stronger compile-time guarantees than primitives
+- ✅ **Domain Language**: VO classes express domain concepts explicitly
 
-## Example VOs to Migrate
+## Implementation Guidelines (Future)
 
-### Account Domain
-- AccountId
-- AccountStatus
-- WorkspaceId
-- WorkspaceRole
-- MemberId
-- Role
-- ModuleId
-- ModuleStatus
-- Capability
+### Validation Rules Examples
 
-### SaaS Domain
-- TaskId
-- TaskStatus
-- Priority
-- PaymentId
-- PaymentStatus
-- Amount
-- IssueId
-- IssueStatus
-- Severity
+**String IDs (AccountId, WorkspaceId, TaskId, etc.)**
+- Non-empty string
+- Valid format (alphanumeric, UUID, etc.)
+- Length constraints if applicable
+
+**Enum-like VOs (Status, Priority, Role, etc.)**
+- Value must be one of allowed literals
+- Case-sensitive validation
+- No custom values accepted
+
+**Currency VO**
+- Must be valid ISO 4217 code
+- Limited to supported currencies
+- Uppercase validation
+
+### Equality Implementation
+
+```typescript
+equals(other: AccountIdVO): boolean {
+  if (!(other instanceof AccountIdVO)) {
+    return false;
+  }
+  return this.value === other.value;
+}
+```
+
+### Factory Method Pattern
+
+```typescript
+static create(value: string): AccountIdVO {
+  if (!value || value.trim().length === 0) {
+    throw new Error('AccountId cannot be empty');
+  }
+  if (!/^[a-zA-Z0-9-_]+$/.test(value)) {
+    throw new Error('AccountId format invalid');
+  }
+  return new AccountIdVO(value);
+}
+```
 
 ## Notes
 
-- This is a **structural improvement** for future phases
-- Current type aliases are **functional** for skeleton phase
-- Migration should happen during **implementation phase**, not skeleton phase
-- Requires updating Aggregate constructors and factories
+- **Skeleton Only**: All VO classes currently throw "Not implemented - skeleton only"
+- **Type Aliases Preserved**: Aggregates continue using type aliases for now
+- **No Breaking Changes**: Dual existence ensures backward compatibility
+- **Future Migration**: Actual implementation deferred to implementation phases
+- **Multi-Tenant Boundary**: WorkspaceId is the ONLY isolation condition for SaaS operations
+
+## Total Value Objects: 19
+
+- **Account Domain**: 9 VOs across 4 aggregates
+- **SaaS Domain**: 10 VOs across 3 aggregates
 
 // END OF FILE
