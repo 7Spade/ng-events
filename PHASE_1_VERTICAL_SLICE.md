@@ -329,6 +329,11 @@ Angular Services
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
+      "@shared": ["packages/ui-angular/src/app/shared/index"],
+      "@core": ["packages/ui-angular/src/app/core/index"],
+      "@env/*": ["packages/ui-angular/src/environments/*"],
+      "@_mock": ["_mock/index"],
+      "@app/*": ["packages/ui-angular/src/app/*"],
       "@account-domain": ["packages/account-domain/index"],
       "@account-domain/*": ["packages/account-domain/*"],
       "@core-engine": ["packages/core-engine/index"],
@@ -359,6 +364,244 @@ import { IEventStore, AggregateRoot } from '@core-engine';
 import { Workspace } from '@account-domain/workspace/aggregates/Workspace';
 import { Account } from '../../../account-domain/account/aggregates/Account';
 ```
+
+---
+
+## Index.ts Export Structure (Phase 1 Aggregates)
+
+### Workspace Aggregate Exports
+
+**File:** `packages/account-domain/workspace/index.ts`
+
+```typescript
+// Value Objects
+export * from './value-objects/WorkspaceId';
+export * from './value-objects/WorkspaceRole';
+
+// Aggregates
+export * from './aggregates/Workspace';
+
+// Domain Events
+export * from './events/WorkspaceCreated';
+export * from './events/WorkspaceArchived';
+
+// Repository Interface
+export * from './repositories/WorkspaceRepository';
+```
+
+**External Usage:**
+```typescript
+import { 
+  Workspace,           // Aggregate
+  WorkspaceId,         // Value Object
+  WorkspaceRole,       // Value Object
+  WorkspaceCreated,    // Event
+  WorkspaceArchived,   // Event
+  WorkspaceRepository  // Repository Interface
+} from '@account-domain/workspace';
+```
+
+### Account Aggregate Exports
+
+**File:** `packages/account-domain/account/index.ts`
+
+```typescript
+// Value Objects
+export * from './value-objects/AccountId';
+export * from './value-objects/AccountStatus';
+
+// Aggregates
+export * from './aggregates/Account';
+
+// Domain Events
+export * from './events/AccountCreated';
+export * from './events/AccountSuspended';
+
+// Repository Interface
+export * from './repositories/AccountRepository';
+
+// Domain Services
+export * from './services/AccountMembershipService';
+```
+
+**External Usage:**
+```typescript
+import { 
+  Account,                   // Aggregate
+  AccountId,                 // Value Object
+  AccountStatus,             // Value Object
+  AccountCreated,            // Event
+  AccountSuspended,          // Event
+  AccountRepository,         // Repository Interface
+  AccountMembershipService   // Domain Service
+} from '@account-domain/account';
+```
+
+### Membership Aggregate Exports
+
+**File:** `packages/account-domain/membership/index.ts`
+
+```typescript
+// Value Objects
+export * from './value-objects/MemberId';
+export * from './value-objects/Role';
+
+// Aggregates
+export * from './aggregates/Membership';
+
+// Domain Events
+export * from './events/MemberJoinedWorkspace';
+export * from './events/MemberRoleChanged';
+
+// Repository Interface
+export * from './repositories/MembershipRepository';
+```
+
+**External Usage:**
+```typescript
+import { 
+  Membership,            // Aggregate
+  MemberId,              // Value Object
+  Role,                  // Value Object
+  MemberJoinedWorkspace, // Event
+  MemberRoleChanged,     // Event
+  MembershipRepository   // Repository Interface
+} from '@account-domain/membership';
+```
+
+### ModuleRegistry Aggregate Exports
+
+**File:** `packages/account-domain/module-registry/index.ts`
+
+```typescript
+// Value Objects
+export * from './value-objects/ModuleId';
+export * from './value-objects/ModuleStatus';
+export * from './value-objects/Capability';
+
+// Aggregates
+export * from './aggregates/ModuleRegistry';
+
+// Domain Events
+export * from './events/ModuleEnabled';
+export * from './events/ModuleDisabled';
+
+// Repository Interface
+export * from './repositories/ModuleRegistryRepository';
+```
+
+**External Usage:**
+```typescript
+import { 
+  ModuleRegistry,           // Aggregate
+  ModuleId,                 // Value Object
+  ModuleStatus,             // Value Object
+  Capability,               // Value Object
+  ModuleEnabled,            // Event
+  ModuleDisabled,           // Event
+  ModuleRegistryRepository  // Repository Interface
+} from '@account-domain/module-registry';
+```
+
+---
+
+## Package Root Index.ts Exports
+
+### account-domain Package Export
+
+**File:** `packages/account-domain/index.ts`
+
+```typescript
+// Account Aggregate
+export * from './account';
+
+// Workspace Aggregate
+export * from './workspace';
+
+// Membership Aggregate
+export * from './membership';
+
+// ModuleRegistry Aggregate
+export * from './module-registry';
+```
+
+**External Usage (All-in-One Import):**
+```typescript
+import { 
+  Account, AccountId, AccountStatus,
+  Workspace, WorkspaceId, WorkspaceRole,
+  Membership, MemberId, Role,
+  ModuleRegistry, ModuleId, ModuleStatus, Capability
+} from '@account-domain';
+```
+
+**External Usage (Granular Import - Recommended):**
+```typescript
+import { Workspace, WorkspaceId } from '@account-domain/workspace';
+import { Account, AccountId } from '@account-domain/account';
+import { Membership, MemberId } from '@account-domain/membership';
+```
+
+---
+
+## _private Folder Encapsulation Guidelines (Future Refactoring)
+
+**NOTE:** This is a FUTURE encapsulation pattern, NOT implemented in current skeleton phase. Files remain in current locations for Phase 1 implementation.
+
+### Proposed _private Structure (For Reference)
+
+**Current Structure (Phase 1):**
+```
+packages/account-domain/workspace/
+├── aggregates/Workspace.ts
+├── value-objects/WorkspaceId.ts
+├── events/WorkspaceCreated.ts
+└── index.ts (exports all)
+```
+
+**Future _private Structure (Post Phase 1):**
+```
+packages/account-domain/workspace/
+├── _private/
+│   ├── aggregates/Workspace.ts
+│   ├── value-objects/WorkspaceId.ts
+│   └── events/WorkspaceCreated.ts
+└── index.ts (ONLY public exports)
+```
+
+### _private Folder Benefits
+
+**Encapsulation:**
+- External consumers MUST import through index.ts
+- Internal implementation details hidden in _private/
+- TypeScript prevents direct file imports
+
+**Example (Future Pattern):**
+```typescript
+// ✅ CORRECT - Via index.ts
+import { Workspace, WorkspaceId } from '@account-domain/workspace';
+
+// ❌ BLOCKED - Direct import fails (file in _private/)
+import { Workspace } from '@account-domain/workspace/_private/aggregates/Workspace';
+// TypeScript error: Module not found
+```
+
+### Implementation Timeline
+
+**Phase 1 (Current):**
+- ✅ Skeleton files in standard locations
+- ✅ index.ts exports established
+- ✅ External imports via package aliases
+
+**Post Phase 1 (Future Refactoring):**
+- Move implementation files to _private/ folders
+- Update index.ts to export from _private/
+- Enforce boundary with TypeScript path restrictions
+
+**Why NOT Now:**
+- Phase 1 focuses on skeleton structure validation
+- Moving files would complicate initial vertical slice implementation
+- _private pattern best applied after implementation is stable
 
 ---
 
