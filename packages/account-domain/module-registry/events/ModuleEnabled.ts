@@ -1,17 +1,25 @@
+import { DomainEvent, CausalityMetadata } from '@ng-events/core-engine';
 import { WorkspaceId } from '../../workspace/value-objects/WorkspaceId';
 import { ModuleId } from '../value-objects/ModuleId';
 import { Capability } from '../value-objects/Capability';
 
 /**
- * Emitted when a module is activated for a workspace.
+ * Payload for ModuleEnabled event
  */
-export interface ModuleEnabled {
+export interface ModuleEnabledPayload {
   workspaceId: WorkspaceId;
   moduleId: ModuleId;
-  occurredAt: string;
   capabilities?: Capability[];
-  causationId?: string;
-  correlationId?: string;
+  enabledAt: string;
 }
+
+/**
+ * Emitted when a module is activated for a workspace.
+ */
+export type ModuleEnabled = DomainEvent<
+  ModuleEnabledPayload,
+  WorkspaceId,
+  CausalityMetadata
+>;
 
 // END OF FILE
