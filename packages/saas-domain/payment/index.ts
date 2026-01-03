@@ -1,29 +1,29 @@
 /**
  * Payment Domain Module
  *
- * SaaS business logic for payment processing.
+ * SaaS business logic for payment processing following Module → Entity pattern.
+ *
+ * **Architecture:**
+ * - Account → Workspace → Module → Entity
+ * - PaymentEntity is an Entity within the Payment Module
+ * - All payments belong to a Workspace (via workspaceId)
  *
  * This module contains:
- * - Payment aggregate
- * - Payment domain events
- * - Payment business rules
- * - Payment value objects (Amount, Currency, etc.)
+ * - PaymentEntity aggregate (event-sourced)
+ * - Payment domain events (PaymentCreated, PaymentProcessed, PaymentRefunded)
+ * - Payment business rules (processing, refund validation)
+ * - Payment value objects (PaymentId, PaymentStatus, Currency)
  */
 
-// TODO: Implement Payment aggregate
-// TODO: Implement Payment domain events (PaymentInitiated, PaymentProcessed, PaymentFailed, etc.)
-// TODO: Implement Payment business rules and validations
+// Events
+export * from './events/PaymentCreated';
+export * from './events/PaymentProcessed';
+export * from './events/PaymentRefunded';
 
-export interface Payment {
-  id: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
-  userId: string;
-  createdAt: string;
-  processedAt?: string;
-  blueprintId: string;
-}
+// Aggregates
+export * from './aggregates/PaymentEntity';
 
-// Placeholder - to be implemented with core-engine
-export {};
+// Value Objects
+export * from './value-objects/PaymentId';
+export * from './value-objects/PaymentStatus';
+export * from './value-objects/Currency';

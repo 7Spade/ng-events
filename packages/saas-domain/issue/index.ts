@@ -1,31 +1,31 @@
 /**
  * Issue Domain Module
  *
- * SaaS business logic for issue tracking.
+ * SaaS business logic for issue tracking following Module → Entity pattern.
+ *
+ * **Architecture:**
+ * - Account → Workspace → Module → Entity
+ * - IssueEntity is an Entity within the Issue Tracking Module
+ * - All issues belong to a Workspace (via workspaceId)
  *
  * This module contains:
- * - Issue aggregate
- * - Issue domain events
- * - Issue business rules
- * - Issue value objects (Priority, Category, etc.)
+ * - IssueEntity aggregate (event-sourced)
+ * - Issue domain events (IssueCreated, IssueAssigned, IssueClosed, IssueReopened)
+ * - Issue business rules (assignment, closing, reopening)
+ * - Issue value objects (IssueId, IssueStatus, IssueType, IssuePriority)
  */
 
-// TODO: Implement Issue aggregate
-// TODO: Implement Issue domain events (IssueCreated, IssueAssigned, IssueClosed, etc.)
-// TODO: Implement Issue business rules and workflow
+// Events
+export * from './events/IssueCreated';
+export * from './events/IssueAssigned';
+export * from './events/IssueClosed';
+export * from './events/IssueReopened';
 
-export interface Issue {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  reporterId: string;
-  assigneeId?: string;
-  createdAt: string;
-  updatedAt: string;
-  blueprintId: string;
-}
+// Aggregates
+export * from './aggregates/IssueEntity';
 
-// Placeholder - to be implemented with core-engine
-export {};
+// Value Objects
+export * from './value-objects/IssueId';
+export * from './value-objects/IssueStatus';
+export * from './value-objects/IssueType';
+export * from './value-objects/IssuePriority';
