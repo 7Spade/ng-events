@@ -1,43 +1,25 @@
 /**
  * IRepositoryAdapter
  * 
- * Skeleton: Interface for repository platform adapters.
- * 🔒 NO IMPLEMENTATION - Interface only
+ * @deprecated This file has been moved and renamed.
+ * Please use: import { RepositoryAdapterCapability } from '@platform-adapters/base';
+ * 
+ * Migration Path:
+ * - Old: import { IRepositoryAdapter } from '@platform-adapters/IRepositoryAdapter';
+ * - New: import { RepositoryAdapterCapability } from '@platform-adapters/base';
+ * 
+ * This file will be removed in Phase 2.
  */
 
-import { IAdapter } from './IAdapter';
+import { RepositoryAdapterCapability } from './base/RepositoryAdapterCapability';
+import { AdapterLifecycle } from './base/AdapterLifecycle';
 
 /**
- * Repository Adapter Interface
- * 
- * Extends base adapter with repository-specific operations.
- * Supports transaction management and query capabilities.
+ * @deprecated Use RepositoryAdapterCapability from @platform-adapters/base instead
  */
-export interface IRepositoryAdapter extends IAdapter {
-  /**
-   * Begin transaction for atomic operations
-   */
-  beginTransaction(): Promise<any>;
+export interface IRepositoryAdapter extends RepositoryAdapterCapability {}
 
-  /**
-   * Commit transaction
-   */
-  commit(transaction: any): Promise<void>;
-
-  /**
-   * Rollback transaction
-   */
-  rollback(transaction: any): Promise<void>;
-
-  /**
-   * Execute query with optional transaction context
-   */
-  query(queryString: string, params?: any, transaction?: any): Promise<any>;
-
-  /**
-   * Get connection status
-   */
-  isConnected(): boolean;
-}
+// Re-export for backward compatibility
+export type { RepositoryAdapterCapability, AdapterLifecycle };
 
 // END OF FILE

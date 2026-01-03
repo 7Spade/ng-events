@@ -1,36 +1,24 @@
 /**
  * IAdapter
  * 
- * Skeleton: Base interface for all platform adapters.
- * 🔒 NO IMPLEMENTATION - Interface only
+ * @deprecated This file has been moved and renamed.
+ * Please use: import { AdapterLifecycle } from '@platform-adapters/base';
+ * 
+ * Migration Path:
+ * - Old: import { IAdapter } from '@platform-adapters/IAdapter';
+ * - New: import { AdapterLifecycle } from '@platform-adapters/base';
+ * 
+ * This file will be removed in Phase 2.
  */
+
+import { AdapterLifecycle } from './base/AdapterLifecycle';
 
 /**
- * Adapter Interface
- * 
- * Base contract for platform-specific adapters.
- * All adapters must support initialization and health checking.
+ * @deprecated Use AdapterLifecycle from @platform-adapters/base instead
  */
-export interface IAdapter {
-  /**
-   * Initialize adapter with configuration
-   */
-  initialize(config: any): Promise<void>;
+export interface IAdapter extends AdapterLifecycle {}
 
-  /**
-   * Check adapter health and connectivity
-   */
-  healthCheck(): Promise<boolean>;
-
-  /**
-   * Cleanup and dispose resources
-   */
-  dispose(): Promise<void>;
-
-  /**
-   * Get adapter name for identification
-   */
-  getName(): string;
-}
+// Re-export for backward compatibility
+export type { AdapterLifecycle };
 
 // END OF FILE

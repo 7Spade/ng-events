@@ -11,7 +11,14 @@
  * SDK Separation:
  * - @angular/fire = User perspective (browser, client)
  * - firebase-admin = System perspective (Node.js, server)
+ * 
+ * Clean Architecture:
+ * - base/: Interface definitions (contracts) - Core depends on these
+ * - */: Concrete implementations - Platform adapters implement base contracts
  */
+
+// Base Abstractions (Interfaces)
+export * from './base';
 
 // Firebase Adapters
 export * from './firebase/admin';
