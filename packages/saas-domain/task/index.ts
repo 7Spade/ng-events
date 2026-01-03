@@ -1,29 +1,30 @@
 /**
  * Task Domain Module
  *
- * SaaS business logic for task management.
+ * SaaS business logic for task management following Module → Entity pattern.
+ *
+ * **Architecture:**
+ * - Account → Workspace → Module → Entity
+ * - TaskEntity is an Entity within the Task Module
+ * - All tasks belong to a Workspace (via workspaceId)
  *
  * This module contains:
- * - Task aggregate
- * - Task domain events
- * - Task business rules
- * - Task value objects
+ * - TaskEntity aggregate (event-sourced)
+ * - Task domain events (TaskCreated, TaskAssigned, TaskCompleted, TaskCancelled)
+ * - Task business rules (assignment, completion, cancellation)
+ * - Task value objects (TaskId, TaskStatus, TaskPriority)
  */
 
-// TODO: Implement Task aggregate
-// TODO: Implement Task domain events (TaskCreated, TaskUpdated, TaskCompleted, etc.)
-// TODO: Implement Task business rules
+// Events
+export * from './events/TaskCreated';
+export * from './events/TaskAssigned';
+export * from './events/TaskCompleted';
+export * from './events/TaskCancelled';
 
-export interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  assigneeId?: string;
-  createdAt: string;
-  updatedAt: string;
-  blueprintId: string;
-}
+// Aggregates
+export * from './aggregates/TaskEntity';
 
-// Placeholder - to be implemented with core-engine
-export {};
+// Value Objects
+export * from './value-objects/TaskId';
+export * from './value-objects/TaskStatus';
+export * from './value-objects/TaskPriority';
