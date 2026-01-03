@@ -14,6 +14,7 @@
  * - Causality tracking
  * - Aggregate Root patterns
  * - Projection (Read Model) definitions
+ * - Process / Saga orchestration (Phase 2A)
  * - Utility functions for ID generation
  */
 
@@ -22,4 +23,5 @@ export * from './event-store';
 export * from './aggregates';
 export * from './projection';
 export * from './repositories';
+export * from './processes';
 export * from './utils/id-generator';
