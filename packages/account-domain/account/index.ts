@@ -12,5 +12,6 @@ export * from './value-objects/AccountId';
 export * from './value-objects/AccountStatus';
 export * from './events/AccountCreated';
 export * from './events/AccountSuspended';
+export * from './repositories/AccountRepository';
 
 // END OF FILE

@@ -28,3 +28,6 @@ export * from './aggregates/TaskEntity';
 export * from './value-objects/TaskId';
 export * from './value-objects/TaskStatus';
 export * from './value-objects/TaskPriority';
+
+// Repositories
+export * from './repositories/TaskRepository';

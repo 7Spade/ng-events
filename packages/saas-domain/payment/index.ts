@@ -27,3 +27,6 @@ export * from './aggregates/PaymentEntity';
 export * from './value-objects/PaymentId';
 export * from './value-objects/PaymentStatus';
 export * from './value-objects/Currency';
+
+// Repositories
+export * from './repositories/PaymentRepository';

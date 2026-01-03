@@ -29,3 +29,6 @@ export * from './value-objects/IssueId';
 export * from './value-objects/IssueStatus';
 export * from './value-objects/IssueType';
 export * from './value-objects/IssuePriority';
+
+// Repositories
+export * from './repositories/IssueRepository';
