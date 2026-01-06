@@ -45,15 +45,15 @@ Implement the next-phase skeletons for ng-events event sourcing architecture, in
 
 ## Implementation Checklist
 
-### [ ] Phase 1: Core-Engine Contract Extensions
+### [x] Phase 1: Core-Engine Contract Extensions
 
-- [ ] Task 1.1: Implement causality metadata validator
+- [x] Task 1.1: Implement causality metadata validator
   - Details: .copilot-tracking/details/20260106-next-steps-implementation-details.md (Lines 11-26)
 
-- [ ] Task 1.2: Create projection rebuilder implementation interface
+- [x] Task 1.2: Create projection rebuilder implementation interface
   - Details: .copilot-tracking/details/20260106-next-steps-implementation-details.md (Lines 28-46)
 
-- [ ] Task 1.3: Add idempotency key support to domain events
+- [x] Task 1.3: Add idempotency key support to domain events
   - Details: .copilot-tracking/details/20260106-next-steps-implementation-details.md (Lines 48-64)
 
 ### [ ] Phase 2: Account-Domain Implementation

@@ -66,7 +66,7 @@ Each complete set includes: Plan (.instructions.md) + Details (.md) + Prompt (.p
 - **Plan**: `plans/20260106-next-steps-implementation-plan.instructions.md`
 - **Details**: `details/20260106-next-steps-implementation-details.md`
 - **Prompt**: `prompts/implement-next-steps.prompt.md`
-- **Status**: Not started [ ]
+- **Status**: Phase 1 completed [x], remaining phases pending
 - **Scope**: Additional contracts, aggregates, and projections
 
 #### 4. Projection-First Vertical Slice (Parallel Track)
@@ -80,7 +80,7 @@ Each complete set includes: Plan (.instructions.md) + Details (.md) + Prompt (.p
 - **Plan**: `plans/20260106-typescript-module-resolution-plan.instructions.md`
 - **Details**: `details/20260106-typescript-module-resolution-details.md`
 - **Prompt**: `prompts/implement-typescript-module-resolution.prompt.md`
-- **Status**: Not started [ ]
+- **Status**: Completed [x]
 - **Scope**: Fix @account-domain import errors
 
 ## Implementation Tracks
@@ -104,10 +104,10 @@ Can run alongside main track:
 ### Bug Fixes (As Needed)
 Can be applied anytime:
 
-1. ⏳ TypeScript Module Resolution - **Ready when needed**
-   - Small, focused fix
-   - Required if @account-domain imports fail
-   - 3 simple phases
+1. ✅ TypeScript Module Resolution - **COMPLETED**
+   - Added account-domain project reference and dependency
+   - Base config updated for path mappings
+   - Verified platform-adapters build succeeds
 
 ## Next Actions
 

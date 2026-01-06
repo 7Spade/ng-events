@@ -17,6 +17,10 @@ export interface DomainEventMetadata extends CausalityMetadata {
    */
   readonly version?: number;
   /**
+   * Idempotency key for duplicate detection across retries.
+   */
+  readonly idempotencyKey?: string;
+  /**
    * Event creation timestamp (epoch millis).
    */
   readonly timestamp: number;
