@@ -1,0 +1,36 @@
+/**
+ * Domain Event Contracts
+ *
+ * Framework-agnostic event definitions carrying tenant (blueprintId)
+ * and causality metadata for replayable event sourcing pipelines.
+ */
+export interface CausalityMetadata {
+  readonly causedBy?: string;
+  readonly causedByUser?: string;
+  readonly causedByAction?: string;
+  readonly blueprintId?: string;
+}
+
+export interface DomainEventMetadata extends CausalityMetadata {
+  /**
+   * Event version within the aggregate stream.
+   */
+  readonly version?: number;
+  /**
+   * Event creation timestamp (epoch millis).
+   */
+  readonly timestamp: number;
+}
+
+export interface DomainEvent<TData = unknown> {
+  readonly id: string;
+  readonly aggregateId: string;
+  readonly aggregateType: string;
+  readonly eventType: string;
+  readonly data: TData;
+  readonly metadata: DomainEventMetadata;
+}
+
+export type DomainEventHandler<TData = unknown> = (event: DomainEvent<TData>) => void | Promise<void>;
+
+// END OF FILE

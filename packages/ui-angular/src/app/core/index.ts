@@ -7,6 +7,7 @@ export * from './guards/command.guard';
 export * from './session-context.interface';
 export * from './session-context.token';
 export * from './auth/delon-session-context.adapter';
+export * from './auth/session-facade.service';
 
 // 🔄 Re-export FirebaseAuthAdapter from platform-adapters for backward compatibility
 // Original: './auth/firebase-auth-bridge.service'

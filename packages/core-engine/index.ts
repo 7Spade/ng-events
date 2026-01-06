@@ -18,3 +18,9 @@
 
 // Session / workspace context boundary (skeleton)
 export * from './src/session/session-context.interface';
+// Event sourcing contracts
+export * from './src/events';
+// Projection contracts
+export * from './src/projections';
+// Causality utilities
+export * from './src/causality/causality-chain.util';

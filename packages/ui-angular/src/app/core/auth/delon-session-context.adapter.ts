@@ -13,6 +13,7 @@ interface DelonTokenPayload extends ITokenModel {
   accountType?: 'user' | 'organization' | 'bot';
   workspaceId?: string;
   workspaceType?: 'organization' | 'container';
+  blueprintId?: string;
   roles?: string[];
   abilities?: string[];
   modules?: string[];
@@ -73,6 +74,11 @@ export class DelonSessionContextAdapter implements SessionContext {
   get workspaceType(): 'organization' | 'container' | undefined {
     const workspaceType = this.token?.workspaceType;
     return workspaceType === 'organization' || workspaceType === 'container' ? workspaceType : undefined;
+  }
+
+  get blueprintId(): string | null {
+    const blueprint = this.token?.blueprintId ?? this.workspaceId;
+    return typeof blueprint === 'string' && blueprint ? blueprint : null;
   }
 
   get roles(): string[] {
