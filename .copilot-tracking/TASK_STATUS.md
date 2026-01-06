@@ -66,7 +66,7 @@ Each complete set includes: Plan (.instructions.md) + Details (.md) + Prompt (.p
 - **Plan**: `plans/20260106-next-steps-implementation-plan.instructions.md`
 - **Details**: `details/20260106-next-steps-implementation-details.md`
 - **Prompt**: `prompts/implement-next-steps.prompt.md`
-- **Status**: Not started [ ]
+- **Status**: Phase 1 completed [x], remaining phases pending
 - **Scope**: Additional contracts, aggregates, and projections
 
 #### 4. Projection-First Vertical Slice (Parallel Track)

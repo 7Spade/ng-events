@@ -23,4 +23,4 @@ export * from './src/events';
 // Projection contracts
 export * from './src/projections';
 // Causality utilities
-export * from './src/causality/causality-chain.util';
+export * from './src/causality';
