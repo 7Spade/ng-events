@@ -18,6 +18,7 @@
   "author": "ng-events team",
   "license": "MIT",
   "dependencies": {
+    "@ng-events/account-domain": "*",
     "@ng-events/core-engine": "*",
     "@ng-events/saas-domain": "*"
   },

@@ -10,6 +10,7 @@
   "exclude": ["node_modules", "dist", "**/*.spec.ts"],
   "references": [
     { "path": "../core-engine" },
+    { "path": "../account-domain" },
     { "path": "../saas-domain" }
   ]
 }
