@@ -1,0 +1,66 @@
+<!-- markdownlint-disable-file -->
+
+# Task Details: 0.md Event Flow Implementation
+
+## Research Reference
+
+**Source Research**: #file:../research/20260106-ng-events-0md-implementation-research.md
+
+## Phase 1: Core Engine Event Sourcing Contracts
+
+### Task 1.1: Create DomainEvent interface with causality metadata
+
+Define the base DomainEvent interface that all domain events must implement.
+
+- **Files**:
+  - packages/core-engine/src/events/domain-event.ts
+  - packages/core-engine/src/events/index.ts
+- **Success**:
+  - DomainEvent interface includes all required fields
+  - Metadata includes blueprintId, causedBy, causedByUser, causedByAction, timestamp, version
+- **Research References**:
+  - #file:../research/20260106-ng-events-0md-implementation-research.md (Lines 92-110)
+- **Dependencies**: None
+
+### Task 1.2: Create EventStore interface and CausalityMetadata type
+
+Define EventStore interface for appending and retrieving events.
+
+- **Files**:
+  - packages/core-engine/src/events/event-store.interface.ts
+  - packages/core-engine/src/causality/causality-metadata.ts
+  - packages/core-engine/src/causality/index.ts
+- **Success**:
+  - EventStore interface defines append, getEvents, getEventsByBlueprint methods
+  - CausalityMetadata type complete
+- **Research References**:
+  - #file:../research/20260106-ng-events-0md-implementation-research.md (Lines 92-110)
+- **Dependencies**: Task 1.1
+
+### Task 1.3: Create Projection interfaces
+
+Define interfaces for projection handlers.
+
+- **Files**:
+  - packages/core-engine/src/projections/projection.interface.ts
+  - packages/core-engine/src/projections/projection-rebuilder.interface.ts
+  - packages/core-engine/src/projections/index.ts
+- **Success**:
+  - Projection interface defines handle(event)
+  - ProjectionRebuilder defines rebuild(blueprintId)
+- **Research References**:
+  - #file:../research/20260106-ng-events-0md-implementation-research.md (Lines 50-59)
+- **Dependencies**: Task 1.1
+
+### Task 1.4: Update SessionContext
+
+Extend SessionContext interface.
+
+- **Files**:
+  - packages/core-engine/src/session/session-context.interface.ts
+- **Success**:
+  - SessionContext includes required blueprintId
+  - Includes uid, email, roles, token, issuedAt, expiresAt
+- **Research References**:
+  - #file:../research/20260106-ng-events-0md-implementation-research.md (Lines 70-75)
+- **Dependencies**: None
