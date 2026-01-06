@@ -34,18 +34,18 @@ Plan the implementation of the ng-events architecture skeleton, multi-tenant met
 
 ## Implementation Checklist
 
-### [ ] Phase 1: Core contracts and domain scaffolding
+### [x] Phase 1: Core contracts and domain scaffolding
 
-- [ ] Task 1.1: Extend core-engine event and causality contracts
+- [x] Task 1.1: Extend core-engine event and causality contracts
 
   - Details: .copilot-tracking/details/20260106-ng-events-architecture-details.md (Lines 11-25)
 
-- [ ] Task 1.2: Scaffold account-domain and saas-domain aggregates and commands
+- [x] Task 1.2: Scaffold account-domain and saas-domain aggregates and commands
   - Details: .copilot-tracking/details/20260106-ng-events-architecture-details.md (Lines 27-48)
 
-### [ ] Phase 2: Adapter and UI auth pipeline alignment
+### [x] Phase 2: Adapter and UI auth pipeline alignment
 
-- [ ] Task 2.1: Build platform-adapters facades and align UI auth/ACL flow
+- [x] Task 2.1: Build platform-adapters facades and align UI auth/ACL flow
   - Details: .copilot-tracking/details/20260106-ng-events-architecture-details.md (Lines 52-67)
 
 ## Dependencies

@@ -43,88 +43,88 @@ Implement the complete 0.md event flow architecture: Account → Workspace (blue
 
 ## Implementation Checklist
 
-### [ ] Phase 1: Core Engine Event Sourcing Contracts
+### [x] Phase 1: Core Engine Event Sourcing Contracts
 
-- [ ] Task 1.1: Create DomainEvent interface with causality metadata
+- [x] Task 1.1: Create DomainEvent interface with causality metadata
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 11-29)
 
-- [ ] Task 1.2: Create EventStore interface and CausalityMetadata type
+- [x] Task 1.2: Create EventStore interface and CausalityMetadata type
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 31-47)
 
-- [ ] Task 1.3: Create Projection interfaces for read model updates
+- [x] Task 1.3: Create Projection interfaces for read model updates
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 49-65)
 
-- [ ] Task 1.4: Update SessionContext to enforce blueprintId
+- [x] Task 1.4: Update SessionContext to enforce blueprintId
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 67-82)
 
-### [ ] Phase 2: Account Domain Aggregates and Events
+### [x] Phase 2: Account Domain Aggregates and Events
 
-- [ ] Task 2.1: Create Account aggregate with creation and linking commands
+- [x] Task 2.1: Create Account aggregate with creation and linking commands
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 86-106)
 
-- [ ] Task 2.2: Create Workspace aggregate with blueprintId boundary
+- [x] Task 2.2: Create Workspace aggregate with blueprintId boundary
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 108-129)
 
-- [ ] Task 2.3: Create Membership aggregate with role-based ACL
+- [x] Task 2.3: Create Membership aggregate with role-based ACL
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 131-152)
 
-- [ ] Task 2.4: Define account-domain commands with blueprintId validation
+- [x] Task 2.4: Define account-domain commands with blueprintId validation
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 154-172)
 
-- [ ] Task 2.5: Define account-domain events with causality metadata
+- [x] Task 2.5: Define account-domain events with causality metadata
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 174-192)
 
-### [ ] Phase 3: SaaS Domain Module and Entity Aggregates
+### [x] Phase 3: SaaS Domain Module and Entity Aggregates
 
-- [ ] Task 3.1: Create Module aggregate with enabledModules gating
+- [x] Task 3.1: Create Module aggregate with enabledModules gating
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 196-215)
 
-- [ ] Task 3.2: Create Entity aggregate examples (Task, Issue)
+- [x] Task 3.2: Create Entity aggregate examples (Task, Issue)
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 217-237)
 
-- [ ] Task 3.3: Define saas-domain commands with blueprintId enforcement
+- [x] Task 3.3: Define saas-domain commands with blueprintId enforcement
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 239-256)
 
-- [ ] Task 3.4: Define saas-domain events with causality chain
+- [x] Task 3.4: Define saas-domain events with causality chain
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 258-275)
 
-### [ ] Phase 4: Platform Adapters with Session Injection
+### [x] Phase 4: Platform Adapters with Session Injection
 
-- [ ] Task 4.1: Create AuthAdapter service with DA_SERVICE_TOKEN provider
+- [x] Task 4.1: Create AuthAdapter service with DA_SERVICE_TOKEN provider
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 279-300)
 
-- [ ] Task 4.2: Create WorkspaceFacade for workspace operations
+- [x] Task 4.2: Create WorkspaceFacade for workspace operations
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 302-320)
 
-- [ ] Task 4.3: Create MembershipFacade for membership operations
+- [x] Task 4.3: Create MembershipFacade for membership operations
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 322-340)
 
-- [ ] Task 4.4: Create projection query services with blueprintId filtering
+- [x] Task 4.4: Create projection query services with blueprintId filtering
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 342-360)
 
-### [ ] Phase 5: UI Angular Integration with ACL Guards
+### [x] Phase 5: UI Angular Integration with ACL Guards
 
-- [ ] Task 5.1: Update Firebase auth bridge to propagate blueprintId
+- [x] Task 5.1: Update Firebase auth bridge to propagate blueprintId
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 364-383)
 
-- [ ] Task 5.2: Create adapter facades in ui-angular
+- [x] Task 5.2: Create adapter facades in ui-angular
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 385-403)
 
-- [ ] Task 5.3: Implement ACL guards using @delon/acl with blueprintId
+- [x] Task 5.3: Implement ACL guards using @delon/acl with blueprintId
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 405-423)
 
-- [ ] Task 5.4: Wire DA_SERVICE_TOKEN through app providers
+- [x] Task 5.4: Wire DA_SERVICE_TOKEN through app providers
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 425-442)
 
-### [ ] Phase 6: Event Replay and Causality Tracking
+### [x] Phase 6: Event Replay and Causality Tracking
 
-- [ ] Task 6.1: Implement EventStore with causality preservation
+- [x] Task 6.1: Implement EventStore with causality preservation
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 446-467)
 
-- [ ] Task 6.2: Create ProjectionRebuilder for event replay
+- [x] Task 6.2: Create ProjectionRebuilder for event replay
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 469-490)
 
-- [ ] Task 6.3: Implement causality chain visualization utilities
+- [x] Task 6.3: Implement causality chain visualization utilities
   - Details: .copilot-tracking/details/20260106-0md-implementation-details.md (Lines 492-510)
 
 ## Dependencies

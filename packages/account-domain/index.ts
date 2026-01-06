@@ -15,7 +15,10 @@
  * - Must NOT import framework SDKs (Angular, Firebase, etc.)
  */
 
-// Public API placeholder (skeleton) — keep domain framework-agnostic
-export {};
+export * from './src/aggregates/account.aggregate';
+export * from './src/aggregates/workspace.aggregate';
+export * from './src/aggregates/membership.aggregate';
+export * from './src/commands';
+export * from './src/events';
 
 // END OF FILE

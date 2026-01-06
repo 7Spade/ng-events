@@ -23,6 +23,10 @@ export const sessionGuard: CanActivateFn = (route, state) => {
     return router.createUrlTree(['/exception/403']);
   }
 
+  if (route.data?.['requireBlueprint'] && !session.blueprintId) {
+    return router.createUrlTree(['/exception/403']);
+  }
+
   const moduleKey = route.data?.['moduleKey'];
   if (moduleKey) {
     const modules = Array.isArray(session.modules) ? session.modules : [];
