@@ -1,0 +1,23 @@
+---
+description: "Ensure AuthStateService and token headers follow #43 centralized pattern."
+applyTo: "packages/ui-angular/**/*.ts"
+---
+
+# Package Auth Instructions
+
+## Project Context
+- Centralized AuthStateService
+- Single source for token header management
+- Avoid duplicate listeners or inconsistent headers
+
+## Development Rules
+- Only one listener for AuthState
+- All HTTP requests must use centralized header helper
+- No manual refresh-token header attachment
+- Integrate Auth consistently across UI layer
+
+## Implementation Process
+1. Review all Auth-related service usage
+2. Replace duplicate listeners with centralized service
+3. Verify header helper used everywhere
+4. Write tests for Auth flows

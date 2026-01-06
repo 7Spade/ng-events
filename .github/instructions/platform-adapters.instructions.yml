@@ -1,0 +1,23 @@
+---
+description: "Platform-adapters: external services, Firebase, API adapters."
+applyTo: "packages/platform-adapters/**/*.ts"
+---
+
+# Platform-Adapters Package Instructions
+
+## Project Context
+- Handles external APIs and services
+- No UI or domain logic here
+- Services must be injectable and mockable
+
+## Development Rules
+- Expose adapters only via index.ts
+- Follow centralized AuthStateService for authentication
+- Do not embed domain logic here
+- Avoid multiple listeners or redundant setup
+
+## Implementation Process
+1. Implement adapter classes with DI
+2. Expose public API via index.ts
+3. Write unit tests with mocks
+4. Verify no domain/UI leakage

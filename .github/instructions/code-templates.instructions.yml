@@ -1,0 +1,530 @@
+---
+description: "Code templates for events, commands, projections, and multi-tenant patterns"
+applyTo: "packages/**/*.ts"
+---
+
+# Code Templates
+
+## Event Template
+
+### Basic Event
+```typescript
+/**
+ * Emitted when {business action} occurs
+ * Causality: Triggered by {parent event or user action}
+ */
+export interface {EventName}Event extends DomainEvent<{EventName}Data> {
+  readonly eventType: '{EventName}';
+}
+
+export interface {EventName}Data {
+  // Aggregate identifier
+  readonly {entity}Id: string;
+  
+  // Actor who triggered this event
+  readonly actorAccountId: string;
+  
+  // Event-specific data
+  readonly {field1}: {Type1};
+  readonly {field2}: {Type2};
+  
+  // Optional: additional context
+  readonly metadata?: {
+    reason?: string;
+    source?: string;
+  };
+}
+
+// Factory function
+export function create{EventName}Event(
+  aggregateId: string,
+  data: {EventName}Data,
+  causedByEventId: string | null,
+  blueprintId: string
+): {EventName}Event {
+  return {
+    eventId: generateEventId(),
+    eventType: '{EventName}',
+    aggregateId,
+    aggregateType: '{AggregateType}',
+    blueprintId,
+    causedByEventId,
+    timestamp: Timestamp.now(),
+    data,
+    version: 1
+  };
+}
+```
+
+### Example: TaskCompletedEvent
+```typescript
+export interface TaskCompletedEvent extends DomainEvent<TaskCompletedData> {
+  readonly eventType: 'TaskCompleted';
+}
+
+export interface TaskCompletedData {
+  readonly taskId: string;
+  readonly actorAccountId: string;
+  readonly completedByAccountId: string;
+  readonly completedAt: Timestamp;
+  readonly notes?: string;
+}
+
+export function createTaskCompletedEvent(
+  taskId: string,
+  data: TaskCompletedData,
+  causedByEventId: string | null,
+  blueprintId: string
+): TaskCompletedEvent {
+  return {
+    eventId: generateEventId(),
+    eventType: 'TaskCompleted',
+    aggregateId: taskId,
+    aggregateType: 'Task',
+    blueprintId,
+    causedByEventId,
+    timestamp: Timestamp.now(),
+    data,
+    version: 1
+  };
+}
+```
+
+## Command Template
+
+### Basic Command
+```typescript
+/**
+ * Command to {action description}
+ * Authorization: Requires {role/permission}
+ */
+export interface {CommandName}Command {
+  // Aggregate target
+  readonly {entity}Id: string;
+  
+  // Actor executing command
+  readonly actorAccountId: string;
+  
+  // Workspace context
+  readonly blueprintId: string;
+  
+  // Causality (event that triggered this command)
+  readonly causedByEventId: string | null;
+  
+  // Command-specific data
+  readonly {field1}: {Type1};
+  readonly {field2}: {Type2};
+}
+
+// Command handler
+export class {CommandName}Handler {
+  constructor(
+    private readonly eventStore: IEventStore,
+    private readonly repository: I{Entity}Repository
+  ) {}
+  
+  async execute(command: {CommandName}Command): Promise<Result<{EventName}Event>> {
+    // 1. Load aggregate
+    const aggregate = await this.repository.getById(command.{entity}Id);
+    if (!aggregate) {
+      return Result.Err(`{Entity} not found: ${command.{entity}Id}`);
+    }
+    
+    // 2. Execute business logic
+    const result = aggregate.{methodName}(command);
+    if (result.isError()) {
+      return result;
+    }
+    
+    // 3. Persist event
+    await this.eventStore.append(result.value);
+    
+    return result;
+  }
+}
+```
+
+### Example: AssignTaskCommand
+```typescript
+export interface AssignTaskCommand {
+  readonly taskId: string;
+  readonly actorAccountId: string;
+  readonly blueprintId: string;
+  readonly causedByEventId: string | null;
+  readonly assigneeAccountId: string;
+  readonly dueDate?: Date;
+  readonly priority?: 'low' | 'medium' | 'high';
+}
+
+export class AssignTaskHandler {
+  constructor(
+    private readonly eventStore: IEventStore,
+    private readonly repository: ITaskRepository
+  ) {}
+  
+  async execute(command: AssignTaskCommand): Promise<Result<TaskAssignedEvent>> {
+    const task = await this.repository.getById(command.taskId);
+    if (!task) {
+      return Result.Err(`Task not found: ${command.taskId}`);
+    }
+    
+    const result = task.assign(
+      command.assigneeAccountId,
+      command.actorAccountId,
+      command.dueDate,
+      command.priority
+    );
+    
+    if (result.isError()) {
+      return result;
+    }
+    
+    await this.eventStore.append(result.value);
+    return result;
+  }
+}
+```
+
+## Projection Template
+
+### Basic Projection Builder
+```typescript
+/**
+ * Builds {EntityName} projection from event stream
+ */
+export class {EntityName}ProjectionBuilder {
+  build(events: DomainEvent[]): {EntityName}Projection {
+    let projection: {EntityName}Projection = this.getInitialState();
+    
+    for (const event of events) {
+      projection = this.apply(projection, event);
+    }
+    
+    return projection;
+  }
+  
+  private getInitialState(): {EntityName}Projection {
+    return {
+      {entity}Id: '',
+      blueprintId: '',
+      // ... default fields
+      createdAt: null,
+      updatedAt: null
+    };
+  }
+  
+  private apply(
+    projection: {EntityName}Projection,
+    event: DomainEvent
+  ): {EntityName}Projection {
+    switch (event.eventType) {
+      case '{Entity}Created':
+        return this.on{Entity}Created(projection, event as {Entity}CreatedEvent);
+      
+      case '{Entity}Updated':
+        return this.on{Entity}Updated(projection, event as {Entity}UpdatedEvent);
+      
+      default:
+        return projection;
+    }
+  }
+  
+  private on{Entity}Created(
+    projection: {EntityName}Projection,
+    event: {Entity}CreatedEvent
+  ): {EntityName}Projection {
+    return {
+      ...projection,
+      {entity}Id: event.aggregateId,
+      blueprintId: event.blueprintId,
+      ...event.data,
+      createdAt: event.timestamp,
+      updatedAt: event.timestamp
+    };
+  }
+}
+```
+
+### Example: TaskListProjectionBuilder
+```typescript
+export interface TaskListProjection {
+  taskId: string;
+  blueprintId: string;
+  title: string;
+  status: TaskStatus;
+  assigneeAccountId: string | null;
+  createdByAccountId: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export class TaskListProjectionBuilder {
+  build(events: DomainEvent[]): TaskListProjection {
+    let projection: TaskListProjection = this.getInitialState();
+    
+    for (const event of events) {
+      projection = this.apply(projection, event);
+    }
+    
+    return projection;
+  }
+  
+  private getInitialState(): TaskListProjection {
+    return {
+      taskId: '',
+      blueprintId: '',
+      title: '',
+      status: 'pending',
+      assigneeAccountId: null,
+      createdByAccountId: '',
+      createdAt: Timestamp.fromMillis(0),
+      updatedAt: Timestamp.fromMillis(0)
+    };
+  }
+  
+  private apply(projection: TaskListProjection, event: DomainEvent): TaskListProjection {
+    switch (event.eventType) {
+      case 'TaskCreated':
+        return this.onTaskCreated(projection, event as TaskCreatedEvent);
+      case 'TaskAssigned':
+        return this.onTaskAssigned(projection, event as TaskAssignedEvent);
+      case 'TaskCompleted':
+        return this.onTaskCompleted(projection, event as TaskCompletedEvent);
+      default:
+        return projection;
+    }
+  }
+  
+  private onTaskCreated(projection: TaskListProjection, event: TaskCreatedEvent): TaskListProjection {
+    return {
+      ...projection,
+      taskId: event.aggregateId,
+      blueprintId: event.blueprintId,
+      title: event.data.title,
+      status: 'pending',
+      createdByAccountId: event.data.actorAccountId,
+      createdAt: event.timestamp,
+      updatedAt: event.timestamp
+    };
+  }
+  
+  private onTaskAssigned(projection: TaskListProjection, event: TaskAssignedEvent): TaskListProjection {
+    return {
+      ...projection,
+      assigneeAccountId: event.data.assigneeAccountId,
+      status: 'assigned',
+      updatedAt: event.timestamp
+    };
+  }
+  
+  private onTaskCompleted(projection: TaskListProjection, event: TaskCompletedEvent): TaskListProjection {
+    return {
+      ...projection,
+      status: 'completed',
+      updatedAt: event.timestamp
+    };
+  }
+}
+```
+
+## Multi-Tenant Query Template
+
+### Query Service with Workspace Filtering
+```typescript
+export class {Entity}QueryService {
+  constructor(
+    private readonly db: Firestore,
+    private readonly sessionContext: SessionContext
+  ) {}
+  
+  /**
+   * Get single {entity} by ID
+   * Validates workspace ownership
+   */
+  async getById(id: string): Promise<{Entity}Projection | null> {
+    const doc = await this.db
+      .collection('{entities}')
+      .doc(id)
+      .get();
+    
+    if (!doc.exists) {
+      return null;
+    }
+    
+    const data = doc.data() as {Entity}Projection;
+    
+    // ✅ Multi-tenant validation
+    if (data.blueprintId !== this.sessionContext.workspaceId) {
+      throw new Error('Unauthorized: {Entity} belongs to different workspace');
+    }
+    
+    return data;
+  }
+  
+  /**
+   * List all {entities} in current workspace
+   */
+  async list(filters?: {Entity}Filters): Promise<{Entity}Projection[]> {
+    let query = this.db
+      .collection('{entities}')
+      .where('blueprintId', '==', this.sessionContext.workspaceId);  // ✅ Workspace filter
+    
+    if (filters?.status) {
+      query = query.where('status', '==', filters.status);
+    }
+    
+    if (filters?.assigneeAccountId) {
+      query = query.where('assigneeAccountId', '==', filters.assigneeAccountId);
+    }
+    
+    const snapshot = await query.get();
+    return snapshot.docs.map(doc => doc.data() as {Entity}Projection);
+  }
+}
+```
+
+## Aggregate Template
+
+### Basic Aggregate
+```typescript
+export class {EntityName}Aggregate {
+  private state: {EntityName}State;
+  private uncommittedEvents: DomainEvent[] = [];
+  
+  constructor(state?: {EntityName}State) {
+    this.state = state || this.getInitialState();
+  }
+  
+  private getInitialState(): {EntityName}State {
+    return {
+      {entity}Id: '',
+      blueprintId: '',
+      status: 'pending',
+      // ... other fields
+      lastEventId: null
+    };
+  }
+  
+  /**
+   * Create new {entity}
+   */
+  static create(
+    command: Create{EntityName}Command
+  ): Result<{EntityName}Aggregate> {
+    // Validate
+    if (!command.{field}) {
+      return Result.Err('{Field} is required');
+    }
+    
+    // Create event
+    const event = create{EntityName}CreatedEvent(
+      command.{entity}Id,
+      {
+        {entity}Id: command.{entity}Id,
+        actorAccountId: command.actorAccountId,
+        ...command.data
+      },
+      command.causedByEventId,
+      command.blueprintId
+    );
+    
+    // Apply and return
+    const aggregate = new {EntityName}Aggregate();
+    aggregate.applyEvent(event);
+    aggregate.uncommittedEvents.push(event);
+    
+    return Result.Ok(aggregate);
+  }
+  
+  /**
+   * Business method
+   */
+  {methodName}(
+    param1: Type1,
+    actorAccountId: string
+  ): Result<{EventName}Event> {
+    // 1. Validate business rules
+    if (this.state.status !== 'valid_status') {
+      return Result.Err('Cannot {action} in current state');
+    }
+    
+    // 2. Create event
+    const event = create{EventName}Event(
+      this.state.{entity}Id,
+      {
+        {entity}Id: this.state.{entity}Id,
+        actorAccountId,
+        param1
+      },
+      this.state.lastEventId,
+      this.state.blueprintId
+    );
+    
+    // 3. Apply event
+    this.applyEvent(event);
+    this.uncommittedEvents.push(event);
+    
+    return Result.Ok(event);
+  }
+  
+  /**
+   * Apply event to state
+   */
+  private applyEvent(event: DomainEvent): void {
+    switch (event.eventType) {
+      case '{EntityName}Created':
+        this.on{EntityName}Created(event as {EntityName}CreatedEvent);
+        break;
+      case '{EventName}':
+        this.on{EventName}(event as {EventName}Event);
+        break;
+    }
+    
+    this.state.lastEventId = event.eventId;
+  }
+  
+  private on{EntityName}Created(event: {EntityName}CreatedEvent): void {
+    this.state = {
+      {entity}Id: event.aggregateId,
+      blueprintId: event.blueprintId,
+      ...event.data,
+      lastEventId: event.eventId
+    };
+  }
+  
+  /**
+   * Get uncommitted events
+   */
+  getUncommittedEvents(): DomainEvent[] {
+    return [...this.uncommittedEvents];
+  }
+  
+  /**
+   * Clear uncommitted events (after persistence)
+   */
+  clearUncommittedEvents(): void {
+    this.uncommittedEvents = [];
+  }
+  
+  /**
+   * Replay from events
+   */
+  static replayFrom(events: DomainEvent[]): {EntityName}Aggregate {
+    const aggregate = new {EntityName}Aggregate();
+    events.forEach(event => aggregate.applyEvent(event));
+    return aggregate;
+  }
+}
+```
+
+## Implementation Checklist
+- [ ] Events use past tense naming
+- [ ] Events include causedByEventId
+- [ ] Commands include actorAccountId and blueprintId
+- [ ] Aggregates enforce business rules
+- [ ] Projections are pure functions
+- [ ] Queries filter by workspace (blueprintId)
+- [ ] Multi-tenant validation in all queries
+- [ ] Event factories generate complete metadata
+- [ ] Aggregates support replay from events
+- [ ] Uncommitted events tracked separately

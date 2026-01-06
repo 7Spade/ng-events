@@ -1,0 +1,654 @@
+---
+description: Templates for creating read-model projections from event streams in ng-events
+applyTo: '**/*.{projection.ts,projection-builder.ts,query.service.ts}'
+---
+
+# Projection Templates
+
+## Core Concepts
+
+### What is a Projection?
+- **Read-optimized view** built from event stream
+- **Eventually consistent** with write model
+- **Query-specific** structure (not normalized)
+- **Rebuilt from events** (can recreate at any time)
+- **Multi-tenant scoped** (filtered by blueprintId)
+
+### Projection vs Aggregate
+- **Aggregate**: Write model, enforces invariants, publishes events
+- **Projection**: Read model, optimized for queries, built from events
+
+## Basic Projection Template
+
+### Projection Interface
+```typescript
+// task.projection.ts
+export interface TaskProjection {
+  // Identity
+  readonly taskId: string;
+  readonly blueprintId: string;
+
+  // Business data
+  readonly title: string;
+  readonly description?: string;
+  readonly status: 'Open' | 'InProgress' | 'Completed' | 'Cancelled';
+  readonly assigneeId?: string;
+  readonly dueDate?: Timestamp;
+
+  // Metadata for queries
+  readonly createdAt: Timestamp;
+  readonly createdBy: string;
+  readonly updatedAt: Timestamp;
+  readonly completedAt?: Timestamp;
+
+  // Denormalized data (for efficient queries)
+  readonly assigneeName?: string;  // From Account projection
+  readonly projectName?: string;   // From Project projection
+
+  // Version tracking
+  readonly lastEventId: string;
+  readonly version: number;
+}
+```
+
+### Projection Builder Pattern
+```typescript
+// task.projection-builder.ts
+export class TaskProjectionBuilder {
+  private projection: Partial<TaskProjection> = {};
+
+  constructor(private readonly taskId: string) {
+    this.projection.taskId = taskId;
+    this.projection.version = 0;
+  }
+
+  // Apply events to build projection
+  applyEvent(event: DomainEvent): void {
+    switch (event.eventType) {
+      case 'TaskCreatedEvent':
+        this.applyTaskCreated(event as TaskCreatedEvent);
+        break;
+      case 'TaskAssignedEvent':
+        this.applyTaskAssigned(event as TaskAssignedEvent);
+        break;
+      case 'TaskCompletedEvent':
+        this.applyTaskCompleted(event as TaskCompletedEvent);
+        break;
+      case 'TaskTitleChangedEvent':
+        this.applyTaskTitleChanged(event as TaskTitleChangedEvent);
+        break;
+      default:
+        // Ignore unknown events (forward compatibility)
+        break;
+    }
+
+    // Update metadata
+    this.projection.lastEventId = event.metadata.eventId;
+    this.projection.version = (this.projection.version || 0) + 1;
+  }
+
+  private applyTaskCreated(event: TaskCreatedEvent): void {
+    this.projection = {
+      ...this.projection,
+      blueprintId: event.data.blueprintId,
+      title: event.data.title,
+      description: event.data.description,
+      status: 'Open',
+      assigneeId: event.data.assigneeId,
+      dueDate: event.data.dueDate,
+      createdAt: event.metadata.timestamp,
+      createdBy: event.metadata.causedByUser,
+      updatedAt: event.metadata.timestamp
+    };
+  }
+
+  private applyTaskAssigned(event: TaskAssignedEvent): void {
+    this.projection.assigneeId = event.data.assigneeId;
+    this.projection.updatedAt = event.metadata.timestamp;
+  }
+
+  private applyTaskCompleted(event: TaskCompletedEvent): void {
+    this.projection.status = 'Completed';
+    this.projection.completedAt = event.metadata.timestamp;
+    this.projection.updatedAt = event.metadata.timestamp;
+  }
+
+  private applyTaskTitleChanged(event: TaskTitleChangedEvent): void {
+    this.projection.title = event.data.newTitle;
+    this.projection.updatedAt = event.metadata.timestamp;
+  }
+
+  build(): TaskProjection {
+    // Validate required fields
+    if (!this.projection.taskId) {
+      throw new Error('taskId is required');
+    }
+    if (!this.projection.blueprintId) {
+      throw new Error('blueprintId is required');
+    }
+    if (!this.projection.title) {
+      throw new Error('title is required');
+    }
+
+    return this.projection as TaskProjection;
+  }
+
+  // Helper to check if projection is complete
+  isComplete(): boolean {
+    return !!(
+      this.projection.taskId &&
+      this.projection.blueprintId &&
+      this.projection.title
+    );
+  }
+}
+```
+
+## Projection Persistence Pattern
+
+### Firestore Projection Repository
+```typescript
+// task-projection.repository.ts
+export class FirestoreTaskProjectionRepository {
+  private readonly collectionPath = 'task_projections';
+
+  constructor(private readonly db: Firestore) {}
+
+  async save(projection: TaskProjection): Promise<void> {
+    const docRef = doc(
+      this.db,
+      this.collectionPath,
+      projection.taskId
+    );
+    
+    await setDoc(docRef, {
+      ...projection,
+      // Convert Timestamp to Firestore Timestamp
+      createdAt: Timestamp.toFirestore(projection.createdAt),
+      updatedAt: Timestamp.toFirestore(projection.updatedAt),
+      completedAt: projection.completedAt 
+        ? Timestamp.toFirestore(projection.completedAt) 
+        : null,
+      dueDate: projection.dueDate
+        ? Timestamp.toFirestore(projection.dueDate)
+        : null
+    });
+  }
+
+  async getById(taskId: string, blueprintId: string): Promise<TaskProjection | null> {
+    const docRef = doc(this.db, this.collectionPath, taskId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    const data = docSnap.data();
+
+    // Validate blueprint boundary
+    if (data.blueprintId !== blueprintId) {
+      throw new Error('Task not found in current workspace');
+    }
+
+    return this.mapToProjection(data);
+  }
+
+  async findByBlueprint(
+    blueprintId: string,
+    filters?: TaskQueryFilters
+  ): Promise<TaskProjection[]> {
+    let q = query(
+      collection(this.db, this.collectionPath),
+      where('blueprintId', '==', blueprintId)
+    );
+
+    // Apply optional filters
+    if (filters?.status) {
+      q = query(q, where('status', '==', filters.status));
+    }
+    if (filters?.assigneeId) {
+      q = query(q, where('assigneeId', '==', filters.assigneeId));
+    }
+
+    // Sorting
+    if (filters?.sortBy === 'dueDate') {
+      q = query(q, orderBy('dueDate', 'asc'));
+    } else {
+      q = query(q, orderBy('updatedAt', 'desc'));
+    }
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => this.mapToProjection(doc.data()));
+  }
+
+  private mapToProjection(data: any): TaskProjection {
+    return {
+      taskId: data.taskId,
+      blueprintId: data.blueprintId,
+      title: data.title,
+      description: data.description,
+      status: data.status,
+      assigneeId: data.assigneeId,
+      dueDate: data.dueDate ? Timestamp.fromFirestore(data.dueDate) : undefined,
+      createdAt: Timestamp.fromFirestore(data.createdAt),
+      createdBy: data.createdBy,
+      updatedAt: Timestamp.fromFirestore(data.updatedAt),
+      completedAt: data.completedAt 
+        ? Timestamp.fromFirestore(data.completedAt) 
+        : undefined,
+      assigneeName: data.assigneeName,
+      projectName: data.projectName,
+      lastEventId: data.lastEventId,
+      version: data.version
+    };
+  }
+}
+```
+
+## Query Service Pattern
+
+### Angular Query Service
+```typescript
+// task-query.service.ts
+@Injectable({ providedIn: 'root' })
+export class TaskQueryService {
+  constructor(
+    private readonly projectionRepo: FirestoreTaskProjectionRepository,
+    private readonly sessionContext: SessionContext
+  ) {}
+
+  async getTaskById(taskId: string): Promise<TaskProjection | null> {
+    const blueprintId = this.sessionContext.getCurrentBlueprintId();
+    return this.projectionRepo.getById(taskId, blueprintId);
+  }
+
+  async getTasksForCurrentWorkspace(
+    filters?: TaskQueryFilters
+  ): Promise<TaskProjection[]> {
+    const blueprintId = this.sessionContext.getCurrentBlueprintId();
+    return this.projectionRepo.findByBlueprint(blueprintId, filters);
+  }
+
+  async getMyTasks(): Promise<TaskProjection[]> {
+    const blueprintId = this.sessionContext.getCurrentBlueprintId();
+    const accountId = this.sessionContext.getCurrentAccountId();
+    
+    return this.projectionRepo.findByBlueprint(blueprintId, {
+      assigneeId: accountId,
+      status: ['Open', 'InProgress']  // Only active tasks
+    });
+  }
+
+  async getOverdueTasks(): Promise<TaskProjection[]> {
+    const blueprintId = this.sessionContext.getCurrentBlueprintId();
+    const now = Timestamp.now();
+    
+    const allTasks = await this.projectionRepo.findByBlueprint(blueprintId, {
+      status: ['Open', 'InProgress']
+    });
+
+    return allTasks.filter(task => 
+      task.dueDate && task.dueDate.toDate() < now.toDate()
+    );
+  }
+}
+
+export interface TaskQueryFilters {
+  status?: TaskStatus | TaskStatus[];
+  assigneeId?: string;
+  sortBy?: 'dueDate' | 'updatedAt' | 'createdAt';
+}
+```
+
+## Event Listener Pattern
+
+### Projection Update Listener
+```typescript
+// task-projection.listener.ts
+export class TaskProjectionListener {
+  constructor(
+    private readonly eventBus: EventBus,
+    private readonly projectionRepo: FirestoreTaskProjectionRepository,
+    private readonly eventStore: EventStore
+  ) {
+    this.subscribeToEvents();
+  }
+
+  private subscribeToEvents(): void {
+    // Subscribe to Task events
+    this.eventBus.subscribe('TaskCreatedEvent', this.handleTaskCreated.bind(this));
+    this.eventBus.subscribe('TaskAssignedEvent', this.handleTaskAssigned.bind(this));
+    this.eventBus.subscribe('TaskCompletedEvent', this.handleTaskCompleted.bind(this));
+    this.eventBus.subscribe('TaskTitleChangedEvent', this.handleTaskTitleChanged.bind(this));
+  }
+
+  private async handleTaskCreated(event: TaskCreatedEvent): Promise<void> {
+    try {
+      // Build projection from scratch
+      const builder = new TaskProjectionBuilder(event.data.taskId);
+      builder.applyEvent(event);
+      
+      const projection = builder.build();
+      await this.projectionRepo.save(projection);
+    } catch (error) {
+      console.error('Failed to handle TaskCreatedEvent', error);
+      // TODO: Add to dead letter queue for retry
+    }
+  }
+
+  private async handleTaskAssigned(event: TaskAssignedEvent): Promise<void> {
+    try {
+      // Rebuild projection from all events
+      const taskId = event.data.taskId;
+      const projection = await this.rebuildProjection(taskId);
+      await this.projectionRepo.save(projection);
+    } catch (error) {
+      console.error('Failed to handle TaskAssignedEvent', error);
+    }
+  }
+
+  private async rebuildProjection(taskId: string): Promise<TaskProjection> {
+    // Load all events for this task
+    const events = await this.eventStore.getEventsForAggregate(taskId);
+    
+    // Rebuild projection
+    const builder = new TaskProjectionBuilder(taskId);
+    for (const event of events) {
+      builder.applyEvent(event);
+    }
+    
+    return builder.build();
+  }
+}
+```
+
+## Denormalization Pattern
+
+### Enriching Projection with Related Data
+```typescript
+// task-projection-enricher.ts
+export class TaskProjectionEnricher {
+  constructor(
+    private readonly accountProjectionRepo: AccountProjectionRepository
+  ) {}
+
+  async enrichTaskProjection(task: TaskProjection): Promise<TaskProjection> {
+    const enriched = { ...task };
+
+    // Enrich with assignee name
+    if (task.assigneeId) {
+      const assignee = await this.accountProjectionRepo.getById(
+        task.assigneeId,
+        task.blueprintId
+      );
+      if (assignee) {
+        enriched.assigneeName = assignee.displayName;
+      }
+    }
+
+    return enriched;
+  }
+
+  async enrichTaskProjections(tasks: TaskProjection[]): Promise<TaskProjection[]> {
+    // Batch load assignees for efficiency
+    const assigneeIds = [...new Set(
+      tasks.map(t => t.assigneeId).filter(Boolean) as string[]
+    )];
+
+    const assignees = await this.accountProjectionRepo.findByIds(
+      assigneeIds,
+      tasks[0]?.blueprintId
+    );
+
+    const assigneeMap = new Map(
+      assignees.map(a => [a.accountId, a.displayName])
+    );
+
+    return tasks.map(task => ({
+      ...task,
+      assigneeName: task.assigneeId 
+        ? assigneeMap.get(task.assigneeId) 
+        : undefined
+    }));
+  }
+}
+```
+
+## Projection Rebuild Pattern
+
+### Full Rebuild from Event Store
+```typescript
+// task-projection-rebuilder.ts
+export class TaskProjectionRebuilder {
+  constructor(
+    private readonly eventStore: EventStore,
+    private readonly projectionRepo: FirestoreTaskProjectionRepository
+  ) {}
+
+  async rebuildAll(blueprintId: string): Promise<RebuildResult> {
+    const startTime = Date.now();
+    let processed = 0;
+    let failed = 0;
+
+    try {
+      // Load all Task events for this blueprint
+      const events = await this.eventStore.getEventsByType(
+        'Task',
+        blueprintId
+      );
+
+      // Group events by taskId
+      const eventsByTask = this.groupEventsByAggregate(events);
+
+      // Rebuild each task projection
+      for (const [taskId, taskEvents] of eventsByTask.entries()) {
+        try {
+          const builder = new TaskProjectionBuilder(taskId);
+          
+          // Apply events in order
+          for (const event of taskEvents) {
+            builder.applyEvent(event);
+          }
+
+          const projection = builder.build();
+          await this.projectionRepo.save(projection);
+          processed++;
+        } catch (error) {
+          console.error(`Failed to rebuild task ${taskId}`, error);
+          failed++;
+        }
+      }
+
+      return {
+        processed,
+        failed,
+        durationMs: Date.now() - startTime
+      };
+    } catch (error) {
+      throw new Error(`Projection rebuild failed: ${error.message}`);
+    }
+  }
+
+  private groupEventsByAggregate(
+    events: DomainEvent[]
+  ): Map<string, DomainEvent[]> {
+    const grouped = new Map<string, DomainEvent[]>();
+
+    for (const event of events) {
+      const aggregateId = event.aggregateId;
+      if (!grouped.has(aggregateId)) {
+        grouped.set(aggregateId, []);
+      }
+      grouped.get(aggregateId)!.push(event);
+    }
+
+    // Sort events by timestamp within each aggregate
+    for (const events of grouped.values()) {
+      events.sort((a, b) => 
+        a.metadata.timestamp.toMillis() - b.metadata.timestamp.toMillis()
+      );
+    }
+
+    return grouped;
+  }
+}
+
+export interface RebuildResult {
+  processed: number;
+  failed: number;
+  durationMs: number;
+}
+```
+
+## Multi-Tenant Query Patterns
+
+### Always Include Blueprint Filter
+```typescript
+// ✅ GOOD: Blueprint-scoped query
+async getTasksForWorkspace(blueprintId: string): Promise<TaskProjection[]> {
+  return this.projectionRepo.findByBlueprint(blueprintId);
+}
+
+// ❌ BAD: Global query (leaks across tenants)
+async getAllTasks(): Promise<TaskProjection[]> {
+  return this.db.collection('task_projections').get();  // NO!
+}
+```
+
+### Firestore Security Rules
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Task projections scoped to blueprint
+    match /task_projections/{taskId} {
+      allow read: if request.auth != null &&
+        resource.data.blueprintId in getUserBlueprintIds(request.auth.uid);
+      
+      allow write: if request.auth != null &&
+        request.resource.data.blueprintId in getUserBlueprintIds(request.auth.uid);
+    }
+  }
+}
+```
+
+## Projection Consistency Patterns
+
+### Eventual Consistency Warning
+```typescript
+// Projection may lag behind write model
+async createTaskAndGetProjection(command: CreateTaskCommand): Promise<TaskProjection> {
+  // 1. Execute command (write model)
+  const result = await this.commandHandler.handleCreateTask(command);
+  
+  if (!result.isSuccess) {
+    throw new Error(result.error);
+  }
+
+  // 2. Wait for projection (eventual consistency)
+  const taskId = result.value;
+  return this.waitForProjection(taskId, command.data.blueprintId);
+}
+
+private async waitForProjection(
+  taskId: string,
+  blueprintId: string,
+  maxRetries: number = 10
+): Promise<TaskProjection> {
+  for (let i = 0; i < maxRetries; i++) {
+    const projection = await this.projectionRepo.getById(taskId, blueprintId);
+    if (projection) {
+      return projection;
+    }
+    await this.delay(100 * Math.pow(2, i));  // Exponential backoff
+  }
+  throw new Error('Projection not available after write');
+}
+```
+
+## Implementation Checklist
+
+### For New Projection Type
+- [ ] Define projection interface with readonly fields
+- [ ] Include blueprintId and multi-tenant fields
+- [ ] Create ProjectionBuilder class
+- [ ] Implement applyEvent() for all relevant events
+- [ ] Add event-specific apply methods
+- [ ] Update lastEventId and version
+- [ ] Create projection repository
+- [ ] Implement save() and query methods
+- [ ] Add multi-tenant filtering (blueprintId)
+- [ ] Create query service
+- [ ] Add common query methods
+- [ ] Create event listener
+- [ ] Subscribe to relevant events
+- [ ] Handle projection updates
+- [ ] Write unit tests for builder
+- [ ] Write integration tests for repository
+- [ ] Write E2E tests for query service
+
+### For Projection Denormalization
+- [ ] Identify related data to include
+- [ ] Create enricher service
+- [ ] Batch load related projections
+- [ ] Update projection interface with denormalized fields
+- [ ] Update builder to handle enrichment
+- [ ] Test performance impact
+- [ ] Document denormalization decisions
+
+## Anti-Patterns to Avoid
+
+### ❌ DON'T: Query Write Model Directly
+```typescript
+// BAD: Querying aggregate state
+async getTasks(): Promise<Task[]> {
+  const aggregates = await this.taskRepository.getAll();
+  return aggregates;  // Exposing write model to queries
+}
+
+// GOOD: Query projections
+async getTasks(): Promise<TaskProjection[]> {
+  return this.taskProjectionRepo.findByBlueprint(blueprintId);
+}
+```
+
+### ❌ DON'T: Update Projections in Commands
+```typescript
+// BAD: Command updating projection directly
+async handleCreateTask(command: CreateTaskCommand) {
+  const task = Task.create(command.data);
+  await this.taskRepo.save(task);
+  
+  // NO! Projection should be updated by event listener
+  await this.projectionRepo.save(task.toProjection());
+}
+
+// GOOD: Let event listener handle projection
+async handleCreateTask(command: CreateTaskCommand) {
+  const task = Task.create(command.data);
+  await this.taskRepo.save(task);
+  // Event listener will update projection
+}
+```
+
+### ❌ DON'T: Missing Blueprint Scope
+```typescript
+// BAD: No tenant filtering
+async getTask(taskId: string): Promise<TaskProjection> {
+  return this.db.doc(`task_projections/${taskId}`).get();
+}
+
+// GOOD: Validate blueprint boundary
+async getTask(taskId: string, blueprintId: string): Promise<TaskProjection> {
+  const doc = await this.db.doc(`task_projections/${taskId}`).get();
+  if (doc.blueprintId !== blueprintId) {
+    throw new Error('Task not in current workspace');
+  }
+  return doc;
+}
+```
+
+## References
+- Event Design: `.github/instructions/event-design-patterns.instructions.yml`
+- Multi-Tenant: `.github/instructions/account-workspace-model.instructions.yml`
+- Query Patterns: docs/📦-Project-Knowledge/Query-patterns.md

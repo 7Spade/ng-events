@@ -1,0 +1,390 @@
+---
+description: "Development naming conventions for Event Sourcing: events, commands, queries, projections, and functions"
+applyTo: "packages/**/*.ts"
+---
+
+# Naming Conventions
+
+## Event Naming
+
+### Pattern
+```typescript
+{Verb}{Noun}Event  // Past tense
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+TaskCreatedEvent
+TaskCompletedEvent
+PaymentApprovedEvent
+OrderPlacedEvent
+InvoiceIssuedEvent
+
+// ❌ BAD
+TaskCreateEvent        // Not past tense
+CreateTaskEvent        // Command, not event
+TaskEvent              // Too vague
+TaskUpdatedEvent       // Use specific actions
+```
+
+### Event Data Interface
+```typescript
+interface TaskCreatedEvent {
+  eventId: string;
+  aggregateId: string;
+  blueprintId: string;
+  causedByEventId: string | null;
+  timestamp: Timestamp;
+  actorAccountId: string;
+  data: {
+    taskId: string;
+    title: string;
+    createdByAccountId: string;
+  };
+}
+```
+
+## Command Naming
+
+### Pattern
+```typescript
+{Verb}{Noun}Command  // Imperative
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+CreateTaskCommand
+AssignTaskCommand
+CompleteTaskCommand
+ApprovePaymentCommand
+IssueInvoiceCommand
+
+// ❌ BAD
+TaskCreatedCommand     // Event, not command
+TaskCreateCommand      // Inconsistent verb form
+CreateCommand          // Missing noun
+```
+
+## Query Function Naming
+
+### Pattern
+```typescript
+get{EntityName}By{Criteria}(criteria: Type): Promise<Entity>
+find{EntityName}s({filters}): Promise<Entity[]>
+list{EntityName}sFor{Context}(contextId: string): Promise<Entity[]>
+list{EntityName}sIn{Scope}(scopeId: string): Promise<Entity[]>
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+getTaskById(taskId: string): Promise<TaskAggregate>
+findTasksByStatus(status: TaskStatus): Promise<TaskAggregate[]>
+listTasksForAccount(accountId: string): Promise<TaskProjection[]>
+listTasksInWorkspace(workspaceId: string): Promise<TaskProjection[]>
+getPaymentByRequestId(requestId: string): Promise<PaymentAggregate>
+
+// ❌ BAD
+getTasks(): Promise<any[]>                    // Missing context
+queryData(id: string): any                    // Too vague
+listTasksForUser(userId: string): any         // Use accountId
+findTasks(): Promise<Task[]>                  // Missing filter criteria
+```
+
+## Event Handler Naming
+
+### Pattern
+```typescript
+on{EventName}({aggregate}: {AggregateType}): void
+handle{EventName}Event(event: {EventName}Event): Promise<void>
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+onTaskCreated(task: TaskAggregate): void { }
+handleTaskCompletedEvent(event: TaskCompletedEvent): Promise<void> { }
+onPaymentApproved(payment: PaymentAggregate): void { }
+
+// ❌ BAD
+taskCreated(t: any): void { }          // Missing 'on' prefix
+processEvent(e: Event): void { }       // Too generic
+handleTask(event: any): void { }       // Missing event name
+```
+
+## Command Handler Naming
+
+### Pattern
+```typescript
+execute{CommandName}Command(command: {CommandName}Command): Promise<Result>
+handle{CommandName}(command: {CommandName}Command): Promise<{AggregateType}>
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+executeCreateTaskCommand(command: CreateTaskCommand): Promise<Result>
+handleApprovePayment(command: ApprovePaymentCommand): Promise<PaymentAggregate>
+
+// ❌ BAD
+createTask(data: any): Promise<any>    // Not clear it's a command
+doApproval(cmd: any): void             // Missing types
+execute(command: any): void            // Too generic
+```
+
+## Projection Naming
+
+### Pattern
+```typescript
+{EntityName}{ViewType}Projection
+{EntityName}{ViewType}View
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+TaskListProjection
+TaskBoardProjection
+TaskWhyProjection
+PaymentSummaryView
+InvoiceListView
+
+// ❌ BAD
+TaskProjection                  // Missing view type
+TaskState                       // Use Projection/View
+TaskListState                   // Use Projection/View
+TaskData                        // Too vague
+```
+
+## Projection Update Function Naming
+
+### Pattern
+```typescript
+update{ProjectionName}From{EventName}(event: {EventName}Event): Promise<void>
+rebuild{ProjectionName}Projection(aggregateId: string): Promise<void>
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+updateTaskListFromTaskCreated(event: TaskCreatedEvent): Promise<void>
+rebuildPaymentSummaryProjection(paymentId: string): Promise<void>
+
+// ❌ BAD
+updateProjection(e: any): void          // Not specific
+rebuildTask(id: string): void           // Missing projection name
+processTaskEvent(event: Event): void    // Too generic
+```
+
+## Aggregate/Entity Naming
+
+### Pattern
+```typescript
+{EntityName}Aggregate
+{EntityName}Entity
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+TaskAggregate
+PaymentAggregate
+IssueAggregate
+ContractEntity
+
+// ❌ BAD
+Task                    // Ambiguous (projection vs aggregate)
+TaskModel               // Unclear if aggregate or projection
+TaskData                // Too vague
+```
+
+## Repository Naming
+
+### Pattern
+```typescript
+{PlatformName}{EntityName}Repository
+I{EntityName}Repository  // Interface
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+interface ITaskRepository { }
+class FirestoreTaskRepository implements ITaskRepository { }
+class SupabasePaymentRepository implements IPaymentRepository { }
+
+// ❌ BAD
+TaskRepo                        // Abbreviation
+TaskDataAccess                  // Too generic
+FirebaseTaskDB                  // Inconsistent naming
+```
+
+## Service Naming
+
+### Pattern
+```typescript
+{EntityName}{Purpose}Service
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+TaskCommandService
+TaskQueryService
+PaymentApprovalService
+NotificationService
+
+// ❌ BAD
+TaskService                     // Missing purpose
+TaskMgr                         // Abbreviation
+ServiceTask                     // Wrong order
+```
+
+## Saga/Process Naming
+
+### Pattern
+```typescript
+{ProcessName}Saga
+{ProcessName}ProcessManager
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+TaskAssignmentSaga
+PaymentApprovalSaga
+OrderFulfillmentProcessManager
+
+// ❌ BAD
+TaskFlow                        // Use Saga or ProcessManager
+TaskProcess                     // Too generic
+AssignmentHandler               // Not clear it's a saga
+```
+
+## Module Naming
+
+### Pattern
+```typescript
+{FeatureName}Module
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+TaskModule
+PaymentModule
+IssueModule
+ContractModule
+
+// ❌ BAD
+Tasks                           // Plural
+TasksModule                     // Plural
+Task                            // Missing Module suffix
+```
+
+## File Naming
+
+### Pattern
+```
+{entity-name}.{purpose}.ts
+```
+
+### Examples
+```
+// ✅ GOOD
+task.aggregate.ts
+task-created.event.ts
+create-task.command.ts
+task-list.projection.ts
+task.repository.ts
+task-command.service.ts
+task-query.service.ts
+task-assignment.saga.ts
+
+// ❌ BAD
+task.ts                         // Missing purpose
+TaskAggregate.ts                // Use kebab-case
+task_aggregate.ts               // Use kebab-case with dots
+```
+
+## Variable Naming
+
+### Pattern
+```typescript
+{descriptiveName}AccountId  // For Account references
+{descriptiveName}WorkspaceId  // For Workspace references
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+actorAccountId
+createdByAccountId
+assigneeAccountId
+approvedByAccountId
+currentWorkspaceId
+targetWorkspaceId
+
+// ❌ BAD
+userId                          // Use accountId
+orgId                           // Use accountId (org is also Account)
+user                            // Use account
+createdBy                       // Use createdByAccountId
+assignedTo                      // Use assigneeAccountId
+```
+
+## Constant Naming
+
+### Pattern
+```typescript
+SCREAMING_SNAKE_CASE for constants
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+const MAX_RETRY_ATTEMPTS = 3;
+const DEFAULT_PAGE_SIZE = 20;
+const WORKSPACE_ROLE_OWNER = 'owner';
+
+// ❌ BAD
+const maxRetryAttempts = 3;     // Use SCREAMING_SNAKE_CASE
+const Max_Retry = 3;            // Inconsistent case
+```
+
+## Type/Interface Naming
+
+### Pattern
+```typescript
+{EntityName}Data
+{EntityName}Props
+I{ServiceName}  // Interface prefix
+```
+
+### Examples
+```typescript
+// ✅ GOOD
+interface TaskData { }
+interface CreateTaskProps { }
+interface IEventStore { }
+type TaskStatus = 'pending' | 'completed';
+
+// ❌ BAD
+interface task_data { }         // Use PascalCase
+interface ITaskInterface { }    // Redundant Interface
+type status = string;           // Use specific type
+```
+
+## Implementation Checklist
+1. All events use past tense + Event suffix
+2. All commands use imperative + Command suffix
+3. All projections include view type + Projection/View suffix
+4. All queries specify entity and criteria
+5. Use accountId instead of userId/orgId
+6. Use workspaceId for scope/boundary
+7. Files use kebab-case with purpose suffix
+8. Constants use SCREAMING_SNAKE_CASE
+9. Types/Interfaces use PascalCase
+10. Functions use camelCase with descriptive names

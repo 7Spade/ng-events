@@ -1,0 +1,63 @@
+---
+description: "Multi-Tenant SaaS architecture rules: Workspace, Module, Entity, Event, Projection, Saga, Angular Query"
+applyTo: "packages/ui-angular/**/*.ts, packages/saas-domain/**/*.ts, packages/core-engine/**/*.ts"
+---
+
+# Multi-Tenant SaaS Instructions
+
+## Core Concepts
+- Account = WHO, Workspace = WHERE
+- Workspace Switcher dynamically selects Workspace based on current identity and permissions
+- SessionContext stores current Workspace, role, and permissions cache
+
+## Architecture Rules
+- Workspace is the tenant container; each tenant maps to a Workspace instance
+- ModuleRegistry dynamically loads/unloads modules per Workspace
+- Modules contain Entities, Commands, Events, and Sagas
+- Shared services (Auth, Logging, Metrics) reside in Shared Services per Workspace
+
+## Event-Sourced & Causality Rules
+- Command → Entity → Event → Projection → Angular Query
+- Events must include causedByEventId to trace causality
+- Projections support multi-view and versioning
+- Angular Query subscribes only to relevant Workspace Projections
+
+## Saga / Long-Running Process Rules
+- Saga state machine: Pending → InProgress → Completed / Failed / Compensated / DeadLetter
+- Cross-Workspace Sagas must validate permissions and roles
+- Compensation actions required for failed or timed-out Sagas
+
+## Angular / UI Integration Rules
+- Commands only executable if current Workspace role permits
+- Angular Query subscribes to projections relevant to current Workspace
+- Guards and components read session from SessionContext
+- Workspace Switcher initializes ModuleRegistry, Event/Saga scope, and Angular Query subscriptions
+
+## Naming Conventions
+- Workspace: PascalCase (e.g., TenantWorkspace)
+- Module: PascalCase (e.g., TaskModule)
+- Entity: PascalCase (e.g., TaskEntity)
+- Event: Verb + Noun (e.g., TaskCreated)
+- Command: Verb + Noun (e.g., AssignTask)
+- Saga: PascalCase + Flow (e.g., TaskAssignmentSaga)
+- Projection: EntityName + View (e.g., TaskListView)
+
+## Multi-Tenant / Sub-Account Rules
+- One Account can have multiple identities across Workspaces
+- Each identity has roles (Owner / Admin / Member / Viewer)
+- Sub-Accounts inherit Workspace access via same Workspace Switcher
+- SessionContext must always store current identity, Workspace, and role
+
+## Implementation Checklist
+1. Verify Workspace Switcher dynamically loads ModuleRegistry per Workspace
+2. Ensure Commands and Events are scoped per Workspace
+3. Ensure Sagas respect Workspace permissions and role-based execution
+4. Projections map Events to Angular Queries scoped per Workspace
+5. Use SessionContext for all current Workspace / Role / Identity access
+6. Write unit tests for multi-tenant Command/Event/Saga flows
+7. Validate Angular UI only shows components allowed for current role
+
+## Additional Notes
+- All cross-Workspace operations require explicit permission checks
+- Event/Command flows must not bypass Workspace boundaries
+- Maintain clear separation between UI / Domain / Adapter layers

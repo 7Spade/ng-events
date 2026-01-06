@@ -1,0 +1,25 @@
+---
+description: "Core-engine package: central logic, event handling, projection, CQRS flow."
+applyTo: "packages/core-engine/**/*.ts"
+---
+
+# Core-Engine Package Instructions
+
+## Project Context
+- Orchestrates process flows, events, projections
+- Handles domain logic only
+- Does not include UI or adapter logic
+
+## Development Rules
+- Do not import UI or adapter internal files
+- Use DI tokens for all services
+- Commands, events, projections must reside in proper folders
+- Maintain CQRS flow consistency
+- Avoid direct instantiation of services
+
+## Implementation Process
+1. Define commands, events, and projections
+2. Implement process orchestration services
+3. Inject domain services via DA_SERVICE_TOKEN
+4. Expose public API via index.ts
+5. Write unit tests for orchestration logic

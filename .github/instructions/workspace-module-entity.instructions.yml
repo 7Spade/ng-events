@@ -1,0 +1,158 @@
+---
+description: "Workspace-Module-Entity core architecture: multi-tenant SaaS structure with dynamic module loading"
+applyTo: "packages/saas-domain/**/*.ts, packages/platform-adapters/**/*.ts"
+---
+
+# Workspace-Module-Entity Architecture
+
+## Core Structure
+```
+Account (WHO)
+   │
+   ├─→ Workspace (WHERE)
+   │      │
+   │      ├─→ ModuleRegistry (dynamic loading)
+   │      │      │
+   │      │      ├─→ TaskModule
+   │      │      │     ├─→ TaskEntity (Aggregate)
+   │      │      │     ├─→ TaskCommands
+   │      │      │     ├─→ TaskEvents
+   │      │      │     └─→ TaskSagas
+   │      │      │
+   │      │      ├─→ PaymentModule
+   │      │      └─→ IssueModule
+   │      │
+   │      └─→ Shared Services (per Workspace)
+   │             ├─→ Auth
+   │             ├─→ Logging
+   │             └─→ Metrics
+```
+
+## Account (WHO)
+- **Definition**: Business actor - the "who" in every action
+- **Types**: UserAccount, OrganizationAccount, BotAccount
+- **Role**: Triggers events, owns permissions, appears in causality chain
+- **In Code**: actorAccountId in events and commands
+
+## Workspace (WHERE)
+- **Definition**: Tenant container - the "where" for all business operations
+- **Role**: Logical boundary for data isolation and module scope
+- **Characteristics**:
+  - One tenant = One Workspace instance
+  - Contains ModuleRegistry
+  - Defines security boundary
+  - Isolates data per tenant
+- **In Code**: workspaceId/blueprintId in all events
+
+## Module
+- **Definition**: Pluggable business capability within a Workspace
+- **Contains**:
+  - Entities (Aggregates)
+  - Commands
+  - Events
+  - Sagas
+  - Projections
+- **Lifecycle**: Dynamically loaded/unloaded per Workspace
+- **Examples**: TaskModule, PaymentModule, IssueModule, ContractModule
+
+## Entity (Aggregate)
+- **Definition**: Consistency boundary in domain model
+- **Characteristics**:
+  - Owns business rules
+  - Emits domain events
+  - Maintains invariants
+  - Has unique identity within Module
+- **Examples**: TaskEntity, PaymentEntity, IssueEntity
+
+## ModuleRegistry
+- **Purpose**: Manage module lifecycle per Workspace
+- **Operations**:
+  - Load module when Workspace activated
+  - Unload module when Workspace deactivated
+  - Route commands to correct module
+  - Scope events to module boundary
+- **Pattern**: Registry pattern with lazy loading
+
+## SessionContext
+- **Definition**: Current session state container
+- **Contains**:
+  - Current accountId (WHO)
+  - Current workspaceId (WHERE)
+  - Current role (owner/admin/member/viewer)
+  - Permissions cache
+- **Purpose**: Single source of truth for "current context"
+- **Usage**: All services read from SessionContext
+
+## Workspace Switcher
+- **Purpose**: Change active Workspace for current Account
+- **Triggers**:
+  - User selects different Workspace in UI
+  - Account has multiple Workspace memberships
+- **Actions**:
+  1. Unload current ModuleRegistry
+  2. Update SessionContext.workspaceId
+  3. Load new ModuleRegistry
+  4. Re-subscribe Angular Query to new Workspace projections
+  5. Update UI components with new context
+
+## Multi-Tenant Rules
+1. **Account-Workspace Relationship**: One Account can belong to multiple Workspaces with different roles
+2. **Data Isolation**: All data MUST be scoped to workspaceId
+3. **Module Isolation**: Modules in Workspace A cannot access data in Workspace B
+4. **Shared Services**: Auth, Logging, Metrics are per-Workspace instances
+5. **Event Scoping**: Events contain blueprintId for multi-tenant filtering
+
+## Event-Sourced Flow
+```
+Command (in Workspace)
+   ↓
+Entity (in Module)
+   ↓
+Event (with blueprintId)
+   ↓
+Projection (scoped to Workspace)
+   ↓
+Angular Query (filtered by SessionContext.workspaceId)
+```
+
+## Saga / Process Rules
+- **Scope**: Sagas run within Workspace boundary
+- **State Machine**: Pending → InProgress → Completed / Failed / Compensated / DeadLetter
+- **Cross-Workspace**: Requires explicit permission validation
+- **Compensation**: Required for failed or timed-out Sagas
+- **Example**: Task Assignment Saga monitors TaskCreated → TaskAssigned → TaskCompleted
+
+## Angular UI Integration
+- **Commands**: Only executable if SessionContext role permits
+- **Queries**: Subscribe only to current Workspace projections
+- **Guards**: Read session from SessionContext
+- **Workspace Switch**: Triggers full re-initialization of modules and queries
+
+## Naming Conventions
+- Workspace: PascalCase (e.g., TenantWorkspace)
+- Module: PascalCase with "Module" suffix (e.g., TaskModule)
+- Entity: PascalCase with "Entity" suffix (e.g., TaskEntity)
+- Event: Verb + Noun past tense (e.g., TaskCreated)
+- Command: Verb + Noun imperative (e.g., AssignTask)
+- Saga: PascalCase with "Saga" suffix (e.g., TaskAssignmentSaga)
+- Projection: EntityName + View suffix (e.g., TaskListView)
+
+## Implementation Checklist
+1. Verify Workspace Switcher dynamically loads ModuleRegistry per Workspace
+2. Ensure Commands and Events are scoped to workspaceId/blueprintId
+3. Ensure Sagas respect Workspace permissions and role-based execution
+4. Projections filter Events by blueprintId
+5. Use SessionContext for all current Workspace/Role/Account access
+6. Write unit tests for multi-tenant Command/Event/Saga flows
+7. Validate Angular UI only shows components allowed for current role
+8. All cross-Workspace operations require explicit permission checks
+9. Event/Command flows MUST NOT bypass Workspace boundaries
+10. Maintain clear separation between UI / Domain / Adapter layers
+
+## Anti-Patterns (NEVER DO THIS)
+- ❌ Hard-code workspaceId in business logic
+- ❌ Share data between Workspaces without permission checks
+- ❌ Load modules globally instead of per-Workspace
+- ❌ Allow cross-Workspace Event subscriptions without validation
+- ❌ Use User instead of Account as business actor
+- ❌ Use Organization instead of Workspace as tenant boundary

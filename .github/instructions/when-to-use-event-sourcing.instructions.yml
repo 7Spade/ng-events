@@ -1,0 +1,243 @@
+---
+description: "When to use and when NOT to use Event Sourcing: suitable scenarios, anti-patterns, and decision criteria"
+applyTo: "**/*.ts, **/*.md"
+---
+
+# When to Use Event Sourcing
+
+## Must-Use Scenarios ✅
+
+### 1. Immutable Business Facts
+**Keywords**: Facts, Commitments, Accountability
+
+**Use When**:
+- OrderPlaced
+- TradeExecuted
+- PositionOpened/Closed
+- FundsLocked/Released
+- ContractSigned
+- PaymentCompleted
+
+**Why**:
+- Once it happened, cannot pretend it didn't
+- Required for regulatory/financial/audit compliance
+- State is projection of events
+- Event = historical truth
+
+### 2. State is Derived from History
+**Decision Criteria**: "Without history, I cannot know why current state is this way"
+
+**Use When**:
+- Account balance (derived from deposits, withdrawals, fees)
+- Inventory position (derived from purchases, sales, adjustments)
+- Risk exposure (derived from trades, market events)
+- Task completion status (derived from assignments, updates, approvals)
+
+**Why**: State is not the source, it's the result
+
+### 3. Replay / Time Travel Required
+**Keywords**: Replay, Simulation, Verification
+
+**Use When**:
+- Backtesting trading strategies
+- Reconstructing bug scenarios
+- Validating new business rules
+- Audit trail reconstruction
+- What-if analysis
+
+**Example**: Replay October 2024 events to see if strategy would have failed
+
+**Why**: Replay is Event Sourcing's killer capability
+
+### 4. Complex Causality Chains
+**Characteristics**:
+- Multi-step processes
+- Conditional branching
+- Interruptible workflows
+
+**Use When**:
+```
+SignalGenerated
+→ OrderPlaced
+→ OrderPartiallyFilled
+→ OrderExpired
+→ PositionAdjusted
+```
+
+**Why**: CRUD cannot express "process over time"
+
+### 5. Audit and Compliance Requirements
+**Use When**:
+- Financial transactions
+- Healthcare records
+- Legal documents
+- Regulated industries
+- Need complete audit trail
+
+**Why**: Events provide immutable audit log
+
+### 6. Multiple Views of Same Data
+**Use When**:
+- Task list view, board view, timeline view, why view
+- Different aggregations for different users
+- Real-time and historical views
+- Different security contexts
+
+**Why**: One event stream → multiple projections
+
+## When NOT to Use Event Sourcing ❌
+
+### 1. Simple CRUD with No History
+**Don't Use When**:
+- User profile updates (just need current value)
+- Configuration settings
+- Static reference data
+- Preference storage
+
+**Why**: Overhead not justified for simple state management
+
+### 2. No Business Value in History
+**Don't Use When**:
+- Cache data
+- Temporary session state
+- UI view state
+- Search indexes (can be rebuilt)
+
+**Why**: Events are permanent - don't store what you don't need forever
+
+### 3. High-Volume, Low-Value Events
+**Don't Use When**:
+- Mouse movements
+- Scroll positions
+- Real-time sensor data (unless critical)
+- Click tracking (unless for audit)
+
+**Why**: Storage and query costs outweigh benefits
+
+### 4. Frequently Changing Schemas
+**Don't Use When**:
+- Experimental features
+- Rapidly evolving domain models
+- Prototyping phase
+- Unclear requirements
+
+**Why**: Event schema changes require migration strategies
+
+### 5. Team Lacks Event Sourcing Expertise
+**Don't Use When**:
+- Team unfamiliar with CQRS/Event Sourcing
+- No senior guidance available
+- Tight deadlines
+- Low risk tolerance
+
+**Why**: Learning curve can slow development
+
+### 6. Simple Reporting/Analytics
+**Don't Use When**:
+- Basic dashboard queries
+- Simple aggregations
+- One-time reports
+- Ad-hoc analysis
+
+**Why**: Traditional databases may be simpler for reporting
+
+## Decision Framework
+
+### Ask These Questions:
+1. **Do we need complete history?** → Yes = Event Sourcing
+2. **Is this a business fact?** → Yes = Event Sourcing
+3. **Do we need audit trail?** → Yes = Event Sourcing
+4. **Multiple views needed?** → Yes = Event Sourcing
+5. **Replay required?** → Yes = Event Sourcing
+6. **Simple CRUD?** → No = Traditional storage
+7. **No business value in history?** → No = Traditional storage
+8. **High volume, low value?** → No = Traditional storage
+
+### Hybrid Approach
+You can mix Event Sourcing with traditional storage:
+- Event Source critical business facts
+- Use traditional DB for reference data, configurations
+- Use projections for read-optimized queries
+
+## Event Sourcing Readiness Checklist
+- [ ] Team understands Event Sourcing concepts
+- [ ] Clear domain model identified
+- [ ] Audit/compliance requirements understood
+- [ ] Event schema versioning strategy defined
+- [ ] Projection rebuild strategy planned
+- [ ] Infrastructure supports append-only storage
+- [ ] Query patterns identified for projections
+- [ ] Event migration strategy documented
+
+## Common Misconceptions
+
+### ❌ "Event Sourcing means no database"
+**Reality**: Event Store IS a database - just append-only
+
+### ❌ "Event Sourcing is always faster"
+**Reality**: Queries may be slower, but you gain other benefits
+
+### ❌ "Event Sourcing solves all problems"
+**Reality**: It's a tool for specific scenarios, not a silver bullet
+
+### ❌ "Event Sourcing means no updates"
+**Reality**: You append new events - state is derived
+
+### ❌ "Event Sourcing is too complex"
+**Reality**: Complexity comes from domain, not Event Sourcing
+
+## Anti-Patterns to Avoid
+
+### 1. Storing Everything as Events
+**Problem**: Not all state changes are business-significant events
+**Solution**: Only event-source business facts
+
+### 2. Mixing Commands and Events
+**Problem**: Commands express intent, events are facts
+**Solution**: Clear separation - Commands → Events
+
+### 3. No Event Versioning Strategy
+**Problem**: Cannot evolve events over time
+**Solution**: Plan versioning and migration upfront
+
+### 4. Ignoring Projections
+**Problem**: Trying to query event stream directly
+**Solution**: Build projections for queries
+
+### 5. No Causality Tracking
+**Problem**: Cannot trace why events occurred
+**Solution**: Always include causedByEventId
+
+## Success Criteria
+
+### Event Sourcing is Working When:
+- ✅ Complete audit trail available
+- ✅ Can replay events to rebuild state
+- ✅ Multiple views from same event stream
+- ✅ Clear causality chain visible
+- ✅ Business rules enforced in aggregates
+- ✅ Projections serve all query needs
+- ✅ Team understands event flow
+
+### Event Sourcing May Not Be Working When:
+- ❌ Querying event stream directly
+- ❌ Frequent event schema changes
+- ❌ No projection rebuild strategy
+- ❌ Team confused about events vs state
+- ❌ Performance issues from lack of projections
+- ❌ Missing causality tracking
+
+## Conclusion
+Event Sourcing is powerful for:
+- Business facts that must be preserved
+- Audit and compliance requirements
+- Complex workflows with causality
+- Multiple views of same data
+- Time travel and replay needs
+
+NOT suitable for:
+- Simple CRUD
+- No history requirement
+- High volume/low value data
+- Rapidly changing schemas
+- Team without expertise

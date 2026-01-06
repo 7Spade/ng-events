@@ -1,0 +1,349 @@
+---
+description: "Copilot Memory usage guidelines: when and how to store project knowledge for long-term AI assistance"
+applyTo: "**/*"
+---
+
+# Copilot Memory Usage
+
+## Purpose
+Store critical project knowledge in Copilot's long-term memory to improve AI assistance across sessions.
+
+## When to Use Memory
+
+### ✅ Store These:
+- Architectural decisions and principles
+- Technology stack and version information
+- Business rules and domain knowledge
+- Coding standards and conventions
+- Common problem solutions
+- Non-negotiable constraints
+- Build and bootstrap commands
+
+### ❌ Don't Store These:
+- Sensitive information (passwords, API keys)
+- Complete code snippets
+- Overly detailed implementations
+- Temporary experimental content
+- Unverified guesses
+- Frequently changing data
+
+## Memory Categories
+
+### 1. general
+**Use For**: Project-wide knowledge
+**Examples**:
+- Architectural principles
+- Business rules
+- Technology choices
+
+```javascript
+store_memory({
+  category: "general",
+  citations: "docs/architecture.md lines 10-25",
+  fact: "Event Sourcing with causality tracking is mandatory for all business events",
+  reason: "Enables complete audit trail and event replay for compliance",
+  subject: "event sourcing architecture"
+})
+```
+
+### 2. file_specific
+**Use For**: File-specific conventions
+**Examples**:
+- Special patterns in certain files
+- File-level constraints
+- Module-specific rules
+
+```javascript
+store_memory({
+  category: "file_specific",
+  citations: "packages/core-engine/event-store.ts",
+  fact: "EventStore MUST be append-only with no update or delete operations",
+  reason: "Ensures immutability of event history for audit compliance",
+  subject: "event store implementation"
+})
+```
+
+### 3. user_preferences
+**Use For**: Team coding preferences
+**Examples**:
+- Code style choices
+- Tool preferences
+- Workflow patterns
+
+```javascript
+store_memory({
+  category: "user_preferences",
+  citations: "Team decision 2024-01-15",
+  fact: "Use accountId instead of userId for all business actors",
+  reason: "Account model supports User, Organization, and Bot actors uniformly",
+  subject: "naming conventions"
+})
+```
+
+### 4. bootstrap_and_build
+**Use For**: Setup and build information
+**Examples**:
+- Version requirements
+- Build commands
+- Environment setup
+
+```javascript
+store_memory({
+  category: "bootstrap_and_build",
+  citations: "package.json, README.md",
+  fact: "Build with 'npm run build', test with 'npm test', requires Node.js 18+",
+  reason: "Standard build commands for CI/CD and developer onboarding",
+  subject: "build process"
+})
+```
+
+## Core Commands
+
+### Store Memory
+```javascript
+store_memory({
+  category: "general",
+  citations: "docs/file.md",
+  fact: "Brief fact statement (< 200 chars)",
+  reason: "Why this needs to be remembered (2-3 sentences)",
+  subject: "topic tag (1-2 words)"
+})
+```
+
+### Search Memory
+```javascript
+memory-search_nodes({ query: "keyword" })
+```
+
+### View Specific Memory
+```javascript
+memory-open_nodes({ names: ["subject name"] })
+```
+
+### Read All Memory
+```javascript
+memory-read_graph()
+```
+
+### Create Entities
+```javascript
+memory-create_entities({
+  entities: [
+    {
+      name: "Entity Name",
+      entityType: "type",
+      observations: ["observation 1", "observation 2"]
+    }
+  ]
+})
+```
+
+### Create Relationships
+```javascript
+memory-create_relations({
+  relations: [
+    {
+      from: "Entity A",
+      to: "Entity B",
+      relationType: "relationship type"
+    }
+  ]
+})
+```
+
+### Update Memory
+```javascript
+memory-add_observations({
+  observations: [
+    {
+      entityName: "Entity Name",
+      contents: ["new observation"]
+    }
+  ]
+})
+```
+
+### Delete Memory
+```javascript
+memory-delete_observations({
+  deletions: [
+    {
+      entityName: "Entity Name",
+      observations: ["observation to delete"]
+    }
+  ]
+})
+
+memory-delete_entities({
+  entityNames: ["Entity 1", "Entity 2"]
+})
+```
+
+## Best Practices
+
+### 1. Use Detailed Citations
+**Good**:
+```javascript
+citations: "docs/architecture.md lines 45-60, PR #123, User comment: 2024-01-15"
+```
+
+**Bad**:
+```javascript
+citations: "docs"
+```
+
+### 2. Keep Facts Concise
+**Good**:
+```javascript
+fact: "Domain layer MUST NOT import Angular or Firebase SDKs"
+```
+
+**Bad**:
+```javascript
+fact: "The domain layer which contains all the business logic and the core domain model should never ever import or depend on framework-specific libraries such as Angular framework or Firebase SDK because that would violate the principle of clean architecture and make the domain layer coupled to infrastructure concerns which would make it harder to test and maintain in the long run..."
+```
+
+### 3. Explain Why
+**Good**:
+```javascript
+reason: "Keeps domain framework-agnostic for easier testing and platform migration. Pure business logic enables reuse across multiple UI frameworks."
+```
+
+**Bad**:
+```javascript
+reason: "Because we decided to do it this way"
+```
+
+### 4. Build Knowledge Networks
+```javascript
+// First create entities
+memory-create_entities({
+  entities: [
+    { name: "Event Bus", entityType: "component", observations: [...] },
+    { name: "Task Service", entityType: "service", observations: [...] }
+  ]
+})
+
+// Then create relationships
+memory-create_relations({
+  relations: [
+    { from: "Task Service", to: "Event Bus", relationType: "publishes_to" }
+  ]
+})
+```
+
+## ng-events Project Memory
+
+### Key Subjects to Query
+```javascript
+// Architecture
+memory-open_nodes({ names: ["core architectural principles"] })
+memory-search_nodes({ query: "event sourcing" })
+
+// Domain Model
+memory-open_nodes({ names: ["account workspace model"] })
+memory-search_nodes({ query: "causality" })
+
+// Technology
+memory-open_nodes({ names: ["technology stack"] })
+memory-search_nodes({ query: "firebase" })
+
+// Conventions
+memory-search_nodes({ query: "naming conventions" })
+memory-search_nodes({ query: "anti-patterns" })
+```
+
+## Maintenance Guidelines
+
+### Monthly Review
+1. Run `memory-read_graph()`
+2. Delete outdated information
+3. Update version numbers
+4. Add new architectural decisions
+5. Validate citations still accurate
+
+### When Project Evolves
+1. Update affected memories immediately
+2. Mark deprecated patterns
+3. Add migration notes
+4. Link to decision records
+
+### Quality Checks
+- [ ] All facts under 200 characters
+- [ ] Reasons are 2-3 clear sentences
+- [ ] Citations include specific references
+- [ ] No sensitive data stored
+- [ ] Subjects are 1-2 words
+- [ ] Facts are actionable, not just informative
+
+## Example Memory Set for ng-events
+
+```javascript
+// Core architecture
+store_memory({
+  category: "general",
+  citations: "docs/📦-Project-Knowledge/06-Event-Sourced架構設計.md",
+  fact: "All business events MUST include causedByEventId for complete causality tracking",
+  reason: "Enables audit trail, event replay, and understanding why events occurred. Required for compliance and debugging.",
+  subject: "event causality"
+})
+
+// Account model
+store_memory({
+  category: "general",
+  citations: "docs/📦-Project-Knowledge/03-名詞與語言邊界定義.md",
+  fact: "Use Account (not User) for business actors; Account types: UserAccount, OrganizationAccount, BotAccount",
+  reason: "Unified actor model supports humans, organizations, and bots consistently. Use actorAccountId in all events.",
+  subject: "account model"
+})
+
+// Package structure
+store_memory({
+  category: "general",
+  citations: "docs/✨-Core-Ideas/1️⃣-Packages-Core-Engine.md",
+  fact: "Package hierarchy: core-engine → saas-domain → platform-adapters → ui-angular. Dependencies flow upward only.",
+  reason: "Maintains clean architecture with domain isolation. Core and domain MUST NOT import framework SDKs.",
+  subject: "package dependencies"
+})
+
+// Build process
+store_memory({
+  category: "bootstrap_and_build",
+  citations: "package.json, tsconfig.json",
+  fact: "Monorepo with workspaces. Build: 'npm run build', Test: 'npm test', Requires TypeScript 5.x, Node.js 18+",
+  reason: "Standard commands for CI/CD pipeline and developer environment setup",
+  subject: "build commands"
+})
+```
+
+## Troubleshooting
+
+### Memory Not Retrieved
+- Check subject name matches query
+- Try broader search terms
+- Verify memory was saved with store_memory
+- Use memory-read_graph() to see all memories
+
+### Too Many Results
+- Use more specific queries
+- Add context to search (e.g., "angular component naming")
+- Query specific subjects with open_nodes
+
+### Conflicting Memories
+- Delete outdated memory first
+- Store corrected memory with citation explaining change
+- Link to decision record for why change was made
+
+## Conclusion
+Copilot Memory is powerful for:
+- Preserving architectural decisions
+- Maintaining coding standards
+- Storing domain knowledge
+- Accelerating onboarding
+
+Use it wisely:
+- Store facts, not code
+- Keep facts concise
+- Explain reasoning
+- Cite sources
+- Review regularly

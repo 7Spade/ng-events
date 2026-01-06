@@ -1,0 +1,41 @@
+---
+description: "Clarify proper placement and boundaries for Domain Modules like Task within Workspace and Account hierarchy."
+applyTo: "packages/saas-domain/task/**/*.ts"
+---
+
+# Domain Module: Task Instructions
+
+## 結論
+- 任務（Task）屬於 **業務模組（Domain Module）**
+- 不屬於業務主體（Account）、邏輯容器（Workspace）或平台能力（Platform）
+- 正確位置：Workspace → Task Module
+
+## 四個角色分層
+| 東西           | 是什麼      | 會不會動 | 會不會是 Actor |
+| -------------- | ---------- | -------- | -------------- |
+| Account        | 行為主體   | ✅       | ✅             |
+| Workspace      | 邏輯容器   | ❌       | ❌             |
+| Module (Task)  | 業務能力   | ❌       | ❌             |
+| Task Entity    | 業務狀態   | ❌       | ❌             |
+
+## Task 正確定位
+- Task 是 **模組**，不是容器
+- Task 的生命週期被 Workspace 控制：
+  - Workspace 關閉 → Task 封存
+  - Workspace 權限 → Task 權限
+  - Workspace 成員 → Task 可指派對象
+- Task 不會跨 Workspace 活
+
+## Event 設計觀念
+- Event 要明確回答：誰做的 (Account)、在哪做 (Workspace)、做什麼 (Module/Entity)
+- 例子：
+  - `TaskAssigned { taskId, workspaceId, actorAccountId, assigneeAccountId }`
+
+## 禁止錯誤
+- 不可把 Task 當容器，Task 不定義 Account
+- Module 永遠只「使用」Account，不擁有 Account
+  - Task 使用 `assigneeAccountId`
+  - Payment 使用 `payerAccountId`
+  - Issue 使用 `reporterAccountId`
+
+## 正確依賴方向

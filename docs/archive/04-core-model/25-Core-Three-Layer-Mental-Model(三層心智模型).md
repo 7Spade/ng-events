@@ -1,0 +1,47 @@
+## 核心三層心智模型（不新增 package）
+
+🧭 摘要
+
+- 不需要再拆 package；只需在 core-engine 內畫出「概念內層」。
+- 三層心智：Kernel（不可碰）、Engine（無語意）、Ports（世界接點）。
+- 鐵律：core-engine 不允許出現任何 domain noun；只容許 Event/Command/Saga/Router/Store。
+
+### Table of Contents
+
+- [為何不再多一層 package](#為何不再多一層-package)
+- [三層心智模型](#三層心智模型)
+- [邊界與理由](#邊界與理由)
+- [鐵律備忘](#鐵律備忘)
+
+### 為何不再多一層 package
+
+- 問題不是層數，而是邊界混亂。再拆會帶來 import 地獄與路徑複雜度。  
+- 你之前推倒 account-domain 是正痛；現在不需要多一層 core-kernel。
+
+### 三層心智模型
+
+```
+core-engine/
+├─ kernel/   ← Event.ts, Command.ts, Causation.ts, Clock.ts（純型別）
+├─ engine/   ← Saga.ts, SagaEngine.ts, EventDispatcher.ts, Router.ts（物理法則）
+└─ ports/    ← EventStore.ts, MessageBus.ts, SagaStore.ts, Scheduler.ts（依賴反轉牆）
+```
+
+**特性**
+
+- Kernel：永遠不 import domain，一行 Firebase 都沒有。五年不動都行。
+- Engine：知道事件進來、Saga 會反應，但不知道 Task/Account/Workspace。
+- Ports：全是 interface，留給 platform-adapters 實作。
+
+### 邊界與理由
+
+- 多一層 package 只換來心理安全感，卻增加 tsconfig path、辯論成本。  
+- 真正安全的是：邊界明確、規則寫死、文件告訴大家「這裡不能放業務」。
+
+### 鐵律備忘
+
+- ❌ core-engine 不允許：任何 domain noun（Account / Workspace / Task / Billing）、事件 enum、Firebase 型別。  
+- ✅ 只允許：Event / Command / Saga / Router / Store。  
+- 發現違規時，先回到 20、21 校正，再更新此鐵律。
+
+// END OF FILE

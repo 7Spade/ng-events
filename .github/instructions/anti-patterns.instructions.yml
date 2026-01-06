@@ -1,0 +1,413 @@
+---
+description: "Anti-patterns and prohibited practices in Event Sourcing architecture: what NEVER to do"
+applyTo: "**/*.ts"
+---
+
+# Event Sourcing Anti-Patterns
+
+## Domain Layer Violations
+
+### ❌ NEVER: Import Framework SDKs in Domain
+**Problem**: Couples domain to infrastructure
+
+**Bad**:
+```typescript
+// In domain/task.aggregate.ts
+import { Firestore } from '@angular/fire/firestore';  // ❌
+import firebase from 'firebase/app';                  // ❌
+import { Injectable } from '@angular/core';           // ❌
+```
+
+**Good**:
+```typescript
+// In domain/task.aggregate.ts
+import { DomainEvent } from '@core-engine/events';    // ✅
+import { Result } from '@core-engine/result';         // ✅
+```
+
+**Rule**: Domain MUST remain framework-agnostic
+
+### ❌ NEVER: Business Logic in Adapters
+**Problem**: Business rules scattered across codebase
+
+**Bad**:
+```typescript
+// In firebase.adapter.ts
+async saveTask(task: Task) {
+  if (task.status === 'completed' && !task.approvedBy) {  // ❌ Business logic
+    throw new Error('Completed tasks must be approved');
+  }
+  await this.firestore.collection('tasks').doc(task.id).set(task);
+}
+```
+
+**Good**:
+```typescript
+// In task.aggregate.ts
+complete(actorAccountId: string): Result<TaskCompletedEvent> {
+  if (!this.approvedBy) {                              // ✅ In aggregate
+    return Result.Err('Task must be approved before completion');
+  }
+  return Result.Ok(new TaskCompletedEvent(...));
+}
+
+// In firebase.adapter.ts
+async appendEvent(event: DomainEvent): Promise<void> {
+  await this.firestore.collection('events').add(event); // ✅ Pure infrastructure
+}
+```
+
+**Rule**: Business rules ONLY in aggregates
+
+### ❌ NEVER: Direct State Mutation
+**Problem**: Violates Event Sourcing immutability
+
+**Bad**:
+```typescript
+class TaskAggregate {
+  status: TaskStatus;
+  
+  complete(): void {
+    this.status = 'completed';  // ❌ Direct mutation
+  }
+}
+```
+
+**Good**:
+```typescript
+class TaskAggregate {
+  private state: TaskState;
+  
+  complete(actorAccountId: string): Result<TaskCompletedEvent> {
+    const event = new TaskCompletedEvent({
+      taskId: this.state.id,
+      completedByAccountId: actorAccountId,
+      causedByEventId: this.state.lastEventId
+    });
+    return Result.Ok(event);  // ✅ Return event
+  }
+  
+  private applyEvent(event: DomainEvent): void {
+    if (event instanceof TaskCompletedEvent) {
+      this.state = { ...this.state, status: 'completed' };  // ✅ Apply from event
+    }
+  }
+}
+```
+
+**Rule**: State changes ONLY through event application
+
+## Event Design Violations
+
+### ❌ NEVER: Modify Past Events
+**Problem**: Breaks immutability guarantee
+
+**Bad**:
+```typescript
+async updateEvent(eventId: string, newData: any) {  // ❌
+  await eventStore.update(eventId, newData);
+}
+
+async deleteEvent(eventId: string) {                // ❌
+  await eventStore.delete(eventId);
+}
+```
+
+**Good**:
+```typescript
+async appendCompensatingEvent(event: DomainEvent) { // ✅
+  await eventStore.append(new TaskCancelledEvent({
+    taskId: task.id,
+    reason: 'Correcting previous error',
+    causedByEventId: previousEventId
+  }));
+}
+```
+
+**Rule**: Events are append-only, use compensation for corrections
+
+### ❌ NEVER: Events Without Causality
+**Problem**: Loses why and how events occurred
+
+**Bad**:
+```typescript
+interface TaskCompletedEvent {
+  taskId: string;
+  completedAt: Timestamp;
+  // ❌ Missing causedByEventId
+}
+```
+
+**Good**:
+```typescript
+interface TaskCompletedEvent {
+  eventId: string;
+  taskId: string;
+  completedAt: Timestamp;
+  causedByEventId: string;        // ✅ Parent event
+  actorAccountId: string;         // ✅ Who did it
+  blueprintId: string;            // ✅ Where (workspace)
+}
+```
+
+**Rule**: ALWAYS include causedByEventId (except root events)
+
+### ❌ NEVER: Commands as Events
+**Problem**: Confuses intent with facts
+
+**Bad**:
+```typescript
+CreateTaskEvent      // ❌ This is a command, not event
+AssignTaskEvent      // ❌ This is a command, not event
+```
+
+**Good**:
+```typescript
+TaskCreatedEvent     // ✅ Past tense fact
+TaskAssignedEvent    // ✅ Past tense fact
+```
+
+**Rule**: Events are past tense facts, commands are imperative intents
+
+### ❌ NEVER: Generic Events
+**Problem**: Loses business meaning
+
+**Bad**:
+```typescript
+EntityUpdatedEvent   // ❌ What was updated?
+DataChangedEvent     // ❌ What changed?
+```
+
+**Good**:
+```typescript
+TaskAssignedEvent    // ✅ Specific business fact
+TaskCompletedEvent   // ✅ Specific business fact
+PaymentApprovedEvent // ✅ Specific business fact
+```
+
+**Rule**: Events must be specific and business-meaningful
+
+## Naming Violations
+
+### ❌ NEVER: Use userId/orgId in Events
+**Problem**: Violates Account/Workspace model
+
+**Bad**:
+```typescript
+interface TaskCreatedEvent {
+  taskId: string;
+  userId: string;          // ❌ Should be accountId
+  orgId: string;           // ❌ Should be workspaceId or accountId
+  createdBy: string;       // ❌ Should be createdByAccountId
+}
+```
+
+**Good**:
+```typescript
+interface TaskCreatedEvent {
+  taskId: string;
+  actorAccountId: string;        // ✅ WHO did it
+  blueprintId: string;           // ✅ WHERE (workspace)
+  createdByAccountId: string;    // ✅ Explicit actor
+}
+```
+
+**Rule**: Use Account for WHO, Workspace for WHERE
+
+### ❌ NEVER: Abbreviate Domain Terms
+**Problem**: Reduces code clarity
+
+**Bad**:
+```typescript
+TaskCrtdEvt          // ❌
+TskAggr              // ❌
+PymnAprvdSvc         // ❌
+```
+
+**Good**:
+```typescript
+TaskCreatedEvent     // ✅
+TaskAggregate        // ✅
+PaymentApprovalService  // ✅
+```
+
+**Rule**: Use full, clear names
+
+## Architecture Violations
+
+### ❌ NEVER: Query Event Stream Directly
+**Problem**: Poor performance and coupling
+
+**Bad**:
+```typescript
+async getTaskList(workspaceId: string) {
+  const events = await eventStore.getEvents('Task', workspaceId);  // ❌
+  // Reconstruct state from events in UI
+  return events.reduce((tasks, event) => {
+    // Heavy processing
+  }, []);
+}
+```
+
+**Good**:
+```typescript
+async getTaskList(workspaceId: string) {
+  return await taskListProjection.query(workspaceId);  // ✅ Use projection
+}
+```
+
+**Rule**: Use projections for queries, not raw events
+
+### ❌ NEVER: Skip Aggregate for Commands
+**Problem**: Bypasses business rules
+
+**Bad**:
+```typescript
+async createTask(command: CreateTaskCommand) {
+  const event = new TaskCreatedEvent({ ...command });  // ❌ No validation
+  await eventStore.append(event);
+}
+```
+
+**Good**:
+```typescript
+async createTask(command: CreateTaskCommand) {
+  const aggregate = new TaskAggregate();
+  const result = aggregate.create(command);            // ✅ Validate in aggregate
+  if (result.isError()) return result;
+  await eventStore.append(result.value);
+}
+```
+
+**Rule**: All commands MUST go through aggregates
+
+### ❌ NEVER: Circular Dependencies
+**Problem**: Creates tight coupling
+
+**Bad**:
+```typescript
+// In core-engine
+import { FirebaseAdapter } from '@platform-adapters/firebase';  // ❌
+
+// In platform-adapters
+import { EventStore } from '@core-engine/event-store';          // ✅
+```
+
+**Rule**: Dependencies flow ONE direction: UI → Adapters → Domain → Core
+
+### ❌ NEVER: Business Logic in Sagas
+**Problem**: Saga should only coordinate, not decide
+
+**Bad**:
+```typescript
+class TaskAssignmentSaga {
+  onTaskCreated(event: TaskCreatedEvent) {
+    if (event.priority === 'high' && event.dueDate < tomorrow) {  // ❌ Business rule
+      this.autoAssign(event.taskId);
+    }
+  }
+}
+```
+
+**Good**:
+```typescript
+class TaskAggregate {
+  create(command: CreateTaskCommand): Result<TaskCreatedEvent> {
+    if (command.priority === 'high' && command.dueDate < tomorrow) {  // ✅
+      // Business rule in aggregate
+    }
+  }
+}
+
+class TaskAssignmentSaga {
+  onTaskCreated(event: TaskCreatedEvent) {
+    this.sendCommand(new AssignTaskCommand({ taskId: event.taskId }));  // ✅ Coordinate only
+  }
+}
+```
+
+**Rule**: Sagas coordinate, aggregates decide
+
+## Multi-Tenant Violations
+
+### ❌ NEVER: Hard-Code Workspace
+**Problem**: Breaks multi-tenancy
+
+**Bad**:
+```typescript
+const WORKSPACE_ID = 'default';  // ❌
+async getTasks() {
+  return db.collection('tasks')
+    .where('workspaceId', '==', WORKSPACE_ID)  // ❌
+}
+```
+
+**Good**:
+```typescript
+async getTasks(workspaceId: string) {
+  return db.collection('tasks')
+    .where('blueprintId', '==', workspaceId)  // ✅
+}
+```
+
+**Rule**: Always scope by workspaceId/blueprintId from SessionContext
+
+### ❌ NEVER: Cross-Workspace Access Without Permission
+**Problem**: Security vulnerability
+
+**Bad**:
+```typescript
+async getTask(taskId: string) {
+  return db.collection('tasks').doc(taskId).get();  // ❌ No workspace check
+}
+```
+
+**Good**:
+```typescript
+async getTask(taskId: string, workspaceId: string) {
+  const task = await db.collection('tasks').doc(taskId).get();
+  if (task.blueprintId !== workspaceId) {           // ✅ Validate workspace
+    throw new Error('Unauthorized access');
+  }
+  return task;
+}
+```
+
+**Rule**: ALWAYS validate workspace boundary
+
+## Testing Violations
+
+### ❌ NEVER: Test Implementation Details
+**Problem**: Brittle tests
+
+**Bad**:
+```typescript
+test('should set internal flag', () => {
+  task.complete();
+  expect(task._internalFlag).toBe(true);  // ❌ Testing private state
+});
+```
+
+**Good**:
+```typescript
+test('should emit TaskCompletedEvent', () => {
+  const result = task.complete(accountId);
+  expect(result.isOk()).toBe(true);       // ✅ Testing behavior
+  expect(result.value).toBeInstanceOf(TaskCompletedEvent);
+});
+```
+
+**Rule**: Test behavior, not implementation
+
+## Implementation Checklist
+- [ ] Domain has ZERO framework imports
+- [ ] Business rules ONLY in aggregates
+- [ ] Events are immutable and append-only
+- [ ] All events include causedByEventId
+- [ ] Use accountId/workspaceId, not userId/orgId
+- [ ] Projections handle all queries
+- [ ] Commands go through aggregates
+- [ ] Dependencies flow: UI → Adapters → Domain → Core
+- [ ] Sagas coordinate, don't contain business logic
+- [ ] Multi-tenant isolation enforced
+- [ ] Tests verify behavior, not internals

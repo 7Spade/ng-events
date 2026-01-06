@@ -1,0 +1,120 @@
+---
+description: "Monorepo package structure and dependency rules: core-engine, saas-domain, platform-adapters, ui-angular"
+applyTo: "packages/**/*"
+---
+
+# Core Packages Structure
+
+## Package Hierarchy
+```
+packages/
+├─ core-engine/      💎 Pure TypeScript core logic
+├─ saas-domain/      🏢 Pure TypeScript business models
+├─ platform-adapters/ 🔧 Technical implementations (Firebase/Angular)
+└─ ui-angular/       💅 Angular frontend application
+```
+
+## Dependency Direction (STRICT)
+```
+core-engine 💎
+     ↑ depends on
+saas-domain 🏢
+     ↑ depends on
+platform-adapters 🔧
+     ↑ depends on
+ui-angular 💅
+```
+
+## Package Rules
+
+### core-engine/ 💎
+- **Purpose**: Pure TypeScript core logic - Event Store, Causality, Aggregates, Projections
+- **Dependencies**: ZERO external dependencies (no SDK, no Angular, no Firebase)
+- **Build**: TypeScript compilation only
+- **Deploy**: Not deployed - used by other packages
+- **Requirements**: package.json, tsconfig.json
+- **Test**: Jest for unit tests
+
+### saas-domain/ 🏢
+- **Purpose**: Pure business domain models (Task, Payment, Issue)
+- **Dependencies**: Only @core-engine
+- **Build**: TypeScript compilation
+- **Deploy**: Not deployed - used by platform-adapters
+- **Requirements**: package.json, tsconfig.json
+- **Test**: Jest for domain logic tests
+
+### platform-adapters/ 🔧
+- **Purpose**: Technical implementations connecting to Firebase, Angular, AI, etc.
+- **Sub-packages**:
+  - firebase/admin/ ⚡ → Firebase Functions (backend)
+  - firebase/angular-fire/ 🌐 → Frontend Firebase integration
+  - auth/ → Authentication adapters
+  - notification/ → FCM/Email adapters
+  - analytics/ → GA adapters
+  - ai/ → GenAI/Vertex adapters
+- **Dependencies**: Firebase SDK, AngularFire, external APIs
+- **Deploy**:
+  - ⚡ Admin adapters → Firebase Functions
+  - 🌐 Angular-fire adapters → bundled with ui-angular
+- **Requirements**: package.json, tsconfig.json
+
+### ui-angular/ 💅
+- **Purpose**: Angular frontend application
+- **Dependencies**: @angular/*, @platform-adapters/angular-fire
+- **Build**: Angular CLI (ng build)
+- **Deploy**: Firebase Hosting
+- **Requirements**: package.json, tsconfig.json, angular.json
+- **Access Pattern**: UI → Facade → Adapters → Core/Domain
+
+## Event/Command Flow
+```
+UI Angular 💅
+   │ Send Command (CreateTask, AssignTask)
+   ▼
+Platform Adapters 🔧
+   │ Firebase Admin SDK ⚡
+   ▼
+Core Engine 💎
+   │ Aggregate processes business rules
+   │ Updates Projection
+   ▼
+Platform Adapters 🌐
+   │ AngularFire queries Projection
+   ▼
+UI Angular 💅
+   │ Updates UI with Observable
+   └─ Loop continues 🔄
+```
+
+## Monorepo Setup
+- Root package.json with workspaces configuration
+- Root tsconfig.base.json for shared TypeScript settings
+- Path aliases: @core-engine/*, @saas-domain/*, @platform-adapters/*
+- Each package has own package.json and tsconfig.json
+- Use TypeScript project references for efficient builds
+
+## Deployment Strategy
+| Package | Build Output | Deploy To | Runtime |
+|---------|--------------|-----------|---------|
+| core-engine | dist/ | - | Used by others |
+| saas-domain | dist/ | - | Used by adapters |
+| platform-adapters/admin | dist/ | Firebase Functions | Node.js |
+| platform-adapters/angular-fire | ts source | - | Bundled with UI |
+| ui-angular | dist/ | Firebase Hosting | Browser |
+
+## Anti-Patterns (NEVER DO THIS)
+- ❌ Import Firebase SDK in core-engine or saas-domain
+- ❌ Import Angular in core-engine or saas-domain
+- ❌ Direct database access from ui-angular
+- ❌ Business logic in platform-adapters
+- ❌ UI components directly importing domain entities
+- ❌ Circular dependencies between packages
+
+## Implementation Checklist
+1. Verify package dependency direction follows hierarchy
+2. Ensure core-engine has ZERO external SDK dependencies
+3. Confirm saas-domain only depends on core-engine
+4. Platform adapters bridge domain to infrastructure
+5. UI only accesses domain through adapters/facade
+6. Each package builds independently
+7. Deploy targets are correctly configured

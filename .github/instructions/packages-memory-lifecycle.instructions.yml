@@ -1,0 +1,75 @@
+---
+description: "Full lifecycle packages instructions: pre-dev recall, stepwise dev, post-dev memory update"
+applyTo: "packages/**"
+---
+
+# Packages Full Lifecycle Memory Instructions
+
+## 🎯 核心目標
+- 開發前回顧每個 package 狀態
+- 開發中分步分析與生成建議
+- 開發後更新 Memory，形成完整歷史記錄
+- 確保依賴方向、邊界、ports、entities、aggregates 清楚
+
+## 🔒 Packages 最終結構建議
+
+```
+
+packages/
+├── core-engine/       # 💎 純核心（永遠無框架 / 無 SDK）
+├── saas-domain/       # 🏢 SaaS 業務模組（只依賴 core-engine）
+├── platform-adapters/ # 🔧 技術實作（SDK 全集中）
+└── ui-angular/        # 💅 前端畫面，只呼叫核心
+
+```
+
+## 🔗 依賴方向（鐵則）
+
+```
+
+ui-angular
+↓
+platform-adapters
+↓
+core-engine (ports + domain)
+
+```
+
+## 🧠 Copilot Memory 流程規則
+
+### 1️⃣ 開發前：回顧現有狀態
+- 讀取所有 packages 記錄
+- 確認每個 package 的 role / ports / entities / aggregates / adapters
+- 將現有依賴、命名規範、邊界寫入 Memory
+- 標註任何違規或待改進點
+
+### 2️⃣ 開發中：分步分析
+- **Step 1：分析 package**  
+  - 列出模組、ports、entities、aggregates、依賴
+- **Step 2：檢查依賴方向**  
+  - 確認 ui → adapter → core，禁止反向引用
+- **Step 3：生成修改/新增建議**  
+  - 建議分步驟，先修復最嚴重違規
+- **Step 4：模擬影響**  
+  - 使用 Memory 模擬改動對其他 package 的影響
+- **Step 5：生成報告**  
+  - 每個 package 的邊界狀態、違規點、改正方案
+
+### 3️⃣ 開發後：記憶更新
+- 將修改結果、決策、依賴變化記入 Memory
+- 記錄新增 ports、entities、aggregates、adapter
+- 更新每個 package 的邊界狀態
+- 標註未來開發注意事項 / 潛在風險
+
+## 💡 開發守則
+- 核心 domain 只在 core-engine / saas-domain 修改
+- UI 開發只能透過 adapter 呼叫 domain
+- SDK / 外部服務統一放 platform-adapters
+- 所有改動必須先用 Sequential-Thinking 拆解，再用 Software-Planning-Tool 產出 step-by-step plan
+- Memory 必須全程更新，確保下一次開發可參照完整歷史
+
+## ✅ 核心原則回顧
+- **邊界明確，避免跨層引用**
+- **唯一依賴方向：ui → adapter → core**
+- **開發前必須回顧，開發後必須記憶**
+- **Sequential-Thinking + Software-Planning-Tool 貫穿全流程**

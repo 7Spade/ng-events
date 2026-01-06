@@ -1,0 +1,598 @@
+---
+description: Multi-tenant security patterns and Blueprint boundary enforcement in ng-events
+applyTo: '**/*.{ts,service.ts,repository.ts,rules}'
+---
+
+# Multi-Tenant Security
+
+## Core Principle: Blueprint as Security Boundary
+
+### What is a Blueprint?
+- **Workspace ID**: Unique identifier for tenant isolation
+- **Security Boundary**: All data MUST be scoped to blueprintId
+- **Firestore Path**: `/blueprints/{blueprintId}/...`
+- **Session Context**: Current user's active workspace
+
+### Blueprint Enforcement Rule
+```
+EVERY data operation MUST include blueprintId filter
+EVERY query MUST scope to current SessionContext.blueprintId
+EVERY write MUST validate blueprintId matches session
+```
+
+## SessionContext Pattern
+
+### Accessing Current Blueprint
+```typescript
+@Injectable({ providedIn: 'root' })
+export class TaskService {
+  constructor(
+    private readonly sessionContext: SessionContext,
+    private readonly taskRepo: TaskRepository
+  ) {}
+
+  async getMyTasks(): Promise<Task[]> {
+    // ALWAYS get blueprintId from session
+    const blueprintId = this.sessionContext.getCurrentBlueprintId();
+    
+    if (!blueprintId) {
+      throw new Error('No active workspace - user must select workspace');
+    }
+
+    return this.taskRepo.findByBlueprint(blueprintId);
+  }
+}
+```
+
+### SessionContext Interface
+```typescript
+export interface SessionContext {
+  // Current authenticated account
+  getCurrentAccountId(): string | null;
+  getCurrentAccount(): AccountProjection | null;
+
+  // Current workspace (Blueprint)
+  getCurrentBlueprintId(): string | null;
+  getCurrentWorkspace(): WorkspaceProjection | null;
+
+  // Check membership and roles
+  hasRole(role: string): boolean;
+  hasPermission(permission: string): boolean;
+
+  // Workspace switching
+  switchWorkspace(blueprintId: string): Promise<void>;
+}
+```
+
+## Repository Security Pattern
+
+### Blueprint-Scoped Repository
+```typescript
+export class FirestoreTaskRepository {
+  async save(task: Task, blueprintId: string): Promise<void> {
+    // Validate task belongs to blueprint
+    if (task.getBlueprintId() !== blueprintId) {
+      throw new Error('Task blueprintId does not match session');
+    }
+
+    // Save to blueprint-scoped path
+    const docRef = doc(
+      this.db,
+      'blueprints',
+      blueprintId,
+      'tasks',
+      task.id
+    );
+
+    await setDoc(docRef, task.toFirestore());
+  }
+
+  async getById(taskId: string, blueprintId: string): Promise<Task | null> {
+    // Query blueprint-scoped path
+    const docRef = doc(
+      this.db,
+      'blueprints',
+      blueprintId,
+      'tasks',
+      taskId
+    );
+
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    return Task.fromFirestore(docSnap.data());
+  }
+
+  async findByBlueprint(blueprintId: string): Promise<Task[]> {
+    // Query all tasks in blueprint
+    const q = query(
+      collection(this.db, 'blueprints', blueprintId, 'tasks')
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => Task.fromFirestore(doc.data()));
+  }
+}
+```
+
+### Cross-Blueprint Query Prevention
+```typescript
+// ❌ BAD: Global query (leaks data across tenants)
+async getAllTasks(): Promise<Task[]> {
+  const q = collectionGroup(this.db, 'tasks');  // NEVER do this!
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => Task.fromFirestore(doc.data()));
+}
+
+// ✅ GOOD: Blueprint-scoped query
+async getTasksForWorkspace(blueprintId: string): Promise<Task[]> {
+  const q = query(
+    collection(this.db, 'blueprints', blueprintId, 'tasks')
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => Task.fromFirestore(doc.data()));
+}
+```
+
+## Command Security Pattern
+
+### Blueprint Validation in Commands
+```typescript
+export class CreateTaskCommand {
+  constructor(
+    public readonly data: CreateTaskCommandData,
+    public readonly actorId: string,
+    public readonly sessionContext: SessionContext
+  ) {
+    // Validate blueprintId is in session
+    const sessionBlueprintId = sessionContext.getCurrentBlueprintId();
+    if (!sessionBlueprintId) {
+      throw new Error('No active workspace');
+    }
+
+    // Validate command blueprintId matches session
+    if (data.blueprintId !== sessionBlueprintId) {
+      throw new Error('Command must be scoped to current workspace');
+    }
+
+    // Validate user has permission
+    if (!sessionContext.hasPermission('task:create')) {
+      throw new Error('User does not have permission to create tasks');
+    }
+  }
+}
+```
+
+### Command Handler Blueprint Check
+```typescript
+export class TaskCommandHandler {
+  async handleCreateTask(command: CreateTaskCommand): Promise<Result<string>> {
+    const blueprintId = command.sessionContext.getCurrentBlueprintId();
+    
+    if (!blueprintId) {
+      return Result.fail('No active workspace');
+    }
+
+    // Create task with blueprint
+    const task = Task.create(
+      command.data,
+      command.actorId,
+      blueprintId  // MUST include blueprintId
+    );
+
+    // Save to blueprint-scoped path
+    await this.taskRepo.save(task, blueprintId);
+
+    return Result.ok(task.id);
+  }
+}
+```
+
+## Event Security Pattern
+
+### Blueprint in Event Metadata
+```typescript
+export class TaskCreatedEvent extends DomainEvent<TaskCreatedEventData> {
+  constructor(data: TaskCreatedEventData, metadata: EventMetadata) {
+    // MUST include blueprintId in event data
+    if (!data.blueprintId) {
+      throw new Error('blueprintId is required in event data');
+    }
+
+    // MUST include blueprintId in metadata
+    if (!metadata.blueprintId) {
+      metadata.blueprintId = data.blueprintId;
+    }
+
+    // Validate consistency
+    if (data.blueprintId !== metadata.blueprintId) {
+      throw new Error('blueprintId mismatch in event data and metadata');
+    }
+
+    super('TaskCreatedEvent', data, metadata);
+  }
+}
+```
+
+### Event Store Blueprint Filtering
+```typescript
+export class FirestoreEventStore {
+  async getEventsForAggregate(
+    aggregateId: string,
+    blueprintId: string
+  ): Promise<DomainEvent[]> {
+    // Query events scoped to blueprint
+    const q = query(
+      collection(
+        this.db,
+        'blueprints',
+        blueprintId,
+        'events'
+      ),
+      where('aggregateId', '==', aggregateId),
+      orderBy('metadata.timestamp', 'asc')
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => this.deserializeEvent(doc.data()));
+  }
+
+  async saveEvents(
+    events: DomainEvent[],
+    blueprintId: string
+  ): Promise<void> {
+    // Validate all events belong to blueprint
+    for (const event of events) {
+      if (event.metadata.blueprintId !== blueprintId) {
+        throw new Error('Event blueprintId does not match session');
+      }
+    }
+
+    // Save to blueprint-scoped path
+    const batch = writeBatch(this.db);
+
+    for (const event of events) {
+      const docRef = doc(
+        collection(this.db, 'blueprints', blueprintId, 'events')
+      );
+      batch.set(docRef, this.serializeEvent(event));
+    }
+
+    await batch.commit();
+  }
+}
+```
+
+## Firestore Security Rules
+
+### Blueprint-Scoped Rules
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Get user's accessible blueprintIds
+    function getUserBlueprintIds() {
+      return get(/databases/$(database)/documents/accounts/$(request.auth.uid))
+        .data.blueprintIds;  // Array of workspace IDs user has access to
+    }
+
+    // Helper: Check blueprint membership
+    function hasAccessToBlueprint(blueprintId) {
+      return request.auth != null && 
+        blueprintId in getUserBlueprintIds();
+    }
+
+    // Blueprint documents (metadata)
+    match /blueprints/{blueprintId} {
+      allow read: if hasAccessToBlueprint(blueprintId);
+      allow write: if hasAccessToBlueprint(blueprintId) &&
+        get(/databases/$(database)/documents/blueprints/$(blueprintId)/memberships/$(request.auth.uid))
+          .data.role == 'Owner';
+    }
+
+    // Blueprint tasks (nested collection)
+    match /blueprints/{blueprintId}/tasks/{taskId} {
+      allow read: if hasAccessToBlueprint(blueprintId);
+      
+      allow create: if hasAccessToBlueprint(blueprintId) &&
+        request.resource.data.blueprintId == blueprintId;
+      
+      allow update: if hasAccessToBlueprint(blueprintId) &&
+        resource.data.blueprintId == blueprintId &&
+        request.resource.data.blueprintId == blueprintId;
+      
+      allow delete: if hasAccessToBlueprint(blueprintId) &&
+        resource.data.blueprintId == blueprintId;
+    }
+
+    // Blueprint events (nested collection)
+    match /blueprints/{blueprintId}/events/{eventId} {
+      allow read: if hasAccessToBlueprint(blueprintId);
+      
+      allow create: if hasAccessToBlueprint(blueprintId) &&
+        request.resource.data.metadata.blueprintId == blueprintId;
+      
+      // Events are immutable - no update or delete
+      allow update, delete: if false;
+    }
+
+    // Blueprint memberships
+    match /blueprints/{blueprintId}/memberships/{accountId} {
+      allow read: if hasAccessToBlueprint(blueprintId);
+      
+      allow write: if hasAccessToBlueprint(blueprintId) &&
+        get(/databases/$(database)/documents/blueprints/$(blueprintId)/memberships/$(request.auth.uid))
+          .data.role in ['Owner', 'Admin'];
+    }
+  }
+}
+```
+
+## Role-Based Access Control (RBAC)
+
+### Role Hierarchy
+```typescript
+export enum WorkspaceRole {
+  Owner = 'Owner',      // Full control
+  Admin = 'Admin',      // Manage members and settings
+  Member = 'Member',    // Create and edit
+  Viewer = 'Viewer'     // Read-only
+}
+
+export const ROLE_PERMISSIONS: Record<WorkspaceRole, string[]> = {
+  Owner: [
+    'workspace:delete',
+    'workspace:settings',
+    'member:manage',
+    'task:create',
+    'task:edit',
+    'task:delete',
+    'task:view'
+  ],
+  Admin: [
+    'workspace:settings',
+    'member:manage',
+    'task:create',
+    'task:edit',
+    'task:delete',
+    'task:view'
+  ],
+  Member: [
+    'task:create',
+    'task:edit',
+    'task:delete',
+    'task:view'
+  ],
+  Viewer: [
+    'task:view'
+  ]
+};
+```
+
+### Permission Check in Commands
+```typescript
+export class DeleteTaskCommand {
+  constructor(
+    public readonly taskId: string,
+    public readonly sessionContext: SessionContext
+  ) {
+    // Check permission
+    if (!sessionContext.hasPermission('task:delete')) {
+      throw new Error('User does not have permission to delete tasks');
+    }
+
+    // Check role (alternative to permission)
+    const role = sessionContext.getCurrentRole();
+    if (role === WorkspaceRole.Viewer) {
+      throw new Error('Viewers cannot delete tasks');
+    }
+  }
+}
+```
+
+### Permission Guard in Angular
+```typescript
+@Injectable({ providedIn: 'root' })
+export class PermissionGuard implements CanActivate {
+  constructor(private readonly sessionContext: SessionContext) {}
+
+  canActivate(route: ActivatedRouteSnapshot): boolean {
+    const requiredPermission = route.data['permission'] as string;
+    
+    if (!requiredPermission) {
+      return true;  // No permission required
+    }
+
+    if (!this.sessionContext.hasPermission(requiredPermission)) {
+      console.warn(`Permission denied: ${requiredPermission}`);
+      return false;
+    }
+
+    return true;
+  }
+}
+
+// Usage in routing
+const routes: Routes = [
+  {
+    path: 'tasks/create',
+    component: CreateTaskComponent,
+    canActivate: [PermissionGuard],
+    data: { permission: 'task:create' }
+  }
+];
+```
+
+## Workspace Switching Pattern
+
+### Switch Workspace Service
+```typescript
+@Injectable({ providedIn: 'root' })
+export class WorkspaceSwitcherService {
+  constructor(
+    private readonly sessionContext: SessionContext,
+    private readonly router: Router,
+    private readonly membershipRepo: MembershipRepository
+  ) {}
+
+  async switchWorkspace(blueprintId: string): Promise<void> {
+    const accountId = this.sessionContext.getCurrentAccountId();
+    
+    if (!accountId) {
+      throw new Error('User not authenticated');
+    }
+
+    // Verify user has access to workspace
+    const membership = await this.membershipRepo.getMembership(
+      accountId,
+      blueprintId
+    );
+
+    if (!membership) {
+      throw new Error('User does not have access to this workspace');
+    }
+
+    // Update session context
+    await this.sessionContext.switchWorkspace(blueprintId);
+
+    // Reload UI data for new workspace
+    this.router.navigate(['/dashboard']);
+  }
+
+  async getAvailableWorkspaces(): Promise<WorkspaceProjection[]> {
+    const accountId = this.sessionContext.getCurrentAccountId();
+    
+    if (!accountId) {
+      return [];
+    }
+
+    // Get all workspaces user is member of
+    const memberships = await this.membershipRepo.getMembershipsForAccount(accountId);
+    
+    const workspaceIds = memberships.map(m => m.blueprintId);
+    return this.workspaceRepo.findByIds(workspaceIds);
+  }
+}
+```
+
+## Data Isolation Checklist
+
+### For Every Repository Method
+- [ ] Accept blueprintId parameter
+- [ ] Use blueprint-scoped Firestore path
+- [ ] Validate blueprintId in data matches parameter
+- [ ] Never use collectionGroup() for multi-tenant data
+- [ ] Return empty result if blueprintId doesn't match
+
+### For Every Command
+- [ ] Include blueprintId in command data
+- [ ] Validate blueprintId matches SessionContext
+- [ ] Check user has permission for action
+- [ ] Pass blueprintId to repository methods
+
+### For Every Event
+- [ ] Include blueprintId in event data
+- [ ] Include blueprintId in event metadata
+- [ ] Validate consistency between data and metadata
+- [ ] Save to blueprint-scoped event store path
+
+### For Every Query Service
+- [ ] Get blueprintId from SessionContext
+- [ ] Pass blueprintId to repository methods
+- [ ] Filter results by blueprintId
+- [ ] Handle missing workspace gracefully
+
+### For Firestore Security Rules
+- [ ] Define helper to get user's blueprintIds
+- [ ] Require authentication for all operations
+- [ ] Validate blueprintId in document matches path
+- [ ] Check user has membership in blueprint
+- [ ] Enforce role-based permissions
+
+## Common Security Vulnerabilities
+
+### ❌ Vulnerability: Missing Blueprint Filter
+```typescript
+// VULNERABLE: Returns tasks from all workspaces
+async getAllTasks(): Promise<Task[]> {
+  const q = collectionGroup(this.db, 'tasks');
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => Task.fromFirestore(doc.data()));
+}
+```
+
+### ✅ Fix: Add Blueprint Scope
+```typescript
+// SECURE: Returns only tasks from current workspace
+async getTasksForWorkspace(): Promise<Task[]> {
+  const blueprintId = this.sessionContext.getCurrentBlueprintId();
+  
+  if (!blueprintId) {
+    throw new Error('No active workspace');
+  }
+
+  const q = query(
+    collection(this.db, 'blueprints', blueprintId, 'tasks')
+  );
+  
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => Task.fromFirestore(doc.data()));
+}
+```
+
+### ❌ Vulnerability: Client-Side Blueprint Filtering
+```typescript
+// VULNERABLE: Loads all data then filters client-side
+async getTasksForWorkspace(blueprintId: string): Promise<Task[]> {
+  const allTasks = await this.getAllTasks();  // Loads ALL workspaces!
+  return allTasks.filter(t => t.blueprintId === blueprintId);
+}
+```
+
+### ✅ Fix: Server-Side Blueprint Filtering
+```typescript
+// SECURE: Query scoped to blueprint at database level
+async getTasksForWorkspace(blueprintId: string): Promise<Task[]> {
+  const q = query(
+    collection(this.db, 'blueprints', blueprintId, 'tasks')
+  );
+  
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => Task.fromFirestore(doc.data()));
+}
+```
+
+### ❌ Vulnerability: Trusting Client-Provided Blueprint
+```typescript
+// VULNERABLE: Client can manipulate blueprintId
+async createTask(data: CreateTaskData): Promise<void> {
+  // Client provides blueprintId - can create task in ANY workspace!
+  const task = Task.create(data, data.blueprintId);
+  await this.taskRepo.save(task, data.blueprintId);
+}
+```
+
+### ✅ Fix: Use Session Blueprint
+```typescript
+// SECURE: Use blueprintId from authenticated session
+async createTask(data: CreateTaskData): Promise<void> {
+  const blueprintId = this.sessionContext.getCurrentBlueprintId();
+  
+  if (!blueprintId) {
+    throw new Error('No active workspace');
+  }
+
+  // Override client-provided blueprintId with session value
+  const task = Task.create({ ...data, blueprintId }, blueprintId);
+  await this.taskRepo.save(task, blueprintId);
+}
+```
+
+## References
+- Account/Workspace Model: `.github/instructions/account-workspace-model.instructions.yml`
+- SessionContext Usage: `.github/instructions/workspace-module-entity.instructions.yml`
+- Anti-Patterns: `.github/instructions/anti-patterns.instructions.yml`

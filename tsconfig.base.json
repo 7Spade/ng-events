@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "paths": {
+      "@account-domain": ["packages/account-domain/index.ts"],
+      "@account-domain/*": ["packages/account-domain/*"],
+      "@core-engine": ["packages/core-engine/index.ts"],
+      "@core-engine/*": ["packages/core-engine/*"],
+      "@saas-domain": ["packages/saas-domain/index.ts"],
+      "@saas-domain/*": ["packages/saas-domain/*"],
+      "@platform-adapters": ["packages/platform-adapters/index.ts"],
+      "@platform-adapters/*": ["packages/platform-adapters/*"],
+      "@ui-angular/*": ["packages/ui-angular/src/app/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+}

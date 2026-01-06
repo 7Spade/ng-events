@@ -1,0 +1,70 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "useDefineForClassFields": false,
+    "isolatedModules": true,
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
+    "baseUrl": "./",
+    "paths": {
+      "@shared": [
+        "packages/ui-angular/src/app/shared/index"
+      ],
+      "@core": [
+        "packages/ui-angular/src/app/core/index"
+      ],
+      "@env/*": [
+        "packages/ui-angular/src/environments/*"
+      ],
+      "@_mock": [
+        "_mock/index"
+      ],
+      "@app/*": [
+        "packages/ui-angular/src/app/*"
+      ],
+      "@core-engine": [
+        "packages/core-engine/index"
+      ],
+      "@core-engine/*": [
+        "packages/core-engine/*"
+      ],
+      "@saas-domain": [
+        "packages/saas-domain/index"
+      ],
+      "@saas-domain/*": [
+        "packages/saas-domain/*"
+      ],
+      "@platform-adapters": [
+        "packages/platform-adapters/index"
+      ],
+      "@platform-adapters/*": [
+        "packages/platform-adapters/*"
+      ]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}

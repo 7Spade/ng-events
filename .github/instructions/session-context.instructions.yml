@@ -1,0 +1,21 @@
+---
+description: "Ensure consistent use of SessionContext across UI and SaaS packages."
+applyTo: "packages/ui-angular/**/*.ts, packages/saas-domain/**/*.ts"
+---
+
+# SessionContext Instructions
+
+## Project Context
+- Maintain single session source
+- Integrate with Guards and DA_SERVICE_TOKEN
+
+## Development Rules
+- All components and services should access session via SessionContext
+- Do not store session in multiple places
+- Guards must read from SessionContext
+- Protect against race conditions and duplicate listeners
+
+## Implementation Process
+1. Refactor session handling to use SessionContext
+2. Verify Guards read session correctly
+3. Write tests to validate session consistency

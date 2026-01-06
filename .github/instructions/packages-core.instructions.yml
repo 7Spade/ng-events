@@ -1,0 +1,65 @@
+---
+description: "Guidelines for all packages to enforce clean architecture, strict boundaries, and sequential reasoning in Copilot."
+applyTo: "packages/**"
+---
+
+# Packages Architecture Instructions
+
+## 核心目標
+- 保持 packages 依賴方向清晰
+- 核心 domain / engine 不被 SDK / UI 綁架
+- SaaS 模組只依賴 core-engine
+- UI / adapters 只能呼叫核心，不直接改 domain
+- 所有決策與設計要使用 Sequential-Thinking + Software-Planning-Tool 分步思考
+
+## 建議結構（最終穩定版）
+
+```
+
+packages/
+├── core-engine/       # 💎 純核心（domain + ports）
+├── saas-domain/       # 🏢 SaaS 業務模組（只依賴 core-engine）
+├── platform-adapters/ # 🔧 技術實作（SDK 全部集中）
+└── ui-angular/        # 💅 前端畫面，只呼叫核心
+
+```
+
+## 鐵則依賴方向
+
+```
+
+ui-angular
+↓
+platform-adapters
+↓
+core-engine (ports + domain)
+
+```
+
+### 永遠禁止
+
+- core-engine import Firebase / Angular / AI SDK
+- saas-domain import platform-adapters
+- adapter 彼此互相依賴
+- UI 直接操作 domain internals（只能透過 adapter / port）
+
+## Copilot 導引（必須遵守 Sequential-Thinking）
+
+1. **先分析**當前 package 的角色（core / saas / adapter / UI）
+2. **判斷依賴方向**是否符合規則
+3. **拆解步驟**：
+   - Step 1: 列出 package 內所有模組、ports、entities
+   - Step 2: 列出對外 import / export
+   - Step 3: 檢查是否有違反依賴規則
+   - Step 4: 建議改正方案（分步列出）
+4. **生成建議**前，先模擬每個依賴改動的影響範圍
+5. **最後形成完整報告**：每個 package 的邊界狀態、違規點、改正建議
+
+## 開發守則
+
+- 核心工程師只修改 core-engine 與 saas-domain
+- UI 開發只能透過 adapters 呼叫 domain 功能
+- 新 SDK / 外部服務必須加入 platform-adapters，並透過 port 對外暴露
+- 所有設計決策必須先用 Sequential-Thinking 拆解，再用 Software-Planning-Tool 產出 step-by-step plan
+- 確保每個 package 的 index.ts 是唯一對外暴露 API
+- 修改核心 domain 需遵守 ports / entity / aggregate 的分層規則

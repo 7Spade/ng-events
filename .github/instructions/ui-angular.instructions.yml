@@ -1,0 +1,26 @@
+---
+description: "UI-Angular package: Angular UI layer, components, guards, session integration."
+applyTo: "packages/ui-angular/**/*.ts, packages/ui-angular/**/*.html, packages/ui-angular/**/*.scss"
+---
+
+# UI-Angular Package Instructions
+
+## Project Context
+- Angular components, guards, services
+- Follow skeleton from #29
+- Centralized Auth / token management from #43
+
+## Development Rules
+- Do not import core-engine or domain internal files directly
+- Use DA_SERVICE_TOKEN for domain service injection
+- Use SessionContext and Guard pattern as skeleton
+- All HTTP calls must use centralized Auth header helper
+- Components should only depend on UI services or injected domain services
+- No domain logic inside components
+
+## Implementation Process
+1. Scaffold UI components using skeleton patterns
+2. Inject domain services via DA_SERVICE_TOKEN
+3. Use centralized header helper for all HTTP calls
+4. Apply Guards and SessionContext patterns
+5. Write unit tests for UI components and guards

@@ -1,0 +1,379 @@
+---
+description: "Account and Workspace model: multi-tenant architecture with WHO (Account) and WHERE (Workspace) concepts"
+applyTo: "packages/saas-domain/**/*.ts, packages/platform-adapters/**/*.ts"
+---
+
+# Account and Workspace Model
+
+## Core Concepts
+
+### Account (WHO)
+- **Definition**: Business actor - the "who" that triggers events
+- **Purpose**: Represents the subject performing actions in the system
+- **Types**: UserAccount, OrganizationAccount, BotAccount
+- **In Events**: Always appears as actorAccountId, createdByAccountId, assigneeAccountId
+- **Key Characteristic**: Accounts TRIGGER events and OWN permissions
+
+### Workspace (WHERE)
+- **Definition**: Logical container and tenant boundary - the "where"
+- **Purpose**: Defines scope, data isolation, and multi-tenant boundaries
+- **In Events**: Always appears as blueprintId or workspaceId
+- **Key Characteristic**: Workspaces DO NOT trigger events, only provide scope
+
+### Identity (Authentication Source)
+- **User Identity**: Human login (email/OAuth) → produces UserAccount
+- **Organization Identity**: Legal entity → produces OrganizationAccount
+- **Bot Identity**: API token → produces BotAccount
+- **Key Point**: Identities are NOT business actors, they authenticate and produce Accounts
+
+## Account Types
+
+### UserAccount
+**Source**: User Identity (human login)
+**Can**:
+- Trigger business events (create tasks, approve payments)
+- Be assigned work (task assignee)
+- Own permissions (admin, member, viewer roles)
+- Belong to multiple Workspaces
+
+**Cannot**:
+- Be managed by other accounts
+- Represent non-human entities
+
+**Example**:
+```typescript
+interface UserAccount {
+  accountId: string;              // Unique account identifier
+  userIdentityId: string;         // Link to authentication identity
+  displayName: string;
+  email: string;
+  createdAt: Timestamp;
+}
+```
+
+### OrganizationAccount
+**Source**: Organization Identity (legal entity)
+**Can**:
+- Trigger business events (sign contracts, approve budgets)
+- Own resources (projects, contracts)
+- Be responsible for actions (contract signatory)
+- Belong to multiple Workspaces
+
+**Cannot**:
+- Log in directly
+- Perform actions without user delegation
+
+**Example**:
+```typescript
+interface OrganizationAccount {
+  accountId: string;
+  organizationIdentityId: string;
+  legalName: string;
+  taxId: string;
+  createdAt: Timestamp;
+}
+```
+
+### BotAccount
+**Source**: Bot Identity (API token)
+**Can**:
+- Trigger automated events (scheduled tasks, data imports)
+- Perform bulk operations
+- Have restricted permissions
+
+**Cannot**:
+- Access UI
+- Escalate privileges
+- Perform actions requiring human approval
+
+**Example**:
+```typescript
+interface BotAccount {
+  accountId: string;
+  botIdentityId: string;
+  name: string;
+  apiToken: string;              // Hashed
+  permissions: string[];
+  createdAt: Timestamp;
+}
+```
+
+## Workspace Model
+
+### Workspace Definition
+```typescript
+interface Workspace {
+  workspaceId: string;            // Also used as blueprintId
+  name: string;
+  ownerId: string;                // AccountId of owner
+  plan: 'free' | 'pro' | 'enterprise';
+  settings: WorkspaceSettings;
+  createdAt: Timestamp;
+}
+```
+
+### Key Characteristics
+- **Multi-Tenant Boundary**: Each workspace is a separate tenant
+- **Data Isolation**: All data scoped to workspaceId/blueprintId
+- **Module Container**: Holds ModuleRegistry for business capabilities
+- **Permission Scope**: Defines authorization context
+
+### Workspace Rules
+1. Every event MUST include blueprintId
+2. All queries MUST filter by workspaceId
+3. Cross-workspace access requires explicit permission
+4. Workspace does NOT appear as event actor (no "workspaceCreatedBy")
+
+## AccountWorkspaceMembership
+
+### Definition
+The relationship between Account and Workspace, defining permissions.
+
+```typescript
+interface AccountWorkspaceMembership {
+  membershipId: string;           // Composite: accountId_workspaceId
+  accountId: string;              // WHO
+  workspaceId: string;            // WHERE
+  role: WorkspaceRole;            // owner | admin | member | viewer
+  joinedAt: Timestamp;
+  invitedBy: string;              // AccountId
+}
+
+enum WorkspaceRole {
+  Owner = 'owner',                // Full control, cannot be removed
+  Admin = 'admin',                // Manage members and settings
+  Member = 'member',              // Read and write access
+  Viewer = 'viewer'               // Read-only access
+}
+```
+
+### Membership Rules
+1. One Account can belong to multiple Workspaces
+2. Each Workspace has exactly ONE owner
+3. Owner role cannot be changed or removed (must transfer ownership first)
+4. Permissions are relationships, not attributes of Account or Workspace
+
+## SessionContext
+
+### Definition
+Current session state for authenticated Account in active Workspace.
+
+```typescript
+interface SessionContext {
+  accountId: string;              // Current Account (WHO)
+  workspaceId: string;            // Current Workspace (WHERE)
+  role: WorkspaceRole;            // Current role in this Workspace
+  permissions: Permission[];      // Cached permissions for this session
+}
+```
+
+### Usage Pattern
+```typescript
+class TaskService {
+  constructor(private sessionContext: SessionContext) {}
+  
+  async createTask(command: CreateTaskCommand): Promise<Result> {
+    // WHO is creating?
+    const actorAccountId = this.sessionContext.accountId;
+    
+    // WHERE is it being created?
+    const blueprintId = this.sessionContext.workspaceId;
+    
+    // Can they do it?
+    if (!this.sessionContext.permissions.includes('task:create')) {
+      return Result.Err('Insufficient permissions');
+    }
+    
+    const event = new TaskCreatedEvent({
+      taskId: generateId(),
+      actorAccountId,
+      blueprintId,
+      ...command.data
+    });
+    
+    return Result.Ok(event);
+  }
+}
+```
+
+## Event Structure with Account/Workspace
+
+### Standard Event Pattern
+```typescript
+interface DomainEvent {
+  eventId: string;
+  aggregateId: string;
+  blueprintId: string;            // Workspace WHERE event occurred
+  causedByEventId: string | null;
+  timestamp: Timestamp;
+  actorAccountId: string;         // Account WHO triggered event
+  data: EventData;
+}
+```
+
+### Example Events
+```typescript
+// Task created by UserAccount in Workspace
+{
+  eventId: 'evt_001',
+  aggregateId: 'task_123',
+  blueprintId: 'workspace_abc',   // WHERE
+  actorAccountId: 'user_acc_1',   // WHO
+  causedByEventId: null,
+  timestamp: 1704470400000,
+  data: {
+    taskId: 'task_123',
+    title: 'Design new feature',
+    createdByAccountId: 'user_acc_1'
+  }
+}
+
+// Contract signed by OrganizationAccount
+{
+  eventId: 'evt_002',
+  aggregateId: 'contract_456',
+  blueprintId: 'workspace_xyz',   // WHERE
+  actorAccountId: 'org_acc_5',    // WHO (Organization)
+  causedByEventId: 'evt_001',
+  timestamp: 1704470460000,
+  data: {
+    contractId: 'contract_456',
+    signedByAccountId: 'org_acc_5',
+    signatoryName: 'Acme Corp'
+  }
+}
+```
+
+## Workspace Switching
+
+### Flow
+1. User selects different Workspace in UI
+2. UI calls WorkspaceSwitcherService.switchWorkspace(newWorkspaceId)
+3. Service validates Account has membership in new Workspace
+4. Service updates SessionContext.workspaceId and SessionContext.role
+5. ModuleRegistry unloads current Workspace modules
+6. ModuleRegistry loads new Workspace modules
+7. Angular queries re-subscribe to new Workspace projections
+8. UI updates to show new Workspace data
+
+### Implementation
+```typescript
+class WorkspaceSwitcherService {
+  constructor(
+    private sessionContext: SessionContext,
+    private moduleRegistry: ModuleRegistry,
+    private queryService: QueryService
+  ) {}
+  
+  async switchWorkspace(newWorkspaceId: string): Promise<Result> {
+    // 1. Verify membership
+    const membership = await this.getMembership(
+      this.sessionContext.accountId,
+      newWorkspaceId
+    );
+    
+    if (!membership) {
+      return Result.Err('No access to workspace');
+    }
+    
+    // 2. Unload current modules
+    await this.moduleRegistry.unloadAll();
+    
+    // 3. Update session
+    this.sessionContext.workspaceId = newWorkspaceId;
+    this.sessionContext.role = membership.role;
+    this.sessionContext.permissions = await this.loadPermissions(membership.role);
+    
+    // 4. Load new modules
+    await this.moduleRegistry.loadForWorkspace(newWorkspaceId);
+    
+    // 5. Re-subscribe queries
+    this.queryService.resubscribeAll(newWorkspaceId);
+    
+    return Result.Ok({ workspaceId: newWorkspaceId });
+  }
+}
+```
+
+## Naming Conventions
+
+### ✅ Correct
+```typescript
+actorAccountId              // Event actor
+createdByAccountId          // Who created
+assigneeAccountId           // Who is assigned
+approvedByAccountId         // Who approved
+workspaceId                 // Workspace scope
+blueprintId                 // Same as workspaceId (multi-tenant boundary)
+UserAccount                 // Account type
+OrganizationAccount         // Account type
+BotAccount                  // Account type
+AccountWorkspaceMembership  // Relationship
+```
+
+### ❌ Incorrect
+```typescript
+userId                      // Use actorAccountId
+orgId                       // Use actorAccountId (org is Account)
+user                        // Use account
+organization                // Use account
+createdBy                   // Use createdByAccountId
+assignedTo                  // Use assigneeAccountId
+tenant                      // Use workspace
+```
+
+## Multi-Tenant Data Isolation
+
+### Query Pattern
+```typescript
+// ❌ BAD: No workspace filter
+const tasks = await db.collection('tasks').get();
+
+// ✅ GOOD: Always filter by workspace
+const tasks = await db.collection('tasks')
+  .where('blueprintId', '==', sessionContext.workspaceId)
+  .get();
+```
+
+### Command Pattern
+```typescript
+// ✅ GOOD: Include workspace in all commands
+class CreateTaskCommand {
+  taskId: string;
+  blueprintId: string;        // From SessionContext
+  actorAccountId: string;     // From SessionContext
+  title: string;
+  description: string;
+}
+```
+
+## Authorization Pattern
+
+### Check Membership and Role
+```typescript
+async canPerformAction(
+  accountId: string,
+  workspaceId: string,
+  action: string
+): Promise<boolean> {
+  // 1. Verify membership
+  const membership = await this.getMembership(accountId, workspaceId);
+  if (!membership) return false;
+  
+  // 2. Check role permissions
+  const permissions = ROLE_PERMISSIONS[membership.role];
+  return permissions.includes(action);
+}
+```
+
+## Implementation Checklist
+- [ ] All events include blueprintId (workspaceId)
+- [ ] All events include actorAccountId (not userId/orgId)
+- [ ] All queries filter by workspaceId from SessionContext
+- [ ] SessionContext provides current accountId and workspaceId
+- [ ] AccountWorkspaceMembership defines all access relationships
+- [ ] Workspace switching unloads/loads ModuleRegistry
+- [ ] Owner role protected from removal
+- [ ] Cross-workspace access validated explicitly
+- [ ] Identities produce Accounts, not used directly in business logic
+- [ ] Commands validate membership before execution

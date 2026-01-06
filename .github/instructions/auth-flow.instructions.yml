@@ -1,0 +1,26 @@
+---
+description: "Ensure consistent Auth / token / DA_SERVICE_TOKEN usage."
+applyTo: "packages/ui-angular/**/*.ts, packages/platform-adapters/**/*.ts"
+---
+
+# Auth & Token Instructions
+
+## Project Context
+- Centralized AuthStateService is single source of truth
+- HTTP requests use unified header helper
+- Domain services injected via DA_SERVICE_TOKEN
+- Flow: @angular/fire → @delon/auth → DA_SERVICE_TOKEN
+
+## Development Rules
+- Do not create multiple AuthStateService listeners
+- All token headers must go through centralized helper
+- No direct calls to @angular/fire Auth methods outside the bridge
+- All injected domain services must use DA_SERVICE_TOKEN
+- Guards and components must read Auth/session via centralized services
+
+## Implementation Process
+1. Audit all Auth-related imports and listeners
+2. Replace duplicates with centralized AuthStateService
+3. Verify header helper used for all HTTP requests
+4. Refactor domain service injection to DA_SERVICE_TOKEN
+5. Add unit tests for Auth flows and guards

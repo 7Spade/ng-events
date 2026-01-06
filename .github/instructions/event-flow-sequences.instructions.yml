@@ -1,0 +1,563 @@
+---
+description: Event flow sequences and lifecycle patterns for common domain events in ng-events
+applyTo: '**/*.{ts,event.ts,saga.ts}'
+---
+
+# Event Flow Sequences
+
+## Task Lifecycle Event Flow
+
+### 1. Task Creation Flow
+```
+User Action: "Create Task"
+  ↓
+CreateTaskCommand
+  ↓
+TaskCommandHandler.handleCreateTask()
+  ↓
+Task.create() → TaskCreatedEvent
+  ↓
+EventBus.publish(TaskCreatedEvent)
+  ↓
+├─→ TaskProjectionListener → Update TaskProjection
+├─→ NotificationSaga → Send notification to assignee
+└─→ AuditLogListener → Record creation audit log
+
+Result: Task created, projection updated, notifications sent
+```
+
+### 2. Task Assignment Flow
+```
+User Action: "Assign Task to User"
+  ↓
+AssignTaskCommand
+  ↓
+TaskCommandHandler.handleAssignTask()
+  ↓
+task.assignTo(assigneeId) → TaskAssignedEvent
+  ↓
+EventBus.publish(TaskAssignedEvent)
+  ↓
+├─→ TaskProjectionListener → Update assigneeId in projection
+├─→ NotificationSaga → Send "Task Assigned" notification
+└─→ AuditLogListener → Record assignment change
+
+Causality Chain:
+  TaskCreatedEvent
+    ↓ causedBy
+  TaskAssignedEvent
+```
+
+### 3. Task Completion Flow
+```
+User Action: "Complete Task"
+  ↓
+CompleteTaskCommand
+  ↓
+TaskCommandHandler.handleCompleteTask()
+  ↓
+task.complete() → TaskCompletedEvent
+  ↓
+EventBus.publish(TaskCompletedEvent)
+  ↓
+├─→ TaskProjectionListener → Update status to 'Completed'
+├─→ NotificationSaga → Send completion notification
+├─→ TaskCompensationSaga → Check for dependent tasks
+└─→ AuditLogListener → Record completion
+
+Causality Chain:
+  TaskCreatedEvent
+    ↓ causedBy
+  TaskAssignedEvent
+    ↓ causedBy
+  TaskCompletedEvent
+```
+
+### 4. Task Batch Completion Flow
+```
+User Action: "Complete All Tasks in Project"
+  ↓
+CompleteBatchCommand
+  ↓
+BatchTaskSaga.start()
+  ↓
+BatchStartedEvent (root event)
+  ↓
+For each task:
+  CompleteTaskCommand
+    ↓
+  TaskCompletedEvent (causedBy: BatchStartedEvent)
+    ↓
+  TaskProjectionListener updates
+  ↓
+All tasks completed
+  ↓
+BatchCompletedEvent (causedBy: BatchStartedEvent)
+  ↓
+NotificationSaga → Send "Batch Complete" notification
+
+Causality DAG:
+        BatchStartedEvent (root)
+              ↓ causedBy
+    ┌─────────┼─────────┐
+    ↓         ↓         ↓
+TaskCompleted TaskCompleted TaskCompleted
+    └─────────┼─────────┘
+              ↓ causedBy
+        BatchCompletedEvent
+```
+
+## Payment Lifecycle Event Flow
+
+### 1. Payment Authorization Flow
+```
+User Action: "Process Payment"
+  ↓
+AuthorizePaymentCommand
+  ↓
+PaymentSaga.start()
+  ↓
+PaymentAuthorizationRequestedEvent (root)
+  ↓
+├─→ PaymentGatewayService → Call external API
+│   ↓ (on success)
+│   PaymentAuthorizedEvent (causedBy: PaymentAuthorizationRequested)
+│   ↓
+│   ├─→ PaymentProjectionListener → Update status to 'Authorized'
+│   └─→ OrderSaga → Proceed with order fulfillment
+│
+└─→ (on failure)
+    PaymentAuthorizationFailedEvent (causedBy: PaymentAuthorizationRequested)
+    ↓
+    ├─→ PaymentProjectionListener → Update status to 'Failed'
+    └─→ NotificationSaga → Send failure notification
+
+Causality Branches:
+  PaymentAuthorizationRequestedEvent
+    ↓ causedBy
+  ┌─────────────────┴─────────────────┐
+  ↓                                   ↓
+PaymentAuthorizedEvent    PaymentAuthorizationFailedEvent
+```
+
+### 2. Payment Capture Flow
+```
+OrderSaga Triggered by: PaymentAuthorizedEvent
+  ↓
+CapturePaymentCommand
+  ↓
+PaymentSaga.handleCapture()
+  ↓
+PaymentCaptureRequestedEvent (causedBy: PaymentAuthorized)
+  ↓
+├─→ PaymentGatewayService → Capture authorized amount
+│   ↓ (on success)
+│   PaymentCapturedEvent (causedBy: PaymentCaptureRequested)
+│   ↓
+│   ├─→ PaymentProjectionListener → Update status to 'Captured'
+│   └─→ OrderSaga → Mark order as paid
+│
+└─→ (on failure)
+    PaymentCaptureFailedEvent (causedBy: PaymentCaptureRequested)
+    ↓
+    CompensationSaga → Void authorization
+
+Causality Chain:
+  PaymentAuthorizationRequestedEvent
+    ↓ causedBy
+  PaymentAuthorizedEvent
+    ↓ causedBy
+  PaymentCaptureRequestedEvent
+    ↓ causedBy
+  PaymentCapturedEvent OR PaymentCaptureFailedEvent
+```
+
+### 3. Payment Refund Flow (Compensation)
+```
+User Action: "Refund Payment"
+  ↓
+RefundPaymentCommand
+  ↓
+PaymentSaga.handleRefund()
+  ↓
+PaymentRefundRequestedEvent (causedBy: PaymentCaptured)
+  ↓
+├─→ PaymentGatewayService → Process refund
+│   ↓ (on success)
+│   PaymentRefundedEvent (causedBy: PaymentRefundRequested)
+│   ↓
+│   ├─→ PaymentProjectionListener → Update status to 'Refunded'
+│   ├─→ OrderSaga → Mark order as refunded
+│   └─→ NotificationSaga → Send refund confirmation
+│
+└─→ (on failure)
+    PaymentRefundFailedEvent (causedBy: PaymentRefundRequested)
+    ↓
+    CompensationSaga → Retry or escalate
+
+Causality Compensation:
+  PaymentCapturedEvent (original action)
+    ↓ causedBy
+  PaymentRefundRequestedEvent (compensation trigger)
+    ↓ causedBy
+  PaymentRefundedEvent (compensation complete)
+```
+
+## Workspace Lifecycle Event Flow
+
+### 1. Workspace Creation Flow
+```
+User Action: "Create Workspace"
+  ↓
+CreateWorkspaceCommand
+  ↓
+WorkspaceCommandHandler.handleCreateWorkspace()
+  ↓
+Workspace.create() → WorkspaceCreatedEvent
+  ↓
+EventBus.publish(WorkspaceCreatedEvent)
+  ↓
+├─→ WorkspaceProjectionListener → Create WorkspaceProjection
+├─→ MembershipSaga → Create owner membership
+│   ↓
+│   CreateMembershipCommand (causedBy: WorkspaceCreated)
+│   ↓
+│   MembershipCreatedEvent (causedBy: WorkspaceCreated)
+│   ↓
+│   MembershipProjectionListener → Create MembershipProjection
+│
+└─→ NotificationSaga → Send welcome notification
+
+Causality Chain:
+  WorkspaceCreatedEvent (root)
+    ↓ causedBy
+  MembershipCreatedEvent (child)
+```
+
+### 2. Workspace Invitation Flow
+```
+User Action: "Invite User to Workspace"
+  ↓
+InviteUserCommand
+  ↓
+MembershipCommandHandler.handleInviteUser()
+  ↓
+Membership.invite() → MembershipInvitedEvent
+  ↓
+EventBus.publish(MembershipInvitedEvent)
+  ↓
+├─→ MembershipProjectionListener → Create pending membership
+├─→ NotificationSaga → Send invitation email
+│   ↓
+│   InvitationEmailSentEvent (causedBy: MembershipInvited)
+│
+└─→ Wait for user response...
+    ↓ (user accepts)
+    AcceptInvitationCommand
+    ↓
+    membership.acceptInvitation() → InvitationAcceptedEvent
+    ↓
+    ├─→ MembershipProjectionListener → Update status to 'Active'
+    └─→ NotificationSaga → Send welcome notification
+
+Causality Flow:
+  MembershipInvitedEvent (root)
+    ↓ causedBy
+  InvitationEmailSentEvent
+    ↓ (user action)
+  InvitationAcceptedEvent
+```
+
+### 3. Workspace Switching Flow
+```
+User Action: "Switch to Different Workspace"
+  ↓
+SwitchWorkspaceCommand
+  ↓
+SessionService.switchWorkspace()
+  ↓
+WorkspaceSwitchedEvent (in SessionContext)
+  ↓
+├─→ SessionProjectionListener → Update active blueprintId
+├─→ TaskQueryService.reloadData() → Load tasks for new workspace
+├─→ ProjectQueryService.reloadData() → Load projects for new workspace
+└─→ UIService.updateWorkspaceDisplay() → Refresh UI
+
+Note: WorkspaceSwitchedEvent is session-level, not domain event
+```
+
+## Saga Coordination Flow
+
+### 1. Multi-Step Order Processing Saga
+```
+OrderPlacedEvent (root)
+  ↓ causedBy
+InventoryReservationRequestedEvent
+  ↓ causedBy
+┌──────────────────────────┴──────────────────────────┐
+↓ (success)                                           ↓ (failure)
+InventoryReservedEvent                    InventoryReservationFailedEvent
+  ↓ causedBy                                          ↓ causedBy
+PaymentAuthorizationRequestedEvent            OrderCancelledEvent
+  ↓ causedBy                                          (compensation)
+┌──────────────────────────┴──────────────────────────┐
+↓ (success)                                           ↓ (failure)
+PaymentAuthorizedEvent                    PaymentAuthorizationFailedEvent
+  ↓ causedBy                                          ↓ causedBy
+ShippingLabelRequestedEvent                   InventoryReleaseRequestedEvent
+  ↓ causedBy                                          ↓ causedBy
+ShippingLabelCreatedEvent                     InventoryReleasedEvent
+  ↓ causedBy                                          ↓ causedBy
+OrderFulfilledEvent                           OrderCancelledEvent
+
+DAG Structure:
+         OrderPlacedEvent
+              ↓
+    InventoryReservationRequested
+         ↓          ↓
+   Reserved     Failed
+         ↓          ↓
+    PaymentAuth  OrderCancelled
+      ↓      ↓
+ Authorized Failed
+      ↓      ↓
+ ShippingLabel ReleaseInventory
+      ↓
+OrderFulfilled
+```
+
+### 2. Compensation Saga Flow
+```
+TransferFundsCommand
+  ↓
+AccountDebitedEvent (root)
+  ↓ causedBy
+AccountCreditedEvent
+  ↓ (validation fails - insufficient funds in target)
+TransferValidationFailedEvent
+  ↓ causedBy
+CompensationStartedEvent
+  ↓ causedBy
+AccountCreditReversedEvent (undo credit)
+  ↓ causedBy
+AccountDebitReversedEvent (undo debit)
+  ↓ causedBy
+CompensationCompletedEvent
+
+Compensation Chain:
+  AccountDebitedEvent (original)
+    ↓ causedBy
+  AccountCreditedEvent (original)
+    ↓ causedBy (failure triggers compensation)
+  TransferValidationFailedEvent
+    ↓ causedBy
+  AccountCreditReversedEvent (undo step 2)
+    ↓ causedBy
+  AccountDebitReversedEvent (undo step 1)
+    ↓ causedBy
+  CompensationCompletedEvent
+```
+
+## Cross-Aggregate Coordination
+
+### Project + Task Coordination
+```
+ProjectCreatedEvent
+  ↓ causedBy
+DefaultTasksCreatedEvent (saga creates default tasks)
+  ↓ causedBy (for each task)
+┌─────────┼─────────┐
+↓         ↓         ↓
+TaskCreated TaskCreated TaskCreated
+(Setup)   (Review)   (Deploy)
+
+Causality:
+  ProjectCreatedEvent (Project aggregate)
+    ↓ causedBy
+  DefaultTasksCreatedEvent (Saga coordination)
+    ↓ causedBy
+  TaskCreatedEvent (Task aggregate 1)
+  TaskCreatedEvent (Task aggregate 2)
+  TaskCreatedEvent (Task aggregate 3)
+```
+
+### Task Dependencies Flow
+```
+TaskCreatedEvent (Task A - root)
+  ↓
+TaskCreatedEvent (Task B - depends on A)
+  ↓ (Task A completes)
+TaskCompletedEvent (Task A)
+  ↓ causedBy
+TaskDependencyResolvedEvent (Task B can start)
+  ↓ causedBy
+TaskStartedEvent (Task B)
+  ↓
+TaskCompletedEvent (Task B)
+
+Dependency Chain:
+  TaskA.created
+    ↓
+  TaskB.created (dependsOn: TaskA)
+    ↓ (wait for dependency)
+  TaskA.completed
+    ↓ causedBy
+  TaskB.dependencyResolved
+    ↓ causedBy
+  TaskB.started
+```
+
+## Event Flow Patterns
+
+### 1. Linear Flow (Simple Causality)
+```
+Event1 → Event2 → Event3 → Event4
+  ↓       ↓       ↓       ↓
+  A   →   B   →   C   →   D
+
+Example: Task lifecycle
+  TaskCreated → TaskAssigned → TaskStarted → TaskCompleted
+```
+
+### 2. Branch Flow (Decision Point)
+```
+       Event1
+         ↓
+    ┌────┴────┐
+    ↓         ↓
+Event2A    Event2B
+(success)  (failure)
+
+Example: Payment authorization
+  PaymentRequested
+    ↓
+  ┌─────────────┴─────────────┐
+  ↓                           ↓
+PaymentAuthorized    PaymentFailed
+```
+
+### 3. Merge Flow (Parallel → Sequential)
+```
+Event1
+  ↓
+┌─┼─┐
+↓ ↓ ↓
+A B C (parallel events)
+└─┼─┘
+  ↓
+Event2 (after all complete)
+
+Example: Batch processing
+  BatchStarted
+    ↓
+  ┌──┼──┐
+  ↓  ↓  ↓
+Task1 Task2 Task3
+  └──┼──┘
+    ↓
+BatchCompleted
+```
+
+### 4. Compensation Flow (Rollback)
+```
+Event1 → Event2 → Event3 (failure)
+  ↑       ↑       ↓
+  ←───────←───────  (compensation)
+Undo1   Undo2   Undo3
+
+Example: Failed payment
+  Debit → Credit → ValidationFailed
+    ↑       ↑         ↓
+    ←───────←─────────  (compensate)
+UndoCredit UndoDebit
+```
+
+## Event Timing Patterns
+
+### 1. Immediate Processing
+```
+Event published → Listeners triggered immediately
+TaskCreatedEvent → TaskProjectionListener (within ms)
+```
+
+### 2. Delayed Processing (Saga)
+```
+Event published → Saga state persisted → Process later
+PaymentAuthorizedEvent → Saga: wait 24h → CapturePayment
+```
+
+### 3. Scheduled Processing
+```
+Event published → Schedule future event
+InvoiceCreatedEvent → Schedule: InvoiceDueReminderEvent (in 7 days)
+```
+
+### 4. Retry Processing
+```
+Event processing failed → Retry with backoff
+PaymentFailedEvent → Retry: 1s, 5s, 25s, 125s → DeadLetterQueue
+```
+
+## Projection Update Flow
+
+### Real-time Projection Update
+```
+Domain Event Published
+  ↓
+EventBus.publish()
+  ↓
+ProjectionListener.handleEvent()
+  ↓
+ProjectionBuilder.applyEvent()
+  ↓
+ProjectionRepository.save()
+  ↓
+Projection Updated (within ms)
+  ↓
+QueryService.getProjection() → Returns updated data
+```
+
+### Projection Rebuild Flow
+```
+Admin Action: "Rebuild Projections"
+  ↓
+ProjectionRebuilder.rebuildAll()
+  ↓
+For each aggregate:
+  EventStore.getEventsForAggregate()
+    ↓
+  ProjectionBuilder.create()
+    ↓
+  For each event:
+    ProjectionBuilder.applyEvent()
+    ↓
+  ProjectionRepository.save()
+  ↓
+All Projections Rebuilt
+```
+
+## Implementation Checklist
+
+### For New Event Flow
+- [ ] Identify root event (user action or scheduled trigger)
+- [ ] Define causality chain (which events cause which)
+- [ ] Identify branch points (success/failure, decisions)
+- [ ] Identify merge points (parallel completion)
+- [ ] Document compensation flows (rollback scenarios)
+- [ ] Define saga coordination if cross-aggregate
+- [ ] Update event flow diagrams
+- [ ] Add flow tests (unit + integration)
+
+### For Saga Coordination
+- [ ] Define saga state machine
+- [ ] Identify compensation steps for each state
+- [ ] Define timeout and retry policies
+- [ ] Document saga lifecycle events
+- [ ] Implement saga persistence
+- [ ] Add saga tests (happy path + compensation)
+
+## References
+- Event Design: `.github/instructions/event-design-patterns.instructions.yml`
+- Causality Rules: `.github/instructions/causality-chain-rules.instructions.yml`
+- Saga Patterns: `.github/instructions/saga-process-patterns.instructions.yml`
+- Event Templates: `.github/instructions/event-command-templates.instructions.yml`

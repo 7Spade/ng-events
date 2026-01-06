@@ -1,0 +1,22 @@
+---
+description: "Ensure tests are written and run correctly."
+applyTo: "packages/**/**/*.ts"
+---
+
+# Test Rules Instructions
+
+## Project Context
+- Maintain high test coverage
+- Cover critical flows: Auth, Command → Event → Projection
+
+## Development Rules
+- Every service must have at least one unit test
+- E2E tests must cover critical flows
+- Mock HTTP requests with provideHttpClientTesting
+- Do not commit code without passing tests
+
+## Implementation Process
+1. Write unit tests for all services
+2. Write E2E tests for critical flows
+3. Validate test coverage
+4. Run all tests before commit

@@ -1,0 +1,21 @@
+---
+description: "Enforce package boundary rules for Copilot. All external access must go through index.ts. UI -> Domain -> Adapter dependencies should be unidirectional."
+applyTo: "packages/**/**/*.ts"
+---
+
+# Package Boundary Instructions
+
+## Project Context
+- Prevent cross-package direct imports
+- Maintain clear dependency direction
+
+## Development Rules
+- Do not import internal files from other packages
+- Only import via index.ts
+- Maintain dependency direction: UI → Domain → Adapter
+- Avoid circular dependencies
+
+## Implementation Process
+1. Review cross-package imports
+2. Refactor violations to use index.ts
+3. Confirm architecture follows dependency rules

@@ -1,0 +1,56 @@
+---
+description: "Enforce strict boundaries between packages and maintain clean dependency flow."
+applyTo: "packages/**"
+---
+
+# Packages Boundary Rules
+
+## 目標
+- 確保 packages 的依賴方向明確
+- 保護核心 domain / engine 不被 SDK / UI 綁架
+- 提升測試、替換和維護可行性
+
+## 推薦結構（參考最終穩定版）
+
+```
+
+packages/
+├── core-engine/       # 💎 純核心（domain + ports）
+├── saas-domain/       # 🏢 業務模組（只依賴 core-engine）
+├── platform-adapters/ # 🔧 技術實作（SDK 全部集中）
+└── ui-angular/        # 💅 前端畫面，只呼叫核心
+
+```
+
+## 鐵則依賴方向
+
+```
+
+ui-angular
+↓
+platform-adapters
+↓
+core-engine (ports + domain)
+
+```
+
+### 永遠禁止
+
+- core-engine import Firebase / Angular / AI SDK
+- saas-domain import platform-adapters
+- adapter 彼此互相依賴
+- UI 直接操作 domain internals（只能透過 adapter / port）
+
+## 設計理念
+
+- **SDK 全集中**：platform-adapters 是唯一實作層，核心只依賴 ports
+- **能力可替換**：port 定義對外能力，實作可以換掉不影響核心
+- **核心可獨立測試**：無 UI、無雲端也能跑 Event Store / Aggregate / Projection
+- **UI / SDK 可替換**：換 Angular、Firebase、AI SDK 不影響 domain
+
+## 建議開發守則
+
+1. 核心工程師只在 core-engine 與 saas-domain 工作
+2. UI 開發只能透過 adapters 呼叫 domain 功能
+3. 新 SDK 或外部服務必須加在 platform-adapters，並用 port 對外暴露
+4. 修改核心 domain 需遵守 ports / entity / aggregate 的分層規則

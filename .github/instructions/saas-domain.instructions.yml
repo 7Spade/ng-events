@@ -1,0 +1,23 @@
+---
+description: "SaaS-domain package: multi-tenant, session, subscription, domain logic."
+applyTo: "packages/saas-domain/**/*.ts"
+---
+
+# SaaS-Domain Package Instructions
+
+## Project Context
+- Multi-tenant and session management
+- Only domain logic allowed
+
+## Development Rules
+- Do not import UI code
+- All services must use DI tokens
+- Keep entities, aggregates, value objects in domain folder
+- Call adapters via platform-adapters only
+- Expose API via index.ts
+
+## Implementation Process
+1. Implement tenant/session services with DI tokens
+2. Define domain entities and aggregates
+3. Expose public API via index.ts
+4. Write unit tests

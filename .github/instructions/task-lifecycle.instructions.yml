@@ -1,0 +1,450 @@
+---
+description: "Task lifecycle and state machine: from creation to acceptance with Event Sourcing patterns"
+applyTo: "packages/saas-domain/task/**/*.ts"
+---
+
+# Task Lifecycle
+
+## Task States
+```
+pending → assigned → in_progress → completed → quality_checked → accepted
+                                      ↓
+                                   blocked
+```
+
+## State Machine
+
+### States
+- **pending**: Task created, awaiting assignment
+- **assigned**: Task assigned to someone, not yet started
+- **in_progress**: Task actively being worked on
+- **blocked**: Task cannot proceed due to dependency/issue
+- **completed**: Work finished, awaiting quality check
+- **quality_checked**: Quality verified, awaiting acceptance
+- **accepted**: Task fully accepted and ready for payment
+- **cancelled**: Task cancelled (terminal state)
+
+### Allowed Transitions
+```
+pending → assigned
+pending → cancelled
+
+assigned → in_progress
+assigned → cancelled
+
+in_progress → completed
+in_progress → blocked
+in_progress → cancelled
+
+blocked → in_progress
+blocked → cancelled
+
+completed → quality_checked
+completed → cancelled
+
+quality_checked → accepted
+quality_checked → in_progress  (rework)
+quality_checked → cancelled
+
+accepted → (terminal)
+cancelled → (terminal)
+```
+
+## Event Flow
+
+### 1. Task Creation (Root Event)
+```typescript
+// User creates task
+TaskCreatedEvent {
+  eventId: 'evt_001',
+  taskId: 'task_123',
+  causedByEventId: null,           // ✅ Root event
+  actorAccountId: 'acc_creator',
+  blueprintId: 'workspace_1',
+  data: {
+    title: 'Implement feature X',
+    description: 'Details...',
+    createdByAccountId: 'acc_creator',
+    dueDate: '2024-01-30'
+  }
+}
+
+// State: pending
+```
+
+### 2. Task Assignment
+```typescript
+TaskAssignedEvent {
+  eventId: 'evt_002',
+  taskId: 'task_123',
+  causedByEventId: 'evt_001',      // ✅ Caused by creation
+  actorAccountId: 'acc_assigner',
+  blueprintId: 'workspace_1',
+  data: {
+    assigneeAccountId: 'acc_worker',
+    assignedByAccountId: 'acc_assigner',
+    priority: 'high'
+  }
+}
+
+// State: pending → assigned
+```
+
+### 3. Task Started
+```typescript
+TaskStartedEvent {
+  eventId: 'evt_003',
+  taskId: 'task_123',
+  causedByEventId: 'evt_002',      // ✅ Caused by assignment
+  actorAccountId: 'acc_worker',
+  blueprintId: 'workspace_1',
+  data: {
+    startedByAccountId: 'acc_worker',
+    startedAt: Timestamp.now()
+  }
+}
+
+// State: assigned → in_progress
+```
+
+### 4. Task Blocked (Optional)
+```typescript
+TaskBlockedEvent {
+  eventId: 'evt_004',
+  taskId: 'task_123',
+  causedByEventId: 'evt_003',
+  actorAccountId: 'acc_worker',
+  blueprintId: 'workspace_1',
+  data: {
+    blockedByAccountId: 'acc_worker',
+    reason: 'Waiting for API key',
+    blockedTaskId: 'task_456'  // Dependency
+  }
+}
+
+// State: in_progress → blocked
+
+// Later unblocked
+TaskUnblockedEvent {
+  eventId: 'evt_005',
+  taskId: 'task_123',
+  causedByEventId: 'evt_004',
+  actorAccountId: 'acc_worker',
+  blueprintId: 'workspace_1',
+  data: {
+    unblockedByAccountId: 'acc_worker',
+    resolution: 'API key received'
+  }
+}
+
+// State: blocked → in_progress
+```
+
+### 5. Task Completed
+```typescript
+TaskCompletedEvent {
+  eventId: 'evt_006',
+  taskId: 'task_123',
+  causedByEventId: 'evt_005',
+  actorAccountId: 'acc_worker',
+  blueprintId: 'workspace_1',
+  data: {
+    completedByAccountId: 'acc_worker',
+    completedAt: Timestamp.now(),
+    notes: 'Feature implemented and tested',
+    deliverables: ['code', 'tests', 'docs']
+  }
+}
+
+// State: in_progress → completed
+```
+
+### 6. Quality Check
+```typescript
+TaskQualityCheckedEvent {
+  eventId: 'evt_007',
+  taskId: 'task_123',
+  causedByEventId: 'evt_006',
+  actorAccountId: 'acc_reviewer',
+  blueprintId: 'workspace_1',
+  data: {
+    checkedByAccountId: 'acc_reviewer',
+    status: 'passed',
+    score: 95,
+    feedback: 'Excellent work'
+  }
+}
+
+// State: completed → quality_checked
+
+// If failed quality check
+TaskQualityCheckedEvent {
+  // ... same structure
+  data: {
+    checkedByAccountId: 'acc_reviewer',
+    status: 'failed',
+    score: 60,
+    feedback: 'Needs improvement in X'
+  }
+}
+
+// Triggers rework
+TaskReworkRequestedEvent {
+  eventId: 'evt_008',
+  taskId: 'task_123',
+  causedByEventId: 'evt_007',
+  actorAccountId: 'acc_reviewer',
+  data: {
+    requestedByAccountId: 'acc_reviewer',
+    reason: 'Quality standards not met',
+    requiredChanges: ['Fix bug in module A', 'Add unit tests']
+  }
+}
+
+// State: quality_checked → in_progress
+```
+
+### 7. Task Acceptance
+```typescript
+TaskAcceptedEvent {
+  eventId: 'evt_009',
+  taskId: 'task_123',
+  causedByEventId: 'evt_007',
+  actorAccountId: 'acc_approver',
+  blueprintId: 'workspace_1',
+  data: {
+    acceptedByAccountId: 'acc_approver',
+    acceptedAt: Timestamp.now(),
+    finalScore: 95
+  }
+}
+
+// State: quality_checked → accepted (terminal)
+```
+
+### 8. Payment Initiated (Cross-Aggregate)
+```typescript
+// Saga listens to TaskAcceptedEvent and triggers payment
+PaymentInitiatedEvent {
+  eventId: 'evt_010',
+  paymentId: 'pay_789',
+  causedByEventId: 'evt_009',      // ✅ Caused by task acceptance
+  actorAccountId: 'system_bot',
+  blueprintId: 'workspace_1',
+  data: {
+    taskId: 'task_123',
+    amount: 500.00,
+    currency: 'USD',
+    recipientAccountId: 'acc_worker'
+  }
+}
+```
+
+## State Transition Validation
+
+### Aggregate Business Rules
+```typescript
+class TaskAggregate {
+  private state: TaskState;
+  
+  start(actorAccountId: string): Result<TaskStartedEvent> {
+    // ✅ Validate state
+    if (this.state.status !== 'assigned') {
+      return Result.Err('Can only start assigned tasks');
+    }
+    
+    // ✅ Validate actor
+    if (actorAccountId !== this.state.assigneeAccountId) {
+      return Result.Err('Only assignee can start task');
+    }
+    
+    const event = createTaskStartedEvent(
+      this.state.taskId,
+      { startedByAccountId: actorAccountId },
+      this.state.lastEventId,
+      this.state.blueprintId
+    );
+    
+    return Result.Ok(event);
+  }
+  
+  complete(actorAccountId: string, notes: string): Result<TaskCompletedEvent> {
+    // ✅ Validate state
+    if (this.state.status !== 'in_progress') {
+      return Result.Err('Can only complete in-progress tasks');
+    }
+    
+    // ✅ Validate actor
+    if (actorAccountId !== this.state.assigneeAccountId) {
+      return Result.Err('Only assignee can complete task');
+    }
+    
+    const event = createTaskCompletedEvent(
+      this.state.taskId,
+      { completedByAccountId: actorAccountId, notes },
+      this.state.lastEventId,
+      this.state.blueprintId
+    );
+    
+    return Result.Ok(event);
+  }
+  
+  accept(actorAccountId: string): Result<TaskAcceptedEvent> {
+    // ✅ Validate state
+    if (this.state.status !== 'quality_checked') {
+      return Result.Err('Can only accept quality-checked tasks');
+    }
+    
+    // ✅ Validate quality passed
+    if (this.state.qualityStatus !== 'passed') {
+      return Result.Err('Cannot accept failed quality check');
+    }
+    
+    // ✅ Validate actor has permission
+    // (Would check via Policy service in real implementation)
+    
+    const event = createTaskAcceptedEvent(
+      this.state.taskId,
+      { acceptedByAccountId: actorAccountId },
+      this.state.lastEventId,
+      this.state.blueprintId
+    );
+    
+    return Result.Ok(event);
+  }
+}
+```
+
+## Projection Updates
+
+### Task List Projection
+```typescript
+class TaskListProjectionBuilder {
+  private apply(projection: TaskListProjection, event: DomainEvent): TaskListProjection {
+    switch (event.eventType) {
+      case 'TaskCreated':
+        return { ...projection, status: 'pending', ...event.data };
+      
+      case 'TaskAssigned':
+        return { ...projection, status: 'assigned', assigneeAccountId: event.data.assigneeAccountId };
+      
+      case 'TaskStarted':
+        return { ...projection, status: 'in_progress', startedAt: event.timestamp };
+      
+      case 'TaskBlocked':
+        return { ...projection, status: 'blocked', blockReason: event.data.reason };
+      
+      case 'TaskUnblocked':
+        return { ...projection, status: 'in_progress', blockReason: null };
+      
+      case 'TaskCompleted':
+        return { ...projection, status: 'completed', completedAt: event.timestamp };
+      
+      case 'TaskQualityChecked':
+        return { ...projection, status: 'quality_checked', qualityScore: event.data.score };
+      
+      case 'TaskAccepted':
+        return { ...projection, status: 'accepted', acceptedAt: event.timestamp };
+      
+      case 'TaskCancelled':
+        return { ...projection, status: 'cancelled', cancelledAt: event.timestamp };
+      
+      default:
+        return projection;
+    }
+  }
+}
+```
+
+## Saga Orchestration
+
+### Task-to-Payment Saga
+```typescript
+class TaskPaymentSaga {
+  private state: SagaState = SagaState.Pending;
+  
+  // 1. Task accepted - initiate payment
+  onTaskAccepted(event: TaskAcceptedEvent): void {
+    this.state = SagaState.InProgress;
+    
+    this.sendCommand(new InitiatePaymentCommand({
+      taskId: event.data.taskId,
+      amount: this.calculatePayment(event),
+      recipientAccountId: this.getTaskAssignee(event.data.taskId),
+      causedByEventId: event.eventId,
+      blueprintId: event.blueprintId
+    }));
+  }
+  
+  // 2. Payment initiated - send notification
+  onPaymentInitiated(event: PaymentInitiatedEvent): void {
+    this.sendCommand(new SendNotificationCommand({
+      recipientAccountId: event.data.recipientAccountId,
+      message: `Payment of ${event.data.amount} initiated for task`,
+      causedByEventId: event.eventId
+    }));
+  }
+  
+  // 3. Notification sent - saga complete
+  onNotificationSent(event: NotificationSentEvent): void {
+    this.state = SagaState.Completed;
+  }
+  
+  // 4. Payment failed - compensate
+  onPaymentFailed(event: PaymentFailedEvent): void {
+    this.state = SagaState.Failed;
+    
+    // Mark task for manual review
+    this.sendCommand(new FlagTaskForReviewCommand({
+      taskId: this.taskId,
+      reason: 'Payment processing failed',
+      causedByEventId: event.eventId
+    }));
+    
+    this.state = SagaState.Compensated;
+  }
+}
+```
+
+## Query Patterns
+
+### Get Task by Status
+```typescript
+async getTasksByStatus(
+  status: TaskStatus,
+  workspaceId: string
+): Promise<TaskListProjection[]> {
+  return this.db
+    .collection('tasks')
+    .where('blueprintId', '==', workspaceId)
+    .where('status', '==', status)
+    .get();
+}
+```
+
+### Get My Assigned Tasks
+```typescript
+async getMyTasks(
+  accountId: string,
+  workspaceId: string
+): Promise<TaskListProjection[]> {
+  return this.db
+    .collection('tasks')
+    .where('blueprintId', '==', workspaceId)
+    .where('assigneeAccountId', '==', accountId)
+    .where('status', 'in', ['assigned', 'in_progress', 'blocked'])
+    .get();
+}
+```
+
+## Implementation Checklist
+- [ ] All state transitions validated in aggregate
+- [ ] Events use past tense naming
+- [ ] Causality chain maintained (causedByEventId)
+- [ ] Terminal states clearly defined (accepted, cancelled)
+- [ ] Actor validation for state changes
+- [ ] Projection updates for all events
+- [ ] Saga handles cross-aggregate workflows
+- [ ] Multi-tenant filtering in all queries
+- [ ] Business rules enforced in aggregate, not saga
+- [ ] Quality check pass/fail logic implemented

@@ -1,0 +1,46 @@
+---
+description: "Core dependency chain rules: Account → Workspace → Module → Entity, enforcing clear boundaries and allowed access direction."
+applyTo: "packages/account-domain/**/*.ts, packages/core-engine/**/*.ts, packages/saas-domain/**/*.ts"
+---
+
+# Core Dependency Chain Instructions
+
+## 🧠 基本規則
+- 依賴方向：Account → Workspace → Module → Entity
+- 每一層只能「往右用」，不能「往左知道」
+- 保持 UI / Domain / Adapter 的邊界清楚
+
+## 1️⃣ Account → Workspace
+- 只回答「你能不能進這個 Workspace」
+- 命名規範：
+  - 關係: `AccountWorkspaceMembership`
+  - 查詢: `isMemberOfWorkspace`
+  - 權限: `WorkspaceRole`
+- 禁止跨 Workspace 查詢 Module 或 Entity 狀態
+
+## 2️⃣ Workspace → Module
+- Workspace 只知道「哪些模組可用」
+- 命名規範：
+  - 狀態: `enabledModules`
+  - 指令: `EnableModuleCommand`
+  - 事件: `WorkspaceModuleEnabled`
+- 禁止 Workspace 操作 Entity 內部狀態
+
+## 3️⃣ Module → Entity
+- Module 知道如何操作 Entity，但 Entity 不知道 Module 或 Workspace
+- 命名規範：
+  - Command: `Verb + Entity` (e.g., `CompleteTask`)
+  - Aggregate: `EntityAggregate` (e.g., `TaskAggregate`)
+  - Event: `EntityVerbPastTense` (e.g., `TaskCompleted`)
+- 保持 Entity 狀態封閉，只處理自身邏輯
+
+## 實作建議
+- 使用接口 / Type 定義邊界資料結構
+- 避免跨層直接引用，全部透過明確 contract / DTO
+- 寫 unit tests 驗證「越界使用」會被阻止
+
+## 觀念重點
+- Account 不知道 Module / Entity 細節
+- Workspace 只管理可用模組
+- Module 可操作 Entity，但不操作 Workspace 或 Account
+- Entity 永遠不知道 Workspace / Module 外部世界

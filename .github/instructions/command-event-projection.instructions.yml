@@ -1,0 +1,23 @@
+---
+description: "CQRS: Commands, Events, Projections must follow consistent patterns."
+applyTo: "packages/core-engine/**/*.ts, packages/account-domain/**/*.ts"
+---
+
+# Command/Event/Projection Instructions
+
+## Project Context
+- Maintain clear flow: Command → Event → Projection
+- Ensure domain boundaries are respected
+- No direct UI calls
+
+## Development Rules
+- Commands must validate input before emitting events
+- Projections only update read models
+- Events must be immutable value objects
+- Follow type safety and DI rules
+
+## Implementation Process
+1. Scaffold command classes
+2. Implement events and value objects
+3. Implement projections for read models
+4. Write unit tests for each layer

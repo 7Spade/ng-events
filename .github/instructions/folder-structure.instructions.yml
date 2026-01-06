@@ -1,0 +1,22 @@
+---
+description: "Enforce consistent folder structure across packages."
+applyTo: "packages/**/**/*.ts"
+---
+
+# Folder Structure Instructions
+
+## Project Context
+- Maintain UI, Domain, Adapter, Core separation
+- Keep components, services, guards, and domain logic in standard paths
+
+## Development Rules
+- Services: src/app/core/services/
+- Components: src/app/components/
+- Guards: src/app/core/guards/
+- Domain logic: packages/*/domain/
+- Expose API only via index.ts
+
+## Implementation Process
+1. Review folder structure before adding new files
+2. Ensure imports respect folder boundaries
+3. Refactor misplaced files into correct folders

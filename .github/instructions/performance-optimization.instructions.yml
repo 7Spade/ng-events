@@ -1,0 +1,23 @@
+---
+description: "Rules for performance and bundle optimization."
+applyTo: "packages/ui-angular/**/*.ts, packages/platform-adapters/**/*.ts"
+---
+
+# Performance Optimization Instructions
+
+## Project Context
+- Reduce startup time
+- Minimize bundle size
+- Avoid unnecessary service registration
+
+## Development Rules
+- Only register required services (Analytics, RemoteConfig, etc.)
+- Lazy load modules when possible
+- Use OnPush change detection
+- Cache observables and avoid repeated API calls
+
+## Implementation Process
+1. Audit service registrations
+2. Apply lazy loading to modules
+3. Optimize component change detection
+4. Write performance benchmarks

@@ -1,0 +1,27 @@
+---
+description: 'UI-Angular package: use @delon/auth for authentication and @delon/acl for access control, integrate with SessionContext and skeleton stubs.'
+applyTo: 'packages/ui-angular/**/*.ts'
+---
+# projectContext:
+- 'UI layer consumes SessionContext and AuthStateFacade for authentication'
+- 'Use ACLService and ACLGuard for role/permission control'
+- 'Domain layer remains framework-agnostic; no direct Angular/Firebase imports'
+- 'Skeleton stubs exist for SessionContext, AuthStateFacade, SessionGuard, Startup, and header contract'
+
+# developmentRules:
+- 'Use ITokenService from @delon/auth for all token storage, retrieval, and change monitoring'
+- 'Use SimpleInterceptor or JWTInterceptor to automatically attach tokens in HTTP requests'
+- 'Inject ACLService for guard stubs; use can() / canAbility() for role/permission checks'
+- 'SessionContext facade provides workspace/tenant/uid info without direct SDK access'
+- 'Skeleton stubs should not contain business logic; logic comes from @delon/auth / @delon/acl'
+- 'Maintain single header contract hook via helper functions; do not manually attach tokens'
+- 'Keep UI / Domain boundaries clear'
+- 'Expose public API only through index.ts; avoid exposing internal SDK usage'
+
+# implementationProcess:
+- 'Inject ITokenService in AuthStateFacade; provide waitForAuthState() and refreshToken() stubs'
+- 'Implement SessionGuard stubs using ACLService.can() / canAbility()'
+- 'Ensure HTTP interceptors use @delon/auth provided interceptors'
+- 'UI components consume SessionContext via Facade, not directly from SDK'
+- 'Write unit tests using mocks for ITokenService and ACLService'
+- 'Review skeleton usage to ensure no direct token or ACL logic in UI components'

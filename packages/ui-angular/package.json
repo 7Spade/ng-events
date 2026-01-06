@@ -1,0 +1,56 @@
+{
+  "name": "@ng-events/ui-angular",
+  "version": "1.0.0",
+  "description": "Angular UI layer - Uses platform-adapters for backend integration",
+  "private": true,
+  "scripts": {
+    "lint": "eslint src/app --ext .ts",
+    "ng": "ng",
+    "start": "ng s -o",
+    "build": "ng build",
+    "test": "ng test"
+  },
+  "keywords": [
+    "angular",
+    "ui",
+    "frontend"
+  ],
+  "author": "ng-events team",
+  "license": "MIT",
+  "dependencies": {
+    "@angular/animations": "^20.3.0",
+    "@angular/cdk": "^20.2.3",
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/fire": "^20.0.1",
+    "@angular/forms": "^20.3.0",
+    "@angular/platform-browser": "^20.3.0",
+    "@angular/platform-browser-dynamic": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "@delon/abc": "^20.1.1",
+    "@delon/acl": "^20.1.1",
+    "@delon/auth": "^20.1.1",
+    "@delon/cache": "^20.1.1",
+    "@delon/chart": "^20.1.1",
+    "@delon/form": "^20.1.1",
+    "@delon/mock": "^20.1.1",
+    "@delon/theme": "^20.1.1",
+    "@delon/util": "^20.1.1",
+    "@ng-events/platform-adapters": "*",
+    "@tanstack-query-firebase/angular": "^1.0.0",
+    "@tanstack/angular-query-experimental": "5.66.4",
+    "ng-zorro-antd": "^20.3.1",
+    "ngx-tinymce": "^20.0.0",
+    "rxjs": "~7.8.0",
+    "screenfull": "^6.0.2",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@delon/testing": "^20.1.1",
+    "@ng-util/monaco-editor": "^20.1.0",
+    "@types/jasmine": "~5.1.0",
+    "typescript": "~5.9.2"
+  }
+}

@@ -1,0 +1,349 @@
+---
+description: "Saga and Process Manager patterns: long-running workflows, compensation, state machines, and cross-aggregate coordination"
+applyTo: "packages/saas-domain/**/*.saga.ts, packages/core-engine/**/*.ts"
+---
+
+# Saga and Process Manager Patterns
+
+## Definition
+- **Saga**: Long-running workflow that coordinates multiple aggregates
+- **Process Manager**: Stateful saga that maintains process state
+- **Purpose**: Handle cross-aggregate workflows without distributed transactions
+
+## When to Use Saga
+- Workflow spans multiple aggregates
+- Compensation needed for partial failures
+- Long-running processes (hours, days, weeks)
+- Need to maintain workflow state
+- Require timeout and retry logic
+
+## Saga Characteristics
+- **Stateful**: Maintains saga state (Pending, InProgress, Completed, Failed)
+- **Event-Driven**: Listens to domain events and triggers commands
+- **Compensating**: Can reverse operations if workflow fails
+- **Timeout-Aware**: Handles timeouts and retries
+
+## Saga State Machine
+```typescript
+enum SagaState {
+  Pending = 'pending',
+  InProgress = 'in_progress',
+  Completed = 'completed',
+  Failed = 'failed',
+  Compensated = 'compensated',
+  DeadLetter = 'dead_letter'
+}
+```
+
+## State Transitions
+```
+Pending → InProgress → Completed ✅
+Pending → InProgress → Failed → Compensated ⚠️
+Pending → InProgress → (timeout) → DeadLetter ❌
+```
+
+## Saga Pattern Example: Task Assignment
+```typescript
+class TaskAssignmentSaga {
+  private state: SagaState = SagaState.Pending;
+  private taskId: string;
+  private assigneeAccountId: string;
+  
+  // 1. Saga starts when task created
+  onTaskCreated(event: TaskCreatedEvent): void {
+    this.state = SagaState.InProgress;
+    this.taskId = event.data.taskId;
+    
+    // Send command to assign task
+    this.sendCommand(new AssignTaskCommand({
+      taskId: this.taskId,
+      assigneeAccountId: this.determineAssignee(),
+      causedByEventId: event.eventId
+    }));
+  }
+  
+  // 2. Task assigned successfully
+  onTaskAssigned(event: TaskAssignedEvent): void {
+    if (event.data.taskId !== this.taskId) return;
+    
+    this.assigneeAccountId = event.data.assigneeAccountId;
+    
+    // Send notification
+    this.sendCommand(new SendNotificationCommand({
+      recipientAccountId: this.assigneeAccountId,
+      message: `Task ${this.taskId} assigned to you`,
+      causedByEventId: event.eventId
+    }));
+  }
+  
+  // 3. Notification sent - saga complete
+  onNotificationSent(event: NotificationSentEvent): void {
+    this.state = SagaState.Completed;
+  }
+  
+  // 4. Assignment failed - compensate
+  onTaskAssignmentFailed(event: TaskAssignmentFailedEvent): void {
+    this.state = SagaState.Failed;
+    this.compensate();
+  }
+  
+  // 5. Compensation logic
+  private async compensate(): Promise<void> {
+    this.sendCommand(new CancelTaskCommand({
+      taskId: this.taskId,
+      reason: 'Assignment failed',
+      causedByEventId: this.getLastEventId()
+    }));
+    this.state = SagaState.Compensated;
+  }
+  
+  // 6. Timeout handling
+  onTimeout(): void {
+    if (this.state === SagaState.InProgress) {
+      this.state = SagaState.DeadLetter;
+      this.logDeadLetter(`Task assignment saga timed out for task ${this.taskId}`);
+    }
+  }
+}
+```
+
+## Saga Rules
+
+### 1. Sagas Coordinate, Don't Decide
+**❌ Bad**: Business logic in saga
+```typescript
+class PaymentSaga {
+  onTaskCompleted(event: TaskCompletedEvent) {
+    // ❌ Business rule in saga
+    if (event.data.amount > 1000 && event.data.priority === 'high') {
+      this.sendCommand(new ApprovePaymentCommand(...));
+    }
+  }
+}
+```
+
+**✅ Good**: Aggregate decides, saga coordinates
+```typescript
+class PaymentSaga {
+  onTaskCompleted(event: TaskCompletedEvent) {
+    // ✅ Just coordinate - aggregate will validate
+    this.sendCommand(new InitiatePaymentCommand({
+      taskId: event.data.taskId,
+      causedByEventId: event.eventId
+    }));
+  }
+}
+
+class PaymentAggregate {
+  initiate(command: InitiatePaymentCommand): Result<PaymentInitiatedEvent> {
+    // ✅ Business rules in aggregate
+    if (this.amount > 1000 && this.priority === 'high') {
+      return this.requireApproval();
+    }
+    return Result.Ok(new PaymentInitiatedEvent(...));
+  }
+}
+```
+
+### 2. Sagas Are Idempotent
+**Must handle**: Event replay and duplicate events
+
+```typescript
+class OrderFulfillmentSaga {
+  private processedEvents = new Set<string>();
+  
+  onOrderPlaced(event: OrderPlacedEvent): void {
+    // ✅ Idempotency check
+    if (this.processedEvents.has(event.eventId)) {
+      return; // Already processed
+    }
+    
+    this.processedEvents.add(event.eventId);
+    this.processOrder(event);
+  }
+}
+```
+
+### 3. Sagas Maintain Minimal State
+**Store only**: Saga coordination state, not domain data
+
+```typescript
+// ❌ Bad: Storing full domain data
+class TaskSaga {
+  private task: TaskAggregate;  // ❌ Duplicate domain state
+}
+
+// ✅ Good: Minimal coordination state
+class TaskSaga {
+  private state: SagaState;
+  private taskId: string;           // ✅ Just reference
+  private currentStep: number;      // ✅ Coordination state
+  private retryCount: number;       // ✅ Saga-specific state
+}
+```
+
+### 4. Sagas Handle Failures
+**Must implement**: Retry, compensation, dead letter
+
+```typescript
+class PaymentSaga {
+  private readonly MAX_RETRIES = 3;
+  private retryCount = 0;
+  
+  onPaymentFailed(event: PaymentFailedEvent): void {
+    if (this.retryCount < this.MAX_RETRIES) {
+      this.retryCount++;
+      this.scheduleRetry(event, this.calculateBackoff());
+    } else {
+      this.compensate();
+    }
+  }
+  
+  private calculateBackoff(): number {
+    return Math.pow(2, this.retryCount) * 1000; // Exponential backoff
+  }
+}
+```
+
+## Timeout and Retry Patterns
+
+### Timeout Configuration
+```typescript
+interface SagaConfig {
+  timeout: number;           // Maximum saga duration (e.g., 24 hours)
+  stepTimeout: number;       // Maximum step duration (e.g., 5 minutes)
+  retryAttempts: number;     // Maximum retry attempts
+  retryBackoff: 'linear' | 'exponential';
+}
+```
+
+### Retry Logic
+```typescript
+class ResilientSaga {
+  private config: SagaConfig;
+  
+  async executeWithRetry<T>(
+    operation: () => Promise<T>,
+    step: string
+  ): Promise<T> {
+    let attempts = 0;
+    
+    while (attempts < this.config.retryAttempts) {
+      try {
+        return await operation();
+      } catch (error) {
+        attempts++;
+        
+        if (attempts >= this.config.retryAttempts) {
+          this.handleFailure(step, error);
+          throw error;
+        }
+        
+        const delay = this.calculateDelay(attempts);
+        await this.wait(delay);
+      }
+    }
+  }
+  
+  private calculateDelay(attempt: number): number {
+    if (this.config.retryBackoff === 'exponential') {
+      return Math.pow(2, attempt) * 1000;
+    }
+    return attempt * 1000; // Linear
+  }
+}
+```
+
+### Dead Letter Queue
+```typescript
+class SagaDeadLetterHandler {
+  onSagaDeadLetter(saga: Saga, reason: string): void {
+    // Log for investigation
+    this.logger.error('Saga moved to dead letter', {
+      sagaId: saga.id,
+      sagaType: saga.constructor.name,
+      state: saga.state,
+      reason,
+      lastEvent: saga.getLastEventId()
+    });
+    
+    // Store for manual intervention
+    this.deadLetterStore.save({
+      sagaId: saga.id,
+      sagaState: saga.serialize(),
+      reason,
+      timestamp: Date.now()
+    });
+    
+    // Notify administrators
+    this.notificationService.alertAdmin({
+      type: 'saga_dead_letter',
+      sagaId: saga.id,
+      reason
+    });
+  }
+}
+```
+
+## Cross-Workspace Saga Rules
+When saga spans multiple workspaces:
+
+```typescript
+class CrossWorkspaceSaga {
+  onEvent(event: DomainEvent): void {
+    // ✅ Validate permissions for each workspace
+    if (!this.hasPermission(event.blueprintId, event.actorAccountId)) {
+      this.state = SagaState.Failed;
+      return;
+    }
+    
+    // ✅ Include workspace context in commands
+    this.sendCommand(new CommandWithWorkspace({
+      workspaceId: event.blueprintId,
+      ...
+    }));
+  }
+}
+```
+
+## Saga Testing Pattern
+```typescript
+describe('TaskAssignmentSaga', () => {
+  it('should complete assignment workflow', async () => {
+    const saga = new TaskAssignmentSaga();
+    
+    // Step 1: Task created
+    saga.onTaskCreated(new TaskCreatedEvent({ taskId: '123' }));
+    expect(saga.state).toBe(SagaState.InProgress);
+    
+    // Step 2: Task assigned
+    saga.onTaskAssigned(new TaskAssignedEvent({ taskId: '123', assigneeAccountId: 'acc1' }));
+    
+    // Step 3: Notification sent
+    saga.onNotificationSent(new NotificationSentEvent({ recipientAccountId: 'acc1' }));
+    expect(saga.state).toBe(SagaState.Completed);
+  });
+  
+  it('should compensate on failure', async () => {
+    const saga = new TaskAssignmentSaga();
+    saga.onTaskCreated(new TaskCreatedEvent({ taskId: '123' }));
+    
+    // Failure event
+    saga.onTaskAssignmentFailed(new TaskAssignmentFailedEvent({ taskId: '123' }));
+    
+    expect(saga.state).toBe(SagaState.Compensated);
+  });
+});
+```
+
+## Implementation Checklist
+- [ ] Saga maintains minimal state (references only)
+- [ ] Saga coordinates but doesn't decide business rules
+- [ ] Saga handles idempotency (duplicate events)
+- [ ] Saga implements retry with exponential backoff
+- [ ] Saga has timeout configuration
+- [ ] Saga implements compensation logic
+- [ ] Saga moves to dead letter after max retries
+- [ ] Saga validates workspace permissions for cross-workspace flows
+- [ ] Saga state machine defined with clear transitions
+- [ ] Tests cover happy path, failures, timeouts, and compensation

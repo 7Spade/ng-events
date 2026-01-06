@@ -1,0 +1,50 @@
+---
+description: "Enforce proper separation of layers: Core, SaaS domain, Platform adapters, and UI. Core must remain framework-agnostic."
+applyTo: "packages/core-engine/**/*.ts, packages/saas-domain/**/*.ts, packages/platform-adapters/**/*.ts, packages/ui-angular/**/*.ts"
+---
+
+# Architecture Layering Instructions
+
+## 最大原則
+- Core 不屬於 Angular
+- SaaS 是 Use Case / Feature，不是 Infrastructure
+- Platform 是 Adapter / Infrastructure，不是 Feature
+- UI 只能呼叫 Core 或 Adapter，不能定義 Core
+
+## 分層角色
+- packages/core-engine → 純核心邏輯：causality engine, event store, aggregates, projections
+- packages/saas-domain → SaaS 業務模型 / Use Case（純 TypeScript）
+- packages/platform-adapters → 技術實作：Firebase, Auth, Notification, Analytics 等
+- packages/ui-angular → Angular 視圖層，只呼叫 Core / Adapter，不依賴 SaaS domain 內部實現
+
+## 違規行為禁止
+- Core 放在 `src/app` 下
+- SaaS / Platform / UI 任意互相 import 造成循環依賴
+- Angular 專案內定義 Event Store / Aggregate / Projection
+- 跨層直接操作 Entity 或命令
+
+## 推薦目錄結構
+```text
+packages/
+├── core-engine/
+│   ├── causality/
+│   ├── event-store/
+│   ├── aggregates/
+│   ├── projection/
+│   └── index.ts
+├── saas-domain/
+│   ├── task/
+│   ├── payment/
+│   └── issue/
+├── platform-adapters/
+│   ├── firebase/
+│   ├── auth/
+│   ├── notification/
+│   └── analytics/
+└── ui-angular/
+    └── src/app/
+        ├── features/
+        │   ├── task/
+        │   └── payment/
+        └── adapters/
+            └── core-engine.ts

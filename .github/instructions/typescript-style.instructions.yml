@@ -1,0 +1,23 @@
+---
+description: "TypeScript / Angular best practices across all packages."
+applyTo: "packages/**/**/*.ts"
+---
+
+# TypeScript Style Instructions
+
+## Project Context
+- Use strict mode
+- Strong typing for all components and services
+- Follow Angular style guide
+
+## Development Rules
+- Enable strict mode in tsconfig.json
+- Use interfaces for public APIs
+- Avoid implicit any
+- Use readonly for immutable properties
+- Handle errors properly with RxJS operators
+
+## Implementation Process
+1. Review tsconfig.json settings
+2. Apply type guards and proper typing
+3. Refactor code violating TS rules

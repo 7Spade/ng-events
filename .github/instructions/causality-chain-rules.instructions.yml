@@ -1,0 +1,413 @@
+---
+description: "Causality chain rules: parent-child event relationships, DAG structures, and causality tracking for complete audit trails"
+applyTo: "packages/**/*.ts"
+---
+
+# Causality Chain Rules
+
+## Core Principle
+Every event (except root events) MUST reference its parent event via causedByEventId to create a complete causality chain.
+
+## Why Causality Matters
+- **Audit Trail**: Complete trace of why events occurred
+- **Debugging**: Understand event flow and dependencies
+- **Compliance**: Prove responsibility and attribution
+- **Replay**: Reconstruct exact event sequences
+- **Analysis**: Identify patterns and bottlenecks
+
+## Causality Structure
+
+### Root Events
+**Definition**: Events with no parent (workflow starters)
+**Pattern**: causedByEventId = null
+
+```typescript
+// User creates task (root event)
+{
+  eventId: 'evt_001',
+  taskId: 'task_123',
+  causedByEventId: null,        // ✅ Root event
+  actorAccountId: 'acc_1',
+  data: { title: 'New task' }
+}
+```
+
+### Child Events
+**Definition**: Events caused by other events
+**Pattern**: causedByEventId = parent eventId
+
+```typescript
+// Task assigned (caused by creation)
+{
+  eventId: 'evt_002',
+  taskId: 'task_123',
+  causedByEventId: 'evt_001',   // ✅ Points to TaskCreated
+  actorAccountId: 'acc_2',
+  data: { assigneeAccountId: 'acc_3' }
+}
+```
+
+## Causality Patterns
+
+### 1. Linear Chain (Single Parent → Single Child)
+```
+TaskCreated (evt_001)
+  ↓ causedBy
+TaskAssigned (evt_002)
+  ↓ causedBy
+TaskStarted (evt_003)
+  ↓ causedBy
+TaskCompleted (evt_004)
+  ↓ causedBy
+TaskAccepted (evt_005)
+```
+
+### 2. Branch (Single Parent → Multiple Children)
+```
+TaskCompleted (evt_001)
+  ├─→ PaymentInitiated (evt_002)
+  ├─→ NotificationSent (evt_003)
+  └─→ MetricsUpdated (evt_004)
+```
+
+### 3. Merge (Multiple Parents → Single Child)
+```
+TaskAccepted (evt_001) ─┐
+TaskAccepted (evt_002) ─┼─→ PaymentBatchCreated (evt_010)
+TaskAccepted (evt_003) ─┘
+```
+
+**Implementation**:
+```typescript
+// For merge, use most recent or primary parent
+{
+  eventId: 'evt_010',
+  causedByEventId: 'evt_003',    // Most recent in batch
+  data: {
+    batchId: 'batch_1',
+    taskIds: ['task_1', 'task_2', 'task_3'],
+    triggerEventIds: ['evt_001', 'evt_002', 'evt_003']  // ✅ Track all triggers
+  }
+}
+```
+
+### 4. Compensation (Reversing Previous Action)
+```
+PaymentInitiated (evt_001)
+  ↓
+PaymentFailed (evt_002)
+  ↓ causedBy
+PaymentCancelled (evt_003)  // Compensation event
+```
+
+## DAG (Directed Acyclic Graph) Rules
+
+### ✅ Allowed: Tree Structures
+```
+Root Event
+  ├─→ Child A
+  │     ├─→ Grandchild A1
+  │     └─→ Grandchild A2
+  └─→ Child B
+        └─→ Grandchild B1
+```
+
+### ❌ Prohibited: Cycles
+```
+Event A ─→ Event B ─→ Event C ─→ Event A  // ❌ CYCLE!
+```
+
+**Why No Cycles**: Events are facts about the past - past cannot cause itself
+
+### Validation
+```typescript
+class CausalityValidator {
+  validateNoCycles(eventId: string, causedByEventId: string): Result {
+    const ancestors = this.getAncestors(causedByEventId);
+    
+    if (ancestors.includes(eventId)) {
+      return Result.Err('Cycle detected in causality chain');
+    }
+    
+    return Result.Ok();
+  }
+  
+  private getAncestors(eventId: string): string[] {
+    const ancestors: string[] = [];
+    let current = eventId;
+    
+    while (current !== null) {
+      const event = this.eventStore.getEvent(current);
+      if (!event) break;
+      
+      if (event.causedByEventId) {
+        ancestors.push(event.causedByEventId);
+        current = event.causedByEventId;
+      } else {
+        break;
+      }
+    }
+    
+    return ancestors;
+  }
+}
+```
+
+## Event Metadata Structure
+
+### Required Fields
+```typescript
+interface DomainEvent {
+  eventId: string;              // Unique event identifier
+  aggregateId: string;          // Entity this event belongs to
+  blueprintId: string;          // Workspace/tenant scope
+  causedByEventId: string | null;  // ✅ Parent event (null for roots)
+  timestamp: Timestamp;         // When event occurred
+  actorAccountId: string;       // WHO triggered this event
+  data: EventData;              // Event-specific data
+}
+```
+
+### Causality Metadata (Optional but Recommended)
+```typescript
+interface EnhancedDomainEvent extends DomainEvent {
+  metadata: {
+    causedByEventId: string | null;
+    causedByUser: string;       // Human-readable user
+    causedByAction: string;     // What action triggered this
+    correlationId?: string;     // For distributed tracing
+    causalityDepth: number;     // How deep in the chain
+  };
+}
+```
+
+## Causality Tracking Patterns
+
+### Pattern 1: Direct Causality (Command → Event)
+```typescript
+class TaskService {
+  async assignTask(command: AssignTaskCommand): Promise<Result> {
+    // Command references the event that triggered it
+    const event = new TaskAssignedEvent({
+      taskId: command.taskId,
+      assigneeAccountId: command.assigneeAccountId,
+      causedByEventId: command.causedByEventId,  // ✅ From triggering event
+      actorAccountId: command.actorAccountId
+    });
+    
+    return Result.Ok(event);
+  }
+}
+```
+
+### Pattern 2: Saga Causality (Event → Command → Event)
+```typescript
+class TaskAssignmentSaga {
+  onTaskCreated(event: TaskCreatedEvent): void {
+    // Saga command references the triggering event
+    this.sendCommand(new AssignTaskCommand({
+      taskId: event.data.taskId,
+      assigneeAccountId: this.selectAssignee(),
+      causedByEventId: event.eventId  // ✅ Chain from TaskCreated
+    }));
+  }
+}
+```
+
+### Pattern 3: Batch Causality (Multiple Events → Single Event)
+```typescript
+class PaymentBatchService {
+  async createBatch(taskEvents: TaskAcceptedEvent[]): Promise<Result> {
+    const event = new PaymentBatchCreatedEvent({
+      batchId: generateId(),
+      taskIds: taskEvents.map(e => e.data.taskId),
+      causedByEventId: taskEvents[taskEvents.length - 1].eventId,  // ✅ Most recent
+      triggerEventIds: taskEvents.map(e => e.eventId),  // ✅ All triggers
+      actorAccountId: this.sessionContext.accountId
+    });
+    
+    return Result.Ok(event);
+  }
+}
+```
+
+## Querying Causality
+
+### Get Event Chain
+```typescript
+async getEventChain(leafEventId: string): Promise<DomainEvent[]> {
+  const chain: DomainEvent[] = [];
+  let currentId = leafEventId;
+  
+  while (currentId !== null) {
+    const event = await this.eventStore.getEvent(currentId);
+    if (!event) break;
+    
+    chain.unshift(event);  // Add to front (chronological order)
+    currentId = event.causedByEventId;
+  }
+  
+  return chain;
+}
+```
+
+### Get All Children
+```typescript
+async getChildren(parentEventId: string): Promise<DomainEvent[]> {
+  return this.eventStore.queryEvents({
+    causedByEventId: parentEventId
+  });
+}
+```
+
+### Get Root Cause
+```typescript
+async getRootCause(eventId: string): Promise<DomainEvent> {
+  let current = await this.eventStore.getEvent(eventId);
+  
+  while (current.causedByEventId !== null) {
+    current = await this.eventStore.getEvent(current.causedByEventId);
+  }
+  
+  return current;  // Root event
+}
+```
+
+## Causality Visualization
+
+### "Why View" Pattern
+```typescript
+interface WhyView {
+  event: DomainEvent;
+  causedBy: DomainEvent | null;
+  causedByChain: DomainEvent[];
+  children: DomainEvent[];
+  relatedEvents: DomainEvent[];
+}
+
+async buildWhyView(eventId: string): Promise<WhyView> {
+  const event = await this.eventStore.getEvent(eventId);
+  const causedByChain = await this.getEventChain(eventId);
+  const children = await this.getChildren(eventId);
+  
+  return {
+    event,
+    causedBy: causedByChain[causedByChain.length - 2] || null,
+    causedByChain,
+    children,
+    relatedEvents: await this.getRelatedEvents(event)
+  };
+}
+```
+
+### Timeline View
+```
+[Root] TaskCreated by User A
+   ↓ 5 minutes later
+[Branch] TaskAssigned to User B
+   ↓ 2 hours later
+[Branch] TaskStarted by User B
+   ↓ 1 day later
+[Branch] TaskCompleted by User B
+   ├─→ PaymentInitiated
+   ├─→ NotificationSent to User A
+   └─→ TaskAccepted by User A
+```
+
+## Causality Best Practices
+
+### 1. Always Set causedByEventId
+```typescript
+// ❌ BAD: Missing causality
+const event = new TaskCompletedEvent({
+  taskId,
+  completedByAccountId
+  // Missing causedByEventId!
+});
+
+// ✅ GOOD: Explicit causality
+const event = new TaskCompletedEvent({
+  taskId,
+  completedByAccountId,
+  causedByEventId: previousEvent.eventId  // ✅
+});
+```
+
+### 2. Preserve Causality Through Sagas
+```typescript
+class PaymentSaga {
+  onTaskCompleted(event: TaskCompletedEvent): void {
+    // ✅ Pass causality to command
+    this.sendCommand(new InitiatePaymentCommand({
+      taskId: event.data.taskId,
+      causedByEventId: event.eventId  // ✅ Preserve chain
+    }));
+  }
+}
+```
+
+### 3. Document Root Events
+```typescript
+// ✅ GOOD: Comment why this is a root
+class TaskService {
+  async createTask(command: CreateTaskCommand): Promise<Result> {
+    // Root event - user explicitly created task
+    const event = new TaskCreatedEvent({
+      ...command,
+      causedByEventId: null  // ✅ Root - started by user action
+    });
+  }
+}
+```
+
+### 4. Use Correlation IDs for Distributed Systems
+```typescript
+interface DomainEvent {
+  eventId: string;
+  causedByEventId: string | null;
+  correlationId: string;  // ✅ Track across services
+}
+```
+
+## Testing Causality
+
+```typescript
+describe('Causality Chain', () => {
+  it('should maintain complete causality chain', async () => {
+    // Root event
+    const created = await taskService.createTask(command);
+    expect(created.causedByEventId).toBeNull();  // ✅ Root
+    
+    // Child event
+    const assigned = await taskService.assignTask({
+      taskId: created.data.taskId,
+      causedByEventId: created.eventId  // ✅ Reference parent
+    });
+    expect(assigned.causedByEventId).toBe(created.eventId);
+    
+    // Verify chain
+    const chain = await eventStore.getEventChain(assigned.eventId);
+    expect(chain).toHaveLength(2);
+    expect(chain[0].eventId).toBe(created.eventId);
+    expect(chain[1].eventId).toBe(assigned.eventId);
+  });
+  
+  it('should prevent cycles', async () => {
+    const result = validator.validateNoCycles('evt_001', 'evt_001');
+    expect(result.isError()).toBe(true);
+    expect(result.error).toContain('Cycle detected');
+  });
+});
+```
+
+## Implementation Checklist
+- [ ] All events (except roots) have causedByEventId
+- [ ] Root events explicitly set causedByEventId = null with comment
+- [ ] Commands include causedByEventId from triggering event
+- [ ] Sagas preserve causality when sending commands
+- [ ] Batch events track all trigger events
+- [ ] Causality validator prevents cycles
+- [ ] Event Store indexes causedByEventId for queries
+- [ ] "Why View" provides causality visualization
+- [ ] Tests verify complete causality chains
+- [ ] Documentation explains why events occurred

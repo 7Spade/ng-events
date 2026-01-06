@@ -1,0 +1,388 @@
+---
+description: Templates and patterns for creating Events and Commands in the ng-events codebase
+applyTo: '**/*.{ts,event.ts,command.ts}'
+---
+
+# Event and Command Templates
+
+## Event Template Pattern
+
+### Basic Domain Event
+```typescript
+// {EntityName}{Action}Event.ts
+export interface TaskCreatedEventData {
+  readonly taskId: string;
+  readonly blueprintId: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly assigneeId?: string;
+  readonly dueDate?: Timestamp;
+}
+
+export class TaskCreatedEvent extends DomainEvent<TaskCreatedEventData> {
+  constructor(data: TaskCreatedEventData, metadata: EventMetadata) {
+    super(
+      'TaskCreatedEvent',     // Event type (past tense)
+      data,
+      metadata
+    );
+  }
+}
+```
+
+### Event with Causality
+```typescript
+export class TaskAssignedEvent extends DomainEvent<TaskAssignedEventData> {
+  constructor(data: TaskAssignedEventData, causedBy: DomainEvent) {
+    const metadata: EventMetadata = {
+      eventId: generateEventId(),
+      timestamp: Timestamp.now(),
+      causedBy: causedBy.metadata.eventId,  // Parent event ID
+      causedByUser: causedBy.metadata.causedByUser,
+      causedByAction: 'TaskAssigned',
+      blueprintId: data.blueprintId
+    };
+    super('TaskAssignedEvent', data, metadata);
+  }
+}
+```
+
+### Event Naming Rules
+- **Past Tense**: TaskCreated (not TaskCreate, CreateTask)
+- **Specific Action**: TaskTitleChanged (not TaskUpdated)
+- **Business Language**: InvoiceApproved (not InvoiceStatusChanged)
+- **No Verbs**: TaskCreatedEvent (not CreateTaskEvent)
+
+## Command Template Pattern
+
+### Basic Command
+```typescript
+// Create{EntityName}Command.ts
+export interface CreateTaskCommandData {
+  readonly blueprintId: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly assigneeId?: string;
+  readonly dueDate?: Timestamp;
+}
+
+export class CreateTaskCommand {
+  constructor(
+    public readonly data: CreateTaskCommandData,
+    public readonly actorId: string,  // Who is executing
+    public readonly causedBy?: string // Parent event ID if any
+  ) {}
+}
+```
+
+### Command Handler Pattern
+```typescript
+export class TaskCommandHandler {
+  constructor(
+    private readonly taskRepository: TaskRepository,
+    private readonly eventBus: EventBus
+  ) {}
+
+  async handleCreateTask(command: CreateTaskCommand): Promise<Result<TaskId>> {
+    try {
+      // 1. Validate command
+      const validation = this.validateCreateTask(command.data);
+      if (!validation.isValid) {
+        return Result.fail(validation.errors);
+      }
+
+      // 2. Create aggregate
+      const task = Task.create(
+        command.data,
+        command.actorId,
+        command.causedBy
+      );
+
+      // 3. Save aggregate
+      await this.taskRepository.save(task);
+
+      // 4. Publish events
+      for (const event of task.getUncommittedEvents()) {
+        await this.eventBus.publish(event);
+      }
+
+      return Result.ok(task.id);
+    } catch (error) {
+      return Result.fail(`Failed to create task: ${error.message}`);
+    }
+  }
+
+  private validateCreateTask(data: CreateTaskCommandData): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!data.blueprintId) errors.push('blueprintId is required');
+    if (!data.title || data.title.trim().length === 0) {
+      errors.push('title is required');
+    }
+    if (data.title && data.title.length > 200) {
+      errors.push('title must be 200 characters or less');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+}
+```
+
+### Command Naming Rules
+- **Imperative Verb**: CreateTask (not TaskCreate, TaskCreated)
+- **Specific Action**: ChangeTaskTitle (not UpdateTask)
+- **Command Suffix**: CreateTaskCommand (consistent)
+- **Business Intent**: ApproveInvoice (not SetInvoiceStatusToApproved)
+
+## Aggregate Event Application Pattern
+
+### Event Application in Aggregate
+```typescript
+export class Task extends AggregateRoot<TaskState> {
+  // Apply event to state
+  protected applyEvent(event: DomainEvent): void {
+    switch (event.eventType) {
+      case 'TaskCreatedEvent':
+        this.applyTaskCreated(event as TaskCreatedEvent);
+        break;
+      case 'TaskAssignedEvent':
+        this.applyTaskAssigned(event as TaskAssignedEvent);
+        break;
+      case 'TaskCompletedEvent':
+        this.applyTaskCompleted(event as TaskCompletedEvent);
+        break;
+      default:
+        throw new Error(`Unknown event type: ${event.eventType}`);
+    }
+  }
+
+  private applyTaskCreated(event: TaskCreatedEvent): void {
+    this.state = {
+      taskId: event.data.taskId,
+      blueprintId: event.data.blueprintId,
+      title: event.data.title,
+      description: event.data.description,
+      assigneeId: event.data.assigneeId,
+      status: 'Open',
+      createdAt: event.metadata.timestamp,
+      lastEventId: event.metadata.eventId
+    };
+  }
+
+  private applyTaskAssigned(event: TaskAssignedEvent): void {
+    this.state.assigneeId = event.data.assigneeId;
+    this.state.lastEventId = event.metadata.eventId;
+  }
+
+  private applyTaskCompleted(event: TaskCompletedEvent): void {
+    this.state.status = 'Completed';
+    this.state.completedAt = event.metadata.timestamp;
+    this.state.lastEventId = event.metadata.eventId;
+  }
+}
+```
+
+## Event vs Command Checklist
+
+### When to Create Event
+- ✅ Something HAS HAPPENED (past tense)
+- ✅ Immutable fact recorded to event store
+- ✅ Multiple listeners may react to it
+- ✅ Part of audit trail and replay
+- ✅ Published after successful command execution
+
+### When to Create Command
+- ✅ Request to DO SOMETHING (imperative)
+- ✅ Contains validation logic before execution
+- ✅ May fail (rejected if business rules violated)
+- ✅ Not persisted (only resulting events are)
+- ✅ Single handler processes it
+
+## Common Patterns
+
+### 1. Create Pattern
+```typescript
+// Command: CreateTaskCommand
+// Event: TaskCreatedEvent
+// Aggregate Method: Task.create() - static factory
+```
+
+### 2. Update Pattern
+```typescript
+// Command: ChangeTaskTitleCommand
+// Event: TaskTitleChangedEvent
+// Aggregate Method: task.changeTitle(newTitle)
+```
+
+### 3. State Transition Pattern
+```typescript
+// Command: CompleteTaskCommand
+// Events: TaskCompletedEvent, TaskArchivedEvent (optional)
+// Aggregate Method: task.complete()
+```
+
+### 4. Assignment Pattern
+```typescript
+// Command: AssignTaskCommand
+// Events: TaskAssignedEvent OR TaskUnassignedEvent
+// Aggregate Method: task.assignTo(assigneeId)
+```
+
+### 5. Compensation Pattern
+```typescript
+// Command: CancelPaymentCommand
+// Events: PaymentCancelledEvent, RefundInitiatedEvent
+// Aggregate Method: payment.cancel()
+```
+
+## Multi-Tenant Template
+
+### Event with Blueprint Boundary
+```typescript
+export class TaskCreatedEvent extends DomainEvent<TaskCreatedEventData> {
+  constructor(data: TaskCreatedEventData, metadata: EventMetadata) {
+    // MUST include blueprintId in data
+    if (!data.blueprintId) {
+      throw new Error('blueprintId is required for multi-tenant event');
+    }
+    
+    // MUST include blueprintId in metadata
+    metadata.blueprintId = data.blueprintId;
+    
+    super('TaskCreatedEvent', data, metadata);
+  }
+}
+```
+
+### Command with Blueprint Validation
+```typescript
+export class CreateTaskCommand {
+  constructor(
+    public readonly data: CreateTaskCommandData,
+    public readonly actorId: string,
+    public readonly sessionContext: SessionContext  // Contains blueprintId
+  ) {
+    // Validate blueprintId matches session
+    if (data.blueprintId !== sessionContext.blueprintId) {
+      throw new Error('Command blueprintId must match session context');
+    }
+  }
+}
+```
+
+## Implementation Checklist
+
+### For New Event Type
+- [ ] Define event data interface (readonly fields)
+- [ ] Create event class extending DomainEvent
+- [ ] Use past tense naming (e.g., TaskCreated)
+- [ ] Include causality metadata (causedBy, causedByUser, causedByAction)
+- [ ] Include blueprintId in data and metadata
+- [ ] Register event type in EventRegistry
+- [ ] Add event application logic in aggregate
+- [ ] Write unit tests for event creation
+- [ ] Update event flow documentation
+
+### For New Command Type
+- [ ] Define command data interface
+- [ ] Create command class with data + actorId
+- [ ] Use imperative naming (e.g., CreateTask)
+- [ ] Implement command handler
+- [ ] Add validation logic
+- [ ] Return Result<T> with success/failure
+- [ ] Publish resulting events to EventBus
+- [ ] Write unit tests for command handler
+- [ ] Write integration tests for command flow
+
+### For Event Application
+- [ ] Add case to applyEvent() switch
+- [ ] Implement private apply{EventName}() method
+- [ ] Update aggregate state immutably
+- [ ] Update lastEventId from event metadata
+- [ ] Handle all required state transitions
+- [ ] Write tests for state changes
+- [ ] Verify idempotency (applying same event twice = same state)
+
+## Anti-Patterns to Avoid
+
+### ❌ DON'T: Generic Update Events
+```typescript
+// BAD: Too generic, loses business meaning
+export class TaskUpdatedEvent {
+  fields: Record<string, any>;  // What changed? Why?
+}
+
+// GOOD: Specific business intent
+export class TaskTitleChangedEvent { ... }
+export class TaskAssignedEvent { ... }
+export class TaskDueDateChangedEvent { ... }
+```
+
+### ❌ DON'T: Commands that Mutate State Directly
+```typescript
+// BAD: Command mutating state
+export class CreateTaskCommand {
+  execute(taskRepository: TaskRepository) {
+    const task = new Task();
+    task.title = this.title;  // Direct mutation
+    taskRepository.save(task);
+  }
+}
+
+// GOOD: Command processed by handler, aggregate creates events
+export class TaskCommandHandler {
+  handleCreateTask(command: CreateTaskCommand) {
+    const task = Task.create(command.data);  // Aggregate raises events
+    this.repository.save(task);  // Save events, not state
+  }
+}
+```
+
+### ❌ DON'T: Missing Causality Metadata
+```typescript
+// BAD: No causality tracking
+const event = new TaskCreatedEvent(data, {
+  eventId: uuid(),
+  timestamp: now()
+  // Missing: causedBy, causedByUser, causedByAction
+});
+
+// GOOD: Complete causality chain
+const event = new TaskCreatedEvent(data, {
+  eventId: uuid(),
+  timestamp: now(),
+  causedBy: parentEvent.eventId,
+  causedByUser: session.accountId,
+  causedByAction: 'CreateTask',
+  blueprintId: session.blueprintId
+});
+```
+
+### ❌ DON'T: Commands Without Validation
+```typescript
+// BAD: No validation
+async handleCreateTask(command: CreateTaskCommand) {
+  const task = Task.create(command.data);  // May create invalid task
+  await this.repository.save(task);
+}
+
+// GOOD: Validate before execution
+async handleCreateTask(command: CreateTaskCommand) {
+  const validation = this.validateCreateTask(command.data);
+  if (!validation.isValid) {
+    return Result.fail(validation.errors);
+  }
+  const task = Task.create(command.data);
+  await this.repository.save(task);
+  return Result.ok(task.id);
+}
+```
+
+## References
+- Event Sourcing Patterns: `.github/instructions/event-design-patterns.instructions.yml`
+- Causality Rules: `.github/instructions/causality-chain-rules.instructions.yml`
+- Naming Conventions: `.github/instructions/naming-conventions.instructions.yml`
+- Anti-Patterns: `.github/instructions/anti-patterns.instructions.yml`

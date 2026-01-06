@@ -1,0 +1,21 @@
+---
+description: "Ensure role-based UI rendering and menu loading."
+applyTo: "packages/ui-angular/**/*.ts"
+---
+
+# Role-Based UI Instructions
+
+## Project Context
+- Menus and components may vary based on user role
+- Firestore / session dependent
+
+## Development Rules
+- Load menu based on roles dynamically
+- Fallback gracefully if Firestore connectivity fails
+- Do not hardcode menu items in components
+- All role checks must read from SessionContext
+
+## Implementation Process
+1. Refactor menu services to be role-aware
+2. Guard sensitive UI elements with role checks
+3. Write unit and E2E tests for role-specific UI

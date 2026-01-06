@@ -1,0 +1,22 @@
+---
+description: "Enforce consistent Guard Pattern usage in UI layer."
+applyTo: "packages/ui-angular/**/*.ts"
+---
+
+# Guard Pattern Instructions
+
+## Project Context
+- Use Guard Pattern from #29 skeleton
+- Ensure role-based and Auth-based route protection
+
+## Development Rules
+- All route guards must implement CanActivate / CanLoad
+- Read session / roles from SessionContext
+- Reuse shared Guard utilities
+- Do not duplicate logic in components
+
+## Implementation Process
+1. Identify all routes requiring protection
+2. Implement guards using SessionContext
+3. Apply guards to routing modules
+4. Write unit tests

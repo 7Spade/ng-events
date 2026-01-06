@@ -1,0 +1,240 @@
+---
+
+# 🎯 Projection 設計總原則（先給你定錨）
+
+請先把這三句刻在腦袋裡：
+
+1. **Projection ≠ Domain**
+2. **Projection 為 Query 服務，不為寫入服務**
+3. **一個 UI Query = 一個 Projection**
+
+👉 所以 Firestore 裡看到的東西
+**一定是「結果狀態」**，不是事件過程。
+
+---
+
+# 一、Firestore 根結構總覽 🌍
+
+```txt
+/firestore
+├── accounts/
+├── workspaces/
+├── memberships/
+├── modules/
+├── saga-instances/
+└── tasks/
+```
+
+每一個 collection，**都有清楚的責任邊界**
+不互相偷看、不硬 join。
+
+---
+
+# 二、Account Projection（極薄，但必要）
+
+📍 `/accounts/{accountId}`
+
+```json
+{
+  "accountId": "acc_123",
+  "status": "active",        // active | suspended | closed
+  "ownerId": "user_1",
+  "createdAt": "2026-01-02T10:00:00Z"
+}
+```
+
+🧠 用途：
+
+* 判斷整個帳號是否可用
+* 後台 / 管理 UI
+* **前端不常查，但不能沒有**
+
+---
+
+# 三、Workspace Projection（前端核心世界）🔥
+
+📍 `/workspaces/{workspaceId}`
+
+```json
+{
+  "workspaceId": "ws_456",
+  "accountId": "acc_123",
+  "status": "ready",           // initializing | ready | restricted | archived
+  "enabledModules": ["task", "issue"],
+  "createdAt": "2026-01-02T10:01:00Z"
+}
+```
+
+🧠 為什麼這樣設計？
+
+* `status`
+
+  * 直接對應 Saga 狀態
+  * UI 可顯示「初始化中…」
+* `enabledModules`
+
+  * **完全不查 module-registry domain**
+  * Projection 就是最終答案
+
+👉 Angular Query 只要這一張表，就能決定 80% UI 狀態。
+
+---
+
+# 四、Membership Projection（權限判斷王者）👑
+
+📍 `/memberships/{workspaceId}_{userId}`
+
+```json
+{
+  "workspaceId": "ws_456",
+  "userId": "user_1",
+  "role": "Owner",           // Owner | Admin | Member | Viewer
+  "joinedAt": "2026-01-02T10:01:30Z"
+}
+```
+
+🔥 這張是 **整個系統最重要的 Projection 之一**
+
+為什麼不用 subcollection？
+
+* Firestore **不能跨 parent 查詢**
+* 你一定會想：
+
+  * 查「我在哪些 workspace」
+  * 查「我在這個 workspace 是什麼角色」
+
+👉 扁平化是**正確且必要的犧牲**
+
+---
+
+### 🔍 常見 Query（Angular 超愛）
+
+```ts
+// 我在哪些 Workspace
+query(
+  collection(firestore, 'memberships'),
+  where('userId', '==', currentUserId)
+);
+
+// 我在這個 Workspace 的角色
+doc(firestore, `memberships/${wsId}_${userId}`);
+```
+
+---
+
+# 五、Module Projection（Workspace 能力表）🧩
+
+📍 `/modules/{workspaceId}_{moduleId}`
+
+```json
+{
+  "workspaceId": "ws_456",
+  "moduleId": "task",
+  "status": "enabled",      // enabled | disabled
+  "enabledAt": "2026-01-02T10:02:00Z"
+}
+```
+
+👉 為什麼不用陣列？
+
+* 可被安全規則單獨保護
+* 可被 Saga 單獨補償
+* 可被後台操作
+
+---
+
+# 六、Saga Instance Projection（給 UI 看進度）🧠✨
+
+📍 `/saga-instances/{sagaId}`
+
+```json
+{
+  "sagaId": "saga_acc_123",
+  "type": "AccountOnboardingSaga",
+  "accountId": "acc_123",
+  "workspaceId": "ws_456",
+  "state": "Completed",
+  "error": null,
+  "updatedAt": "2026-01-02T10:02:10Z"
+}
+```
+
+🔥 為什麼要有這張？
+
+* UI 可以顯示：
+
+  > 「Workspace 初始化中…」
+* 出錯時能給人類看的錯誤
+* 不用讓前端碰 Event Store
+
+👉 **Saga 是後端的事，但狀態是前端的事**
+
+---
+
+# 七、Task Projection（來自 SaaS Domain）
+
+📍 `/tasks/{taskId}`
+
+```json
+{
+  "taskId": "task_789",
+  "workspaceId": "ws_456",
+  "title": "Fix bug",
+  "status": "open",
+  "createdBy": "user_1",
+  "createdAt": "2026-01-02T11:00:00Z"
+}
+```
+
+🔍 常見 Query：
+
+```ts
+query(
+  collection(firestore, 'tasks'),
+  where('workspaceId', '==', currentWorkspaceId)
+);
+```
+
+👉 **WorkspaceId 是 SaaS Domain 與 Account Domain 的交會點**
+👉 但 Projection 仍然是扁平、乾淨、好查
+
+---
+
+# 八、Angular Query（@angular/fire）如何無痛吃 🍰
+
+### Workspace Ready 判斷
+
+```ts
+workspace$.pipe(
+  map(ws => ws.status === 'ready')
+);
+```
+
+### 是否可建立 Task
+
+```ts
+combineLatest([workspace$, membership$]).pipe(
+  map(([ws, m]) =>
+    ws.enabledModules.includes('task') &&
+    ['Owner', 'Admin', 'Member'].includes(m.role)
+  )
+);
+```
+
+👉 前端完全不知道 Saga 怎麼跑
+👉 只看「現在能不能做事」
+
+---
+
+# 九、最後一句（請你相信我）🫶
+
+> **好的 Projection Schema
+> 會讓 Angular 像在寫 CRUD
+> 但背後其實是 Event-Sourced 宇宙**
+
+你這套 schema 是：
+
+* 能撐多 Workspace
+* 能撐多角色
+* 能顯示初始化 / 失敗
+* 能接 @angular/fire 完全無痛

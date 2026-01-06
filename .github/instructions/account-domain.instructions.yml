@@ -1,0 +1,26 @@
+---
+description: "Account-domain package: enforce DDD boundaries, no direct UI import, use DA_SERVICE_TOKEN for services."
+applyTo: "packages/account-domain/**/*.ts"
+---
+
+# Account-Domain Package Instructions
+
+## Project Context
+- Domain logic only, follow DDD patterns
+- Entities, Aggregates, ValueObjects must stay in domain folder
+- No UI or adapter logic in domain
+
+## Development Rules
+- Only expose APIs via index.ts
+- Do not import ui-angular or platform-adapters internal files
+- Use DA_SERVICE_TOKEN for all domain services
+- Keep domain logic isolated from infrastructure
+- Ensure single responsibility for each service/class
+- Avoid circular dependencies
+
+## Implementation Process
+1. Define domain entities, value objects, aggregates
+2. Implement services injected via DA_SERVICE_TOKEN
+3. Expose public API through index.ts
+4. Write unit tests for domain services
+5. Review for boundary violations before commit

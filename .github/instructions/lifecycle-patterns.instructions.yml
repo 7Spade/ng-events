@@ -1,0 +1,684 @@
+---
+description: Domain lifecycle patterns for Task, Payment, and other core aggregates in ng-events
+applyTo: '**/*.{aggregate.ts,lifecycle.ts,state-machine.ts}'
+---
+
+# Domain Lifecycle Patterns
+
+## Task Lifecycle State Machine
+
+### States
+```typescript
+export enum TaskStatus {
+  Open = 'Open',
+  InProgress = 'InProgress',
+  Blocked = 'Blocked',
+  InReview = 'InReview',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled'
+}
+```
+
+### State Transitions
+```
+    [Created]
+       ↓
+    ┌──Open──┐
+    ↓        ↓
+InProgress  Cancelled
+    ↓        ↑
+  Blocked────┘ (can cancel from any state)
+    ↓
+InProgress
+    ↓
+ InReview
+    ↓
+ Completed
+```
+
+### Transition Rules
+```typescript
+const ALLOWED_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
+  Open: ['InProgress', 'Cancelled'],
+  InProgress: ['Blocked', 'InReview', 'Cancelled'],
+  Blocked: ['InProgress', 'Cancelled'],
+  InReview: ['InProgress', 'Completed', 'Cancelled'],
+  Completed: [],  // Terminal state
+  Cancelled: []   // Terminal state
+};
+
+export class Task extends AggregateRoot<TaskState> {
+  start(): void {
+    if (this.state.status !== TaskStatus.Open) {
+      throw new Error('Can only start task in Open status');
+    }
+    
+    const event = new TaskStartedEvent({
+      taskId: this.id,
+      blueprintId: this.state.blueprintId,
+      startedAt: Timestamp.now()
+    }, this.createMetadata('TaskStarted'));
+    
+    this.applyAndAdd(event);
+  }
+
+  block(reason: string): void {
+    if (this.state.status !== TaskStatus.InProgress) {
+      throw new Error('Can only block task in InProgress status');
+    }
+    
+    const event = new TaskBlockedEvent({
+      taskId: this.id,
+      blueprintId: this.state.blueprintId,
+      reason,
+      blockedAt: Timestamp.now()
+    }, this.createMetadata('TaskBlocked'));
+    
+    this.applyAndAdd(event);
+  }
+
+  unblock(): void {
+    if (this.state.status !== TaskStatus.Blocked) {
+      throw new Error('Can only unblock task in Blocked status');
+    }
+    
+    const event = new TaskUnblockedEvent({
+      taskId: this.id,
+      blueprintId: this.state.blueprintId,
+      unblockedAt: Timestamp.now()
+    }, this.createMetadata('TaskUnblocked'));
+    
+    this.applyAndAdd(event);
+  }
+
+  submitForReview(): void {
+    if (this.state.status !== TaskStatus.InProgress) {
+      throw new Error('Can only submit task in InProgress status');
+    }
+    
+    const event = new TaskSubmittedForReviewEvent({
+      taskId: this.id,
+      blueprintId: this.state.blueprintId,
+      submittedAt: Timestamp.now()
+    }, this.createMetadata('TaskSubmittedForReview'));
+    
+    this.applyAndAdd(event);
+  }
+
+  complete(): void {
+    if (this.state.status !== TaskStatus.InReview) {
+      throw new Error('Can only complete task in InReview status');
+    }
+    
+    const event = new TaskCompletedEvent({
+      taskId: this.id,
+      blueprintId: this.state.blueprintId,
+      completedAt: Timestamp.now()
+    }, this.createMetadata('TaskCompleted'));
+    
+    this.applyAndAdd(event);
+  }
+
+  cancel(reason: string): void {
+    // Can cancel from any non-terminal state
+    if (this.isTerminal()) {
+      throw new Error('Cannot cancel task in terminal status');
+    }
+    
+    const event = new TaskCancelledEvent({
+      taskId: this.id,
+      blueprintId: this.state.blueprintId,
+      reason,
+      cancelledAt: Timestamp.now()
+    }, this.createMetadata('TaskCancelled'));
+    
+    this.applyAndAdd(event);
+  }
+
+  private isTerminal(): boolean {
+    return this.state.status === TaskStatus.Completed ||
+           this.state.status === TaskStatus.Cancelled;
+  }
+}
+```
+
+### Lifecycle Events
+```typescript
+// Creation
+TaskCreatedEvent → status: Open
+
+// Progression
+TaskStartedEvent → status: InProgress
+TaskBlockedEvent → status: Blocked (with reason)
+TaskUnblockedEvent → status: InProgress
+TaskSubmittedForReviewEvent → status: InReview
+
+// Completion
+TaskCompletedEvent → status: Completed (terminal)
+TaskCancelledEvent → status: Cancelled (terminal)
+
+// Modifications (can occur in any non-terminal state)
+TaskAssignedEvent → assigneeId updated
+TaskTitleChangedEvent → title updated
+TaskDueDateChangedEvent → dueDate updated
+```
+
+## Payment Lifecycle State Machine
+
+### States
+```typescript
+export enum PaymentStatus {
+  Pending = 'Pending',
+  Authorizing = 'Authorizing',
+  Authorized = 'Authorized',
+  AuthorizationFailed = 'AuthorizationFailed',
+  Capturing = 'Capturing',
+  Captured = 'Captured',
+  CaptureFailed = 'CaptureFailed',
+  Refunding = 'Refunding',
+  Refunded = 'Refunded',
+  RefundFailed = 'RefundFailed',
+  Voided = 'Voided',
+  Expired = 'Expired'
+}
+```
+
+### State Transitions
+```
+     [Created]
+        ↓
+     Pending
+        ↓
+   Authorizing
+     ↓      ↓
+Authorized  AuthorizationFailed (terminal)
+     ↓
+  Capturing
+     ↓      ↓
+ Captured   CaptureFailed
+     ↓          ↓
+ Refunding    Voided (terminal)
+     ↓      ↓
+ Refunded   RefundFailed
+(terminal)      ↓
+            Retry or Escalate
+```
+
+### Transition Rules
+```typescript
+export class Payment extends AggregateRoot<PaymentState> {
+  authorize(): void {
+    if (this.state.status !== PaymentStatus.Pending) {
+      throw new Error('Can only authorize payment in Pending status');
+    }
+    
+    const event = new PaymentAuthorizationRequestedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      amount: this.state.amount,
+      currency: this.state.currency
+    }, this.createMetadata('PaymentAuthorizationRequested'));
+    
+    this.applyAndAdd(event);
+  }
+
+  markAuthorized(authorizationCode: string): void {
+    if (this.state.status !== PaymentStatus.Authorizing) {
+      throw new Error('Invalid status for authorization');
+    }
+    
+    const event = new PaymentAuthorizedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      authorizationCode,
+      authorizedAt: Timestamp.now()
+    }, this.createMetadata('PaymentAuthorized'));
+    
+    this.applyAndAdd(event);
+  }
+
+  markAuthorizationFailed(errorCode: string, errorMessage: string): void {
+    if (this.state.status !== PaymentStatus.Authorizing) {
+      throw new Error('Invalid status for authorization failure');
+    }
+    
+    const event = new PaymentAuthorizationFailedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      errorCode,
+      errorMessage,
+      failedAt: Timestamp.now()
+    }, this.createMetadata('PaymentAuthorizationFailed'));
+    
+    this.applyAndAdd(event);
+  }
+
+  capture(): void {
+    if (this.state.status !== PaymentStatus.Authorized) {
+      throw new Error('Can only capture payment in Authorized status');
+    }
+    
+    // Check authorization hasn't expired (typically 7 days)
+    const authAge = Timestamp.now().toMillis() - this.state.authorizedAt!.toMillis();
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    
+    if (authAge > SEVEN_DAYS_MS) {
+      this.markExpired();
+      throw new Error('Authorization has expired');
+    }
+    
+    const event = new PaymentCaptureRequestedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      amount: this.state.amount
+    }, this.createMetadata('PaymentCaptureRequested'));
+    
+    this.applyAndAdd(event);
+  }
+
+  markCaptured(captureId: string): void {
+    if (this.state.status !== PaymentStatus.Capturing) {
+      throw new Error('Invalid status for capture');
+    }
+    
+    const event = new PaymentCapturedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      captureId,
+      capturedAt: Timestamp.now()
+    }, this.createMetadata('PaymentCaptured'));
+    
+    this.applyAndAdd(event);
+  }
+
+  refund(amount: number, reason: string): void {
+    if (this.state.status !== PaymentStatus.Captured) {
+      throw new Error('Can only refund captured payment');
+    }
+    
+    if (amount > this.state.amount) {
+      throw new Error('Refund amount exceeds payment amount');
+    }
+    
+    const event = new PaymentRefundRequestedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      amount,
+      reason,
+      requestedAt: Timestamp.now()
+    }, this.createMetadata('PaymentRefundRequested'));
+    
+    this.applyAndAdd(event);
+  }
+
+  void(): void {
+    if (this.state.status !== PaymentStatus.Authorized &&
+        this.state.status !== PaymentStatus.CaptureFailed) {
+      throw new Error('Can only void authorized or failed payments');
+    }
+    
+    const event = new PaymentVoidedEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      voidedAt: Timestamp.now()
+    }, this.createMetadata('PaymentVoided'));
+    
+    this.applyAndAdd(event);
+  }
+
+  private markExpired(): void {
+    const event = new PaymentExpiredEvent({
+      paymentId: this.id,
+      blueprintId: this.state.blueprintId,
+      expiredAt: Timestamp.now()
+    }, this.createMetadata('PaymentExpired'));
+    
+    this.applyAndAdd(event);
+  }
+}
+```
+
+### Lifecycle Events
+```typescript
+// Creation
+PaymentCreatedEvent → status: Pending
+
+// Authorization Flow
+PaymentAuthorizationRequestedEvent → status: Authorizing
+  ↓ (success)
+PaymentAuthorizedEvent → status: Authorized
+  ↓ (failure)
+PaymentAuthorizationFailedEvent → status: AuthorizationFailed
+
+// Capture Flow
+PaymentCaptureRequestedEvent → status: Capturing
+  ↓ (success)
+PaymentCapturedEvent → status: Captured
+  ↓ (failure)
+PaymentCaptureFailedEvent → status: CaptureFailed
+
+// Refund Flow (Compensation)
+PaymentRefundRequestedEvent → status: Refunding
+  ↓ (success)
+PaymentRefundedEvent → status: Refunded
+  ↓ (failure)
+PaymentRefundFailedEvent → status: RefundFailed
+
+// Void Flow
+PaymentVoidedEvent → status: Voided
+
+// Expiration
+PaymentExpiredEvent → status: Expired
+```
+
+## Membership Lifecycle State Machine
+
+### States
+```typescript
+export enum MembershipStatus {
+  Invited = 'Invited',
+  Active = 'Active',
+  Suspended = 'Suspended',
+  Removed = 'Removed'
+}
+```
+
+### State Transitions
+```
+    [Created]
+       ↓
+    Invited
+       ↓ (accept)
+    Active ←──→ Suspended
+       ↓
+    Removed (terminal)
+```
+
+### Transition Rules
+```typescript
+export class Membership extends AggregateRoot<MembershipState> {
+  static invite(
+    accountId: string,
+    blueprintId: string,
+    role: WorkspaceRole,
+    invitedBy: string
+  ): Membership {
+    const membership = new Membership();
+    
+    const event = new MembershipInvitedEvent({
+      membershipId: MembershipId.create(accountId, blueprintId),
+      accountId,
+      blueprintId,
+      role,
+      invitedBy,
+      invitedAt: Timestamp.now()
+    }, {
+      eventId: generateEventId(),
+      timestamp: Timestamp.now(),
+      causedBy: null,  // Root event
+      causedByUser: invitedBy,
+      causedByAction: 'InviteUser',
+      blueprintId
+    });
+    
+    membership.applyAndAdd(event);
+    return membership;
+  }
+
+  acceptInvitation(): void {
+    if (this.state.status !== MembershipStatus.Invited) {
+      throw new Error('Can only accept invitation in Invited status');
+    }
+    
+    const event = new InvitationAcceptedEvent({
+      membershipId: this.id,
+      accountId: this.state.accountId,
+      blueprintId: this.state.blueprintId,
+      acceptedAt: Timestamp.now()
+    }, this.createMetadata('InvitationAccepted'));
+    
+    this.applyAndAdd(event);
+  }
+
+  changeRole(newRole: WorkspaceRole): void {
+    if (this.state.status !== MembershipStatus.Active) {
+      throw new Error('Can only change role for active membership');
+    }
+    
+    // Prevent changing Owner role
+    if (this.state.role === WorkspaceRole.Owner) {
+      throw new Error('Owner role cannot be changed - use ownership transfer instead');
+    }
+    
+    if (newRole === WorkspaceRole.Owner) {
+      throw new Error('Cannot assign Owner role via changeRole - use ownership transfer instead');
+    }
+    
+    const event = new MembershipRoleChangedEvent({
+      membershipId: this.id,
+      accountId: this.state.accountId,
+      blueprintId: this.state.blueprintId,
+      oldRole: this.state.role,
+      newRole,
+      changedAt: Timestamp.now()
+    }, this.createMetadata('MembershipRoleChanged'));
+    
+    this.applyAndAdd(event);
+  }
+
+  suspend(reason: string): void {
+    if (this.state.status !== MembershipStatus.Active) {
+      throw new Error('Can only suspend active membership');
+    }
+    
+    if (this.state.role === WorkspaceRole.Owner) {
+      throw new Error('Cannot suspend Owner - transfer ownership first');
+    }
+    
+    const event = new MembershipSuspendedEvent({
+      membershipId: this.id,
+      accountId: this.state.accountId,
+      blueprintId: this.state.blueprintId,
+      reason,
+      suspendedAt: Timestamp.now()
+    }, this.createMetadata('MembershipSuspended'));
+    
+    this.applyAndAdd(event);
+  }
+
+  reactivate(): void {
+    if (this.state.status !== MembershipStatus.Suspended) {
+      throw new Error('Can only reactivate suspended membership');
+    }
+    
+    const event = new MembershipReactivatedEvent({
+      membershipId: this.id,
+      accountId: this.state.accountId,
+      blueprintId: this.state.blueprintId,
+      reactivatedAt: Timestamp.now()
+    }, this.createMetadata('MembershipReactivated'));
+    
+    this.applyAndAdd(event);
+  }
+
+  remove(): void {
+    if (this.state.status === MembershipStatus.Removed) {
+      throw new Error('Membership already removed');
+    }
+    
+    if (this.state.role === WorkspaceRole.Owner) {
+      throw new Error('Owner role cannot be removed - transfer ownership first');
+    }
+    
+    const event = new MembershipRemovedEvent({
+      membershipId: this.id,
+      accountId: this.state.accountId,
+      blueprintId: this.state.blueprintId,
+      removedAt: Timestamp.now()
+    }, this.createMetadata('MembershipRemoved'));
+    
+    this.applyAndAdd(event);
+  }
+}
+```
+
+### Lifecycle Events
+```typescript
+// Creation
+MembershipInvitedEvent → status: Invited
+
+// Activation
+InvitationAcceptedEvent → status: Active
+
+// Role Management
+MembershipRoleChangedEvent → role updated (Active → Active)
+
+// Suspension
+MembershipSuspendedEvent → status: Suspended
+MembershipReactivatedEvent → status: Active
+
+// Removal
+MembershipRemovedEvent → status: Removed (terminal)
+```
+
+## Workspace Lifecycle State Machine
+
+### States
+```typescript
+export enum WorkspaceStatus {
+  Active = 'Active',
+  Archived = 'Archived',
+  Deleted = 'Deleted'
+}
+```
+
+### State Transitions
+```
+  [Created]
+      ↓
+   Active
+      ↓
+   Archived
+      ↓
+   Deleted (terminal)
+```
+
+### Lifecycle Events
+```typescript
+// Creation
+WorkspaceCreatedEvent → status: Active
+
+// Modifications
+WorkspaceRenamedEvent → name updated
+WorkspaceSettingsUpdatedEvent → settings updated
+
+// Archival
+WorkspaceArchivedEvent → status: Archived
+WorkspaceUnarchivedEvent → status: Active
+
+// Deletion (soft delete)
+WorkspaceDeletedEvent → status: Deleted (terminal)
+```
+
+## Common Lifecycle Patterns
+
+### 1. Creation Pattern
+```typescript
+static create(data: CreateData, actorId: string): Aggregate {
+  const aggregate = new Aggregate();
+  const event = new AggregateCreatedEvent(data, {
+    eventId: generateEventId(),
+    timestamp: Timestamp.now(),
+    causedBy: null,  // Root event
+    causedByUser: actorId,
+    causedByAction: 'Create',
+    blueprintId: data.blueprintId
+  });
+  aggregate.applyAndAdd(event);
+  return aggregate;
+}
+```
+
+### 2. State Transition Pattern
+```typescript
+transitionTo(newState: State): void {
+  // Validate transition is allowed
+  if (!this.canTransitionTo(newState)) {
+    throw new Error(`Cannot transition from ${this.state.status} to ${newState}`);
+  }
+  
+  // Create transition event
+  const event = new StateTransitionEvent({
+    aggregateId: this.id,
+    blueprintId: this.state.blueprintId,
+    fromState: this.state.status,
+    toState: newState,
+    transitionedAt: Timestamp.now()
+  }, this.createMetadata('StateTransition'));
+  
+  this.applyAndAdd(event);
+}
+
+private canTransitionTo(newState: State): boolean {
+  const allowedTransitions = ALLOWED_TRANSITIONS[this.state.status] || [];
+  return allowedTransitions.includes(newState);
+}
+```
+
+### 3. Terminal State Pattern
+```typescript
+isTerminal(): boolean {
+  return TERMINAL_STATES.includes(this.state.status);
+}
+
+ensureNotTerminal(action: string): void {
+  if (this.isTerminal()) {
+    throw new Error(`Cannot ${action} - ${this.constructor.name} is in terminal state: ${this.state.status}`);
+  }
+}
+
+// Usage
+changeTitle(newTitle: string): void {
+  this.ensureNotTerminal('change title');
+  // ... rest of logic
+}
+```
+
+### 4. Idempotency Pattern
+```typescript
+// Use lastEventId to detect duplicate operations
+performAction(actionId: string): void {
+  // Check if action already performed
+  if (this.state.lastActionId === actionId) {
+    return;  // Idempotent - no-op
+  }
+  
+  const event = new ActionPerformedEvent({
+    aggregateId: this.id,
+    blueprintId: this.state.blueprintId,
+    actionId,
+    performedAt: Timestamp.now()
+  }, this.createMetadata('ActionPerformed'));
+  
+  this.applyAndAdd(event);
+}
+```
+
+## Implementation Checklist
+
+### For New Lifecycle
+- [ ] Define all possible states (enum)
+- [ ] Define allowed state transitions (map)
+- [ ] Define lifecycle events for each transition
+- [ ] Implement validation methods (canTransitionTo)
+- [ ] Implement transition methods (public API)
+- [ ] Add terminal state checks
+- [ ] Document state machine diagram
+- [ ] Write tests for all transitions
+- [ ] Write tests for invalid transitions
+- [ ] Test terminal state enforcement
+
+## References
+- Event Design: `.github/instructions/event-design-patterns.instructions.yml`
+- State Machines: `.github/instructions/saga-process-patterns.instructions.yml`
+- Event Flows: `.github/instructions/event-flow-sequences.instructions.yml`

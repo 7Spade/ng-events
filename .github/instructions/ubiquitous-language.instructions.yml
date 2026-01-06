@@ -1,0 +1,188 @@
+---
+description: "Ubiquitous language definitions: Account/Workspace model, Event Sourcing terms, and domain boundaries"
+applyTo: "**/*.ts, **/*.md"
+---
+
+# Ubiquitous Language
+
+## Core Platform Terms (WHO and WHERE)
+
+### Account (WHO)
+- **Definition**: Unique business actor that triggers events
+- **Purpose**: WHO did something - the actor in causality chain
+- **Types**: UserAccount, OrganizationAccount, BotAccount
+- **Usage**: actorAccountId, createdByAccountId, assigneeAccountId
+- **In Events**: ALWAYS appears as the subject performing actions
+- **Never Use**: userId, orgId (use accountId instead)
+
+### Workspace (WHERE)
+- **Definition**: Logical container for business modules and data
+- **Purpose**: WHERE something happened - scope and boundary
+- **Usage**: workspaceId, blueprintId (same concept)
+- **In Events**: Defines multi-tenant boundary
+- **Key Point**: Workspace does NOT trigger events, only provides scope
+- **Never Use**: Organization as business boundary (use Workspace)
+
+### Identity Types (Authentication Source)
+- **User Identity**: Human login via email/OAuth → creates UserAccount
+- **Organization Identity**: Legal entity managed by users → creates OrganizationAccount
+- **Bot Identity**: API token authentication → creates BotAccount
+- **Note**: Identities are NOT business actors - they produce Accounts
+
+### AccountWorkspaceMembership
+- **Definition**: Relationship between Account and Workspace
+- **Attributes**: accountId, workspaceId, role (owner/admin/member/viewer)
+- **Purpose**: Defines permissions and access scope
+- **Principle**: Permissions are relationships, not attributes
+
+## Event Sourcing Terms
+
+### Event
+- **Definition**: Immutable business fact that occurred
+- **Characteristics**: Past tense, permanent, traceable
+- **Examples**: TaskCreated, TaskCompleted, OrderPlaced
+- **Contains**: eventId, aggregateId, blueprintId, causedByEventId, timestamp, actorAccountId
+
+### Event Store
+- **Definition**: Single source of truth for all events
+- **Operations**: Append-only, query event streams, maintain causality
+- **Never**: Update or delete events
+
+### Causality
+- **Definition**: Parent-child relationship between events
+- **Implementation**: causedByEventId field references parent event
+- **Purpose**: Complete traceability, responsibility attribution, flow analysis
+
+### Projection
+- **Definition**: Derived view rebuilt from event stream
+- **Characteristics**: Pure function, recomputable, supports multiple views
+- **Examples**: TaskListView, TaskBoardView, TaskWhyView
+- **Never Call**: State, Snapshot (use Projection instead)
+
+## Domain Terms
+
+### Task
+- **Definition**: Work item requiring human decision or action
+- **Nature**: Derived view from Event Stream
+- **States**: Pending, Assigned, InProgress, Blocked, Completed
+- **Key Point**: Task is a projection, not source of truth
+
+### Process
+- **Definition**: Standardized business workflow definition
+- **Purpose**: Define standard steps, suggest next actions
+- **Characteristics**: Repeatable, customizable, optimizable
+
+### Work Package
+- **Definition**: Actual executable work bundle
+- **Hierarchy**: Contract → Work Package → Task
+- **Lifecycle**: Can be adjusted during planning phase
+
+## Architecture Layer Terms
+
+### Domain Layer
+- **Definition**: Core business logic
+- **Constraints**: NO UI dependencies, NO infrastructure dependencies
+- **Principles**: Pure functions, side-effect free
+
+### Application Layer
+- **Definition**: Business process orchestration
+- **Responsibilities**: Call Policy, compose Domain, invoke Repository
+- **Principles**: Thin layer, no business logic
+
+### Policy
+- **Definition**: Centralized authorization decision engine
+- **Purpose**: Determine permissions, validate rules
+- **Principle**: Features do NOT make their own permission decisions
+
+### Saga / Process Manager
+- **Definition**: Long-running cross-aggregate workflow coordinator
+- **Responsibilities**: Listen to events, trigger compensation, maintain state
+- **Principles**: Does NOT own data, does NOT contain business rules
+
+### Repository
+- **Definition**: Aggregate persistence interface
+- **Implementations**: Firebase, Supabase, IndexedDB
+- **Principle**: Implements interfaces defined in Core layer
+
+## CQRS Terms
+
+### Command
+- **Definition**: Intent-expressing operation request
+- **Examples**: CreateTask, CompleteTask, AssignTask
+- **Result**: Produces Event or Error
+- **Naming**: Imperative verb + noun
+
+### Query
+- **Definition**: Side-effect-free data retrieval
+- **Source**: Read Model / Projection
+- **Principle**: Never changes state, never produces events
+
+### Read Model
+- **Definition**: Pre-computed view optimized for queries
+- **Updated By**: Event Handlers
+- **Characteristics**: Rebuildable, multiple formats possible
+
+### Write Model
+- **Definition**: Event Store itself
+- **Operations**: Append-only
+- **Principle**: Immutable, complete history
+
+## Bounded Contexts
+
+### Task Domain
+- **Scope**: Task, Event, Projection, Decision, Process
+- **Boundaries**: Task lifecycle, state transitions, collaboration
+- **External**: References Platform (accountId, workspaceId) but doesn't modify
+
+### Platform Domain
+- **Scope**: Account, Workspace, AccountWorkspaceMembership, Identity management
+- **Boundaries**: Authentication, multi-tenant isolation, permission scope
+- **External**: Doesn't contain Task business logic
+
+## Deprecated Terms (DO NOT USE)
+- ❌ User (as business actor) → Use UserAccount or User Identity
+- ❌ Organization (as business actor) → Use OrganizationAccount or Organization Identity
+- ❌ Team → Feature pending redefinition
+- ❌ Collaborator → Use AccountWorkspaceMembership
+- ❌ State → Use Projection, View, or Snapshot
+- ❌ Save → Use Append Event, Commit
+- ❌ Delete → Use Mark as Cancelled, Soft Delete Event
+- ❌ Update → Use Apply Event, Transition State
+- ❌ Sync → Use Replay, Reconcile, Converge
+- ❌ userId in events → Use actorAccountId
+- ❌ orgId in events → Use actorAccountId (for OrganizationAccount)
+
+## Naming Examples
+
+### ✅ Correct
+```typescript
+actorAccountId              // Event actor
+workspaceId                 // Event scope
+blueprintId                 // Same as workspaceId (multi-tenant)
+AccountCreatedEvent
+WorkspaceCreatedEvent
+AccountWorkspaceMembership
+TaskCreatedEvent           // Past tense
+CreateTaskCommand          // Imperative
+TaskListProjection         // View
+createdByAccountId
+assigneeAccountId
+```
+
+### ❌ Incorrect
+```typescript
+userId                     // Use actorAccountId
+orgId                      // Use actorAccountId
+TaskCreateEvent            // Use TaskCreated (past tense)
+CreateTaskEvent            // Commands not events
+TaskListState              // Use TaskListProjection
+createdBy                  // Use createdByAccountId
+assignedTo                 // Use assigneeAccountId
+```
+
+## Communication Guidelines
+- **Business Discussions**: Use Domain terms (Task, Event, Process)
+- **Technical Discussions**: Distinguish layers (Domain vs Infrastructure)
+- **Architecture**: Use unified terms (Projection, Saga, Policy)
+- **Always**: Prefer Account over User when referring to business actors
+- **Always**: Prefer Workspace when defining scope/boundary

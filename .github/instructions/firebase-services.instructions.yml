@@ -1,0 +1,23 @@
+---
+description: "Rules for using Firebase services: only include needed services, follow centralized Auth and token patterns."
+applyTo: "packages/platform-adapters/firebase/**/*.ts"
+---
+
+# Firebase Services Instructions
+
+## Project Context
+- Only include Firebase services that are actually used
+- Avoid unnecessary bundle increase
+- Centralized AuthStateService integration
+
+## Development Rules
+- Prune unused services like Analytics, RemoteConfig, Performance if not used
+- All Auth-related listeners go through centralized service
+- Token headers must follow #43 pattern
+- All Firestore / collection / doc operations should be mockable for tests
+
+## Implementation Process
+1. Review Firebase service imports
+2. Remove unused services
+3. Ensure AuthStateService is single source of truth
+4. Mock Firebase services in tests

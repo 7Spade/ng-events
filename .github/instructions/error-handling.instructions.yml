@@ -1,0 +1,23 @@
+---
+description: "Enforce consistent error handling across UI and core packages."
+applyTo: "packages/ui-angular/**/*.ts, packages/core-engine/**/*.ts"
+---
+
+# Error Handling Instructions
+
+## Project Context
+- Centralized error handling
+- Use RxJS operators for reactive flows
+- Ensure user-friendly feedback in UI
+
+## Development Rules
+- All observables must handle errors with catchError
+- Use centralized error service to log / display errors
+- Do not swallow errors silently
+- Components must react to loading / error states
+
+## Implementation Process
+1. Review all service methods returning observables
+2. Apply catchError operators
+3. Route errors through centralized error handler
+4. Update UI components to handle error signals

@@ -1,0 +1,79 @@
+---
+description: "Event design patterns for causality-driven event sourcing: event naming, causality chains, and DAG structures"
+applyTo: "packages/saas-domain/**/*.ts, packages/core-engine/**/*.ts"
+---
+
+# Event Design Patterns
+
+## Core Concepts
+- Events are immutable business facts that have occurred
+- Every event MUST include causedByEventId for causality tracking
+- Events use past tense naming (TaskCreated, TaskCompleted, not TaskCreate)
+- Events form DAG (Directed Acyclic Graph) structures through causality
+
+## Event Structure Rules
+- Event names: {Verb}{Noun} in past tense (e.g., TaskCreated, PaymentApproved)
+- Required metadata:
+  - eventId: unique identifier
+  - aggregateId: entity identifier
+  - blueprintId: workspace/tenant identifier
+  - causedByEventId: parent event ID (null for root events)
+  - timestamp: when event occurred
+  - actorAccountId: WHO triggered the event
+
+## Causality Chain Patterns
+- Single Chain: Event A → Event B → Event C (linear flow)
+- Branch: Event A → Event B1 and Event B2 (parallel outcomes)
+- Merge: Event A1 and Event A2 → Event B (multiple triggers)
+- Never create cycles: Event A cannot cause Event A directly or indirectly
+
+## Task Event Lifecycle Example
+```typescript
+TaskCreated { taskId, title, createdByAccountId }
+  ↓ causedBy
+TaskAssigned { taskId, assigneeAccountId, causedByEventId }
+  ↓ causedBy
+TaskCompleted { taskId, completedByAccountId, causedByEventId }
+  ↓ causedBy
+TaskQualityChecked { taskId, checkedByAccountId, status, causedByEventId }
+  ↓ causedBy
+TaskAccepted { taskId, acceptedByAccountId, causedByEventId }
+```
+
+## Payment Event Lifecycle Example
+```typescript
+PaymentDraftCreated { taskId, requestId, amount, createdByAccountId }
+  ↓
+PaymentSubmitted { requestId, submittedByAccountId, causedByEventId }
+  ↓
+PaymentApproved { requestId, approvedByAccountId, causedByEventId }
+  ↓
+InvoiceIssued { requestId, invoiceNumber, causedByEventId }
+  ↓
+PaymentCompleted { requestId, amount, completedByAccountId, causedByEventId }
+```
+
+## Batch Event Pattern
+```typescript
+// Multiple tasks feed into batch
+TaskAccepted(101) ─┐
+TaskAccepted(102) ─┼─→ PaymentBatchCreated { batchId, taskIds[] }
+TaskAccepted(103) ─┘         ↓
+                    PaymentBatchSubmitted
+                             ↓
+                    PaymentBatchApproved
+                             ↓
+                    BatchInvoiceIssued
+                             ↓
+                    PaymentBatchCompleted
+```
+
+## Implementation Checklist
+1. Verify all events use past tense naming
+2. Ensure causedByEventId is populated (except root events)
+3. Include actorAccountId (not userId or orgId)
+4. Include blueprintId for multi-tenant isolation
+5. Validate DAG structure - no cycles allowed
+6. Events MUST be immutable - no modification after creation
+7. Store complete causality chain in Event Store
+8. Use events for audit trails and replay capabilities

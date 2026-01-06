@@ -1,0 +1,23 @@
+---
+description: "Ensure dependency injection is consistent and no direct instantiation."
+applyTo: "packages/**/**/*.ts"
+---
+
+# Dependency Injection Instructions
+
+## Project Context
+- All services injected via DI token
+- No manual instantiation with `new` outside of tests
+- Centralized service injection patterns for maintainability
+
+## Development Rules
+- Use DA_SERVICE_TOKEN for domain services
+- All adapters and utilities must be injectable
+- Avoid singleton misuse or multiple listener issues
+- Follow centralized AuthStateService for authentication
+
+## Implementation Process
+1. Define DI tokens for services
+2. Replace all `new` instantiations with injected services
+3. Validate singleton usage and listener management
+4. Write unit tests with mocked services

@@ -1,0 +1,24 @@
+---
+description: "Rules for HTTP API integration in UI and Adapters."
+applyTo: "packages/ui-angular/**/*.ts, packages/platform-adapters/**/*.ts"
+---
+
+# API Integration Instructions
+
+## Project Context
+- All API calls go through HttpClient with type safety
+- Use centralized Auth header helper
+- Cache responses when appropriate
+
+## Development Rules
+- Do not hardcode URLs or tokens
+- Use DI-injected services for API calls
+- Handle errors globally
+- Cache responses with shareReplay for observables
+- Avoid side effects in API calls
+
+## Implementation Process
+1. Refactor all HTTP calls to use centralized service
+2. Inject header helper for Auth
+3. Implement caching strategies
+4. Write integration tests
