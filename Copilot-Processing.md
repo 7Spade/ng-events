@@ -1,2 +1,0 @@
-User request: Analyze docs/* using Sequential-Thinking and Software-Planning-Tool, migrate outdated/unused documents into docs/archive with matching subfolders (create if missing). Work incrementally, folder by folder, to minimize token use. Repository path: /home/runner/work/ng-events/ng-events.
-User Request: 前端登入/註冊時出現 403 錯誤，需分析 token/cookie 送出、後端權限設定、middleware/guard、登入流程 redirect/headers 並提供排查步驟與 Angular/NodeJS 代碼示例。
