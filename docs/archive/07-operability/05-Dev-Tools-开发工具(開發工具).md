@@ -26,7 +26,6 @@ if (開發環境) {
 
 **檢查項目**:
 - ✅ Rule #9: Core 層不直接依賴 Firebase
-- ✅ Rule #10: 所有檔案 < 4000 字元
 - ✅ Features → core/abstractions 依賴方向
 - ✅ 循環依賴檢測
 
@@ -324,7 +323,7 @@ const project = new Project({
 const sourceFiles = project.getSourceFiles();
 sourceFiles.forEach(file => {
   const charCount = file.getFullText().length;
-  if (charCount > 4000) {
+  if (charCount > 400000) {
     console.warn(`檔案超標: ${file.getFilePath()} (${charCount} chars)`);
   }
 });

@@ -23,7 +23,6 @@
 - `06-Workspace-Model-Detailed-工作空间模型详解.md` - Workspace 完整指南
 
 ### ✨ Knowledge Essence Files (知識精華，07-17)
-快速參考，≤4000 bytes：
 - `07-✨Account-Model-账户模型.md` - Account 核心概念
 - `08-✨Workspace-Concept-工作空间概念.md` - Workspace 核心概念
 - `09-✨Event-Essence-事件本质.md` - Event 本質

@@ -149,7 +149,6 @@ See [CONFLICT-RESOLUTION(衝突解決).md](./CONFLICT-RESOLUTION(衝突解決).m
 - 架構文件: 目標 <20KB，提供完整規範
 - 約束文件: 目標 <30KB，涵蓋詳細約束
 - 分析文件: 可較大，提供深度分析
-- 整合文件: 避免單檔 >4000 字元（Copilot 限制）
 
 ---
 

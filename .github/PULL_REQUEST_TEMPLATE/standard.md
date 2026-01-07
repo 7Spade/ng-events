@@ -1,23 +1,23 @@
 ---
 name: Standard Pull Request
-about: 用於一般功能或 bug 修復
+about: Pull request template for general features or bug fixes
 ---
 
 ### Description
-簡述這次 PR 做了什麼，為什麼需要
+Provide a brief summary of what this PR changes and why it is needed.
 
 ### Related Issue
-關聯的 Issue 編號： #123
+- Related issue(s): #
 
 ### Changes
-- 列出主要修改項目
-- 例如新增 function / 調整 UI / 修復 bug
+- List key changes made in this PR
+- Examples: new function, UI adjustment, bug fix
 
 ### Checklist
-- [ ] Code style 已通過 ESLint / Prettier
-- [ ] 單元測試已更新 / 新增
-- [ ] 文件已更新（如有必要）
-- [ ] 確保單檔案字數 <= 4000 字元（Copilot 生成時）
+- [ ] Code style checks passed (ESLint / Prettier)
+- [ ] Unit tests updated or added as appropriate
+- [ ] Documentation updated (if applicable)
+- [ ] If Copilot-generated, all non-Markdown files comply with the **4000-character** limit (UTF-8 characters)
 
 ### Notes
-- 額外說明或提醒 reviewers
+- Additional context or guidance for reviewers

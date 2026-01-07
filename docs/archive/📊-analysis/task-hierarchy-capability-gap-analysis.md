@@ -163,7 +163,6 @@ Task 生命週期:
 
 **約束驗證**:
 ```typescript
-// 單檔 ≤4000 字元範例
 export function decideTaskSplit(
   events: readonly DomainEvent[],
   command: TaskSplitCommand
@@ -287,7 +286,6 @@ export function decideTaskSplit(
 
 **但需遵守以下原則**:
 1. **分階段實施** - 不可貪快一次到位
-2. **嚴格遵守約束** - 單檔 ≤4000 字元，Occam's Razor
 3. **持續驗證** - 每個 Phase 結束都需完整測試
 4. **效能監控** - 樹狀結構需特別關注效能
 

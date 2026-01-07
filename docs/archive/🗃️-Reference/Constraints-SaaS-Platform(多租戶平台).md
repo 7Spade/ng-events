@@ -306,7 +306,6 @@ Total Platform Layer: ~170 files
 - ✅ **Replay Capability**: 支援時間旅行與事件重放
 - ✅ **Type Safety**: TypeScript strict mode
 - ✅ **Reactive Updates**: Angular Signals 響應式更新
-- ✅ **File Size**: 所有檔案 < 4000 字元
 - ✅ **Testability**: 完整 E2E 測試覆蓋
 
 ---

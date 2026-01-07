@@ -100,7 +100,6 @@ const issue = result.value;
 - ❌ Feature → Firebase 直接依賴
 - ❌ Domain 包含 UI 邏輯
 - ❌ 使用 `throw new Error`
-- ❌ 單檔案超過 4000 字元
 
 ### 必須
 - ✅ 所有錯誤用 Result.Err

@@ -13,7 +13,6 @@
    - 確認不會落入 AP-01..AP-04
 
 2. **Generation Limit**
-   - 單檔 ≤ 4000 characters
    - 超過 → 拆檔或詢問
 
 3. **Post-Generation Verification**

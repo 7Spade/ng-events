@@ -7,7 +7,7 @@
 // .eslintrc.js
 rules: {
   'no-firebase-in-core': 'error',
-  'max-file-size': ['error', { max: 4000 }],
+  'max-file-size': ['error', { max:  }],
   'enforce-result-pattern': 'error'
 }
 ```

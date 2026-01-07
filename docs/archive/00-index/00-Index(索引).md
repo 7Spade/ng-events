@@ -122,7 +122,6 @@ UI → Features → Core → Infrastructure
 
 系統透過以下機制防止架構違規：
 1. ESLint 規則檢查依賴方向
-2. 檔案大小限制（≤ 4000 字元）
 3. Result pattern 強制錯誤處理
 4. 自動化 Anti-pattern 檢測
 

@@ -1,4 +1,8 @@
 # File Size Compliance Skill
-- 每個檔案限制: <= 4000 字元
-- 拆分請命名規則: file-part-01.ts, file-part-02.ts
-- 測試和 lint 必須通過
+
+- Except for Markdown (`.md`) files, any single file must not exceed **4000 characters**.
+- Character count is based on UTF-8 characters.
+- When a file exceeds the limit, it must be split into multiple files using the naming convention:
+  - `file-part-01.ts`
+  - `file-part-02.ts`
+- All related tests and lint checks must pass after splitting.

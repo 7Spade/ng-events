@@ -4,7 +4,6 @@
 1. **Task 是唯一業務實體** (Task.md)
 2. **Platform層提供多租戶能力** (SaaS.md)
 3. **Event Sourcing + Causality** (SYS.md, Enable.md)
-4. **所有文件 < 4000字元**
 5. **完整DDD分層架構**
 
 ---
@@ -318,7 +317,6 @@ src/app/
 
 ## ✅ 架構保證
 
-- ✅ 所有檔案 < 4000 字元
 - ✅ TypeScript strict mode
 - ✅ 完整型別定義，無 `any`
 - ✅ 每個檔案包含功能標記與最小可運行範例

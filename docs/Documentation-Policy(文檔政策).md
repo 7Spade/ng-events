@@ -275,7 +275,6 @@ docs: Add ✨ file for [Topic] - [ChineseTopic]
 
 - Location: docs/##-category/
 - File: ##-✨EnglishName-中文名称.md
-- Size: ### bytes (≤4000 ✅)
 - Purpose: [簡述用途]
 ```
 

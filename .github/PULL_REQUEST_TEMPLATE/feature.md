@@ -1,22 +1,27 @@
 ---
 name: New Feature PR
-about: 新功能模組開發
+about: Pull request template for new feature module development
 ---
 
 ### Feature Description
-- 功能目標與預期行為
-- 使用場景
+- Feature objectives and expected behavior
+- Primary usage scenarios
 
 ### Related Issue
-# 關聯 Issue
+- Related issue(s): #
 
 ### Implementation Notes
-- 分模組拆檔說明
-- Copilot 生成限制（如有）
-- 需要注意的邊界或風險
+- Module-level file split and responsibility description
+- Copilot generation constraints (if applicable):
+  - Except for Markdown (`.md`) files, any single generated file must not exceed **4000 characters**.
+  - Character count is based on UTF-8 characters.
+  - Files exceeding the limit must be split following the naming convention:
+    - `file-part-01.ts`
+    - `file-part-02.ts`
+- Notable boundaries, assumptions, or risks
 
 ### Checklist
-- [ ] 功能單元測試完成
-- [ ] ESLint / Prettier 通過
-- [ ] 文件已更新
-- [ ] Copilot 生成檔案字數檢查 ≤4000
+- [ ] Feature-level unit tests completed
+- [ ] ESLint / Prettier checks passed
+- [ ] Documentation updated as required
+- [ ] Copilot-generated files comply with the 4000-character limit

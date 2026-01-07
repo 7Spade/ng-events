@@ -9,7 +9,6 @@
 本目錄包含三類文件，遵循專案文件政策 (見 `docs/DOCUMENTATION-POLICY.md`):
 
 ### ✨ Knowledge Essence Files (知識精華，01-06)
-快速參考，≤4000 bytes，核心概念：
 - `01-✨Core-Not-Angular-核心不属于Angular.md` - Core 獨立原則
 - `02-✨Authorization-Layers-权限分层.md` - 三層權限架構
 - `03-✨Packages-Structure-目录结构.md` - packages/ 結構
