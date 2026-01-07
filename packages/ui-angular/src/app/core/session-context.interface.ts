@@ -23,6 +23,10 @@ export interface SessionContext {
   workspaceId: string | null;
   workspaceType?: 'organization' | 'container';
   /**
+   * Workspace boundary alias used by domains and projections.
+   */
+  blueprintId?: string | null;
+  /**
    * Workspace owners (container only); actors must be user or organization.
    */
   ownerAccountIds?: string[];

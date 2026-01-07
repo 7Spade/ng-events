@@ -7,3 +7,14 @@ mcp:
 instructions:
   - '.github/instructions/mcp-integration.instructions.md'
   - '.github/instructions/angular.instructions.md'
+
+version: 1
+
+agents:
+  playwright:
+    description: Runs Playwright MCP for browser-based testing
+    capabilities:
+      - run
+      - test
+      - browser
+      - mcp

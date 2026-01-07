@@ -32,14 +32,6 @@ export class FirebaseAuthBridgeService {
   }
 
   /**
-   * 獲取 token 過期時間（毫秒時間戳）
-   */
-  private async getTokenExpiration(user: User): Promise<number> {
-    const idTokenResult = await user.getIdTokenResult();
-    return new Date(idTokenResult.expirationTime).getTime();
-  }
-
-  /**
    * 強制刷新 token
    */
   async refreshToken(): Promise<string> {
@@ -82,8 +74,12 @@ export class FirebaseAuthBridgeService {
   }
 
   private async setTokenOnService(user: User, token?: string): Promise<void> {
-    const resolvedToken = token ?? (await user.getIdToken());
-    const tokenExpiration = await this.getTokenExpiration(user);
+    const [resolvedToken, idTokenResult] = await Promise.all([token ?? user.getIdToken(), user.getIdTokenResult()]);
+    const tokenExpiration = new Date(idTokenResult.expirationTime).getTime();
+    const blueprintId =
+      typeof idTokenResult.claims?.['blueprintId'] === 'string'
+        ? (idTokenResult.claims['blueprintId'] as string)
+        : undefined;
 
     this.tokenService.set({
       token: resolvedToken,
@@ -91,7 +87,8 @@ export class FirebaseAuthBridgeService {
       email: user.email,
       name: user.displayName || user.email,
       avatar: user.photoURL,
-      expired: tokenExpiration
+      expired: tokenExpiration,
+      blueprintId
     });
   }
 }

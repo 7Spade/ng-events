@@ -15,5 +15,10 @@
  * - NO SDK dependencies
  */
 
-// Public API placeholder (skeleton) — keep domain framework-agnostic
-export {};
+export * from './src/aggregates/module.aggregate';
+export * from './src/aggregates/task.aggregate';
+export * from './src/aggregates/issue.aggregate';
+export * from './src/commands';
+export * from './src/events';
+export * from './src/manifests';
+export * from './src/handlers';

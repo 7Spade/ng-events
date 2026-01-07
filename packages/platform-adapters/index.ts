@@ -17,6 +17,7 @@
 
 // Auth Adapters
 export * from './src/auth/auth-state.service';
+export * from './src/auth/auth-adapter.service';
 
 // Notification Adapters
 
@@ -26,3 +27,12 @@ export * from './src/auth/auth-state.service';
 
 // Session Context Adapter (skeleton)
 export * from './src/session/session-context.adapter';
+// Facades
+export * from './src/facades/workspace.facade';
+export * from './src/facades/membership.facade';
+// Queries
+export * from './src/queries/blueprint-query.service';
+// Event store implementation
+export * from './src/event-store/in-memory-event-store';
+// Projection tools
+export * from './src/projections/projection-rebuilder';

@@ -8,7 +8,8 @@
     "ng": "ng",
     "start": "ng s -o",
     "build": "ng build",
-    "test": "ng test"
+    "test": "ng test",
+    "ng-high-memory": "NODE_OPTIONS=--max_old_space_size=8192 ng"
   },
   "keywords": [
     "angular",
