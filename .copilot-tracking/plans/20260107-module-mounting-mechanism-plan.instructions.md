@@ -12,6 +12,7 @@ Implement the module mounting mechanism for ng-events, including ModuleManifest/
 
 ## Objectives
 
+- **Phase 0**: Update DomainEvent interface to include actorAccountId for proper actor/workspace separation
 - Implement ModuleManifest and ModuleRegistry in core-engine for dependency validation
 - Add EnableModuleCommand and WorkspaceModuleEnabled event to account-domain Workspace aggregate
 - Create per-module manifest files (task, payment, issue) in saas-domain with dependency declarations
@@ -41,78 +42,86 @@ Implement the module mounting mechanism for ng-events, including ModuleManifest/
 
 ## Implementation Checklist
 
+### [ ] Phase 0: DomainEvent Interface Updates for actorAccountId
+
+- [ ] Task 0.1: Add actorAccountId to DomainEventMetadata
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 11-31)
+
+- [ ] Task 0.2: Update existing command/event interfaces to include actorAccountId in data
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 33-50)
+
 ### [ ] Phase 1: Core-Engine Module System Contracts
 
 - [ ] Task 1.1: Create ModuleManifest interface with key and requires fields
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 11-28)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 52-69)
 
 - [ ] Task 1.2: Implement ModuleRegistry class with dependency validation
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 30-50)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 71-91)
 
 - [ ] Task 1.3: Create ModuleGuard utility for workspace-module boundary checks
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 52-68)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 93-109)
 
 - [ ] Task 1.4: Define ModuleKey union type for type-safe module references
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 70-84)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 111-125)
 
 ### [ ] Phase 2: Account-Domain Workspace Module Management
 
 - [ ] Task 2.1: Add enabledModules array to WorkspaceAggregate
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 86-104)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 127-145)
 
-- [ ] Task 2.2: Create EnableModuleCommand interface
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 106-123)
+- [ ] Task 2.2: Create EnableModuleCommand interface with actorAccountId
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 147-164)
 
-- [ ] Task 2.3: Create WorkspaceModuleEnabled event interface
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 125-142)
+- [ ] Task 2.3: Create WorkspaceModuleEnabled event interface with actorAccountId
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 166-183)
 
 - [ ] Task 2.4: Implement enableModule method in WorkspaceAggregate
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 144-167)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 185-208)
 
 - [ ] Task 2.5: Update WorkspaceAggregate replay to handle WorkspaceModuleEnabled events
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 169-185)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 210-226)
 
 ### [ ] Phase 3: SaaS-Domain Module Manifests
 
 - [ ] Task 3.1: Create task.manifest.ts with module declaration
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 187-203)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 228-244)
 
 - [ ] Task 3.2: Create payment.manifest.ts with task dependency
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 205-222)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 246-263)
 
 - [ ] Task 3.3: Create issue.manifest.ts with module declaration
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 224-240)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 265-281)
 
 - [ ] Task 3.4: Export manifests from saas-domain index
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 242-256)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 283-297)
 
 ### [ ] Phase 4: Passive Module Initialization
 
 - [ ] Task 4.1: Create WorkspaceModuleEnabled event handler interface
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 258-274)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 299-315)
 
 - [ ] Task 4.2: Implement task module initialization handler
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 276-296)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 317-337)
 
 - [ ] Task 4.3: Implement payment module initialization handler
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 298-318)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 339-359)
 
 - [ ] Task 4.4: Implement issue module initialization handler
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 320-340)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 361-381)
 
 ### [ ] Phase 5: Integration and Validation
 
 - [ ] Task 5.1: Update core-engine index to export module system contracts
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 342-356)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 383-397)
 
 - [ ] Task 5.2: Validate ModuleRegistry dependency checking logic
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 358-375)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 399-416)
 
-- [ ] Task 5.3: Ensure all events carry complete causality metadata
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 377-394)
+- [ ] Task 5.3: Ensure all events carry complete causality metadata including actorAccountId
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 418-435)
 
 - [ ] Task 5.4: Verify modules never create Workspaces or access other module state
-  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 396-413)
+  - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 437-454)
 
 ## Dependencies
 
@@ -124,6 +133,7 @@ Implement the module mounting mechanism for ng-events, including ModuleManifest/
 
 ## Success Criteria
 
+- **Phase 0**: DomainEventMetadata includes actorAccountId field to distinguish actor from workspace scope
 - ModuleRegistry correctly validates module dependencies using manifest requires lists
 - Workspace aggregate maintains enabledModules array without knowing module implementation details
 - EnableModuleCommand and WorkspaceModuleEnabled events carry workspaceId, actorAccountId, and causedBy metadata
@@ -134,3 +144,4 @@ Implement the module mounting mechanism for ng-events, including ModuleManifest/
 - All module operations receive workspaceContext and never create Workspaces
 - Event replay preserves module enablement state through WorkspaceModuleEnabled events
 - No module directly accesses another module's internal state (only via manifest dependencies)
+- Clear separation maintained: actorAccountId (who) vs workspaceId (where) vs causedBy (causality chain)

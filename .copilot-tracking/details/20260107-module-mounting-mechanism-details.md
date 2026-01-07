@@ -9,6 +9,41 @@
 - #file:../research/20260106-workspace-model-gap-analysis.md
 - #file:../research/20260106-next-steps-skeletons.md
 
+## Phase 0: DomainEvent Interface Updates for actorAccountId
+
+### Task 0.1: Add actorAccountId to DomainEventMetadata
+
+Update the DomainEvent interface to include actorAccountId, distinguishing who performed the action from the workspace scope.
+
+- **Files**:
+  - packages/core-engine/src/events/domain-event.ts - Add actorAccountId field to DomainEventMetadata
+- **Success**:
+  - DomainEventMetadata includes `readonly actorAccountId: string` field
+  - Field is documented as "The account that initiated this event"
+  - Distinct from workspaceId (scope) and causedByUser (causality chain)
+- **Research References**:
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 6-10) - Actor vs workspace separation
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 34-36) - Event metadata requirements
+- **Dependencies**:
+  - None (foundational change)
+
+### Task 0.2: Update existing command/event interfaces to include actorAccountId in data
+
+Ensure all module-related commands and events properly include actorAccountId.
+
+- **Files**:
+  - Review packages/account-domain/src/commands/index.ts - Verify commands include actorAccountId
+  - Review packages/account-domain/src/events/index.ts - Verify events include actorAccountId
+- **Success**:
+  - All commands that will be created in Phase 2 are documented to require actorAccountId
+  - Event data payloads include actorAccountId alongside workspaceId
+  - Clear separation: actorAccountId (who) vs workspaceId (where) vs causedBy (causality)
+- **Research References**:
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 24-29) - Command/event shape requirements
+  - #file:../research/20260106-module-mounting-gap-analysis.md (Lines 30-32) - Metadata consistency
+- **Dependencies**:
+  - Task 0.1 completion (actorAccountId in DomainEventMetadata)
+
 ## Phase 1: Core-Engine Module System Contracts
 
 ### Task 1.1: Create ModuleManifest interface with key and requires fields
@@ -96,40 +131,49 @@ Update WorkspaceAggregate to track enabled modules without knowing their interna
 - **Dependencies**:
   - Task 1.4 completion (ModuleKey type)
 
-### Task 2.2: Create EnableModuleCommand interface
+### Task 2.2: Create EnableModuleCommand interface with actorAccountId
 
-Define EnableModuleCommand with workspaceId, moduleKey, and actorAccountId.
+Define EnableModuleCommand with workspaceId, moduleKey, actorAccountId, and blueprintId.
 
 - **Files**:
   - packages/account-domain/src/commands/enable-module.command.ts - Create command interface
   - packages/account-domain/src/commands/index.ts - Export EnableModuleCommand
 - **Success**:
   - EnableModuleCommand has workspaceId, moduleKey, actorAccountId, blueprintId, metadata fields
+  - actorAccountId explicitly identifies who is enabling the module (the actor)
+  - workspaceId identifies where the module is being enabled (the scope)
   - Carries complete causality metadata (causedBy, causedByUser, causedByAction)
   - Properly typed with ModuleKey
 - **Research References**:
   - #file:../research/20260106-module-mounting-gap-analysis.md (Lines 30-32) - EnableModuleCommand specification
-  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 34-36) - actorAccountId vs workspaceId
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 6-10) - actorAccountId (who) vs workspaceId (where)
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 34-36) - Event/command metadata requirements
   - docs/archive/03-architecture/04-Module-Mounting-Mechanism(模組掛載機制).md (Lines 45-51) - Enable command structure
 - **Dependencies**:
+  - Task 0.1 completion (actorAccountId in DomainEventMetadata)
   - Task 1.4 completion (ModuleKey type)
 
-### Task 2.3: Create WorkspaceModuleEnabled event interface
+### Task 2.3: Create WorkspaceModuleEnabled event interface with actorAccountId
 
-Define WorkspaceModuleEnabled event for replayable module enablement.
+Define WorkspaceModuleEnabled event for replayable module enablement with complete actor context.
 
 - **Files**:
   - packages/account-domain/src/events/workspace-module-enabled.event.ts - Create event interface
   - packages/account-domain/src/events/index.ts - Export WorkspaceModuleEnabled
 - **Success**:
   - WorkspaceModuleEnabled extends DomainEvent with workspaceId, moduleKey, enabledBy in data
+  - Event metadata includes actorAccountId identifying who enabled the module
+  - workspaceId in data identifies workspace scope
   - Event carries complete causality metadata including blueprintId
   - Replayable and auditable event structure
+  - Clear separation: actorAccountId (actor) vs workspaceId (scope) vs causedBy (causality)
 - **Research References**:
   - #file:../research/20260106-module-mounting-gap-analysis.md (Lines 13-16) - WorkspaceModuleEnabled event specification
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 24-29) - Event shape with actorAccountId and workspaceId
   - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 34-36) - Event metadata requirements
   - docs/archive/03-architecture/04-Module-Mounting-Mechanism(模組掛載機制).md (Lines 35-43) - Event structure
 - **Dependencies**:
+  - Task 0.1 completion (actorAccountId in DomainEventMetadata)
   - Task 1.4 completion (ModuleKey type)
 
 ### Task 2.4: Implement enableModule method in WorkspaceAggregate
@@ -346,21 +390,25 @@ Test that ModuleRegistry correctly enforces module dependencies.
   - Task 1.2 completion (ModuleRegistry)
   - Tasks 3.1, 3.2, 3.3 completion (all manifests)
 
-### Task 5.3: Ensure all events carry complete causality metadata
+### Task 5.3: Ensure all events carry complete causality metadata including actorAccountId
 
-Verify EnableModuleCommand and WorkspaceModuleEnabled include all required metadata.
+Verify EnableModuleCommand and WorkspaceModuleEnabled include all required metadata with proper actor/workspace separation.
 
 - **Files**:
   - Review command and event interfaces
 - **Success**:
-  - workspaceId present in all module-related commands/events
-  - actorAccountId identifies who performed the action
-  - causedBy, causedByUser, causedByAction in metadata
+  - workspaceId present in all module-related commands/events (identifies scope - where)
+  - actorAccountId explicitly identifies who performed the action (the actor - who)
+  - causedBy, causedByUser, causedByAction in metadata for causality tracking
   - blueprintId included for multi-tenant boundary
+  - Clear conceptual separation: actorAccountId (actor/who) vs workspaceId (scope/where) vs causedBy (causality chain)
+  - All three concepts are distinct and properly utilized
 - **Research References**:
   - #file:../research/20260106-module-mounting-gap-analysis.md (Lines 30-32) - Metadata requirements
-  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 34-36) - Actor vs workspace separation
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 6-10) - Actor vs workspace vs causality separation
+  - #file:../research/20260106-workspace-model-gap-analysis.md (Lines 34-36) - Complete event shape requirements
 - **Dependencies**:
+  - Task 0.1 completion (actorAccountId in DomainEventMetadata)
   - Task 2.2 completion (EnableModuleCommand)
   - Task 2.3 completion (WorkspaceModuleEnabled)
 
