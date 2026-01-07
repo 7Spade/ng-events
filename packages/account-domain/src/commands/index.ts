@@ -1,6 +1,7 @@
 import type { CausalityMetadata } from '@core-engine';
 
 export interface CommandMetadata extends CausalityMetadata {
+  readonly actorAccountId?: string;
   readonly timestamp?: number;
   readonly version?: number;
 }
@@ -29,3 +30,5 @@ export interface InviteMemberCommand {
 }
 
 // END OF FILE
+
+export * from './enable-module.command';
