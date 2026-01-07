@@ -6,7 +6,7 @@
 
 ## Summary
 
-Added actor metadata support, introduced core-engine module system scaffolding, implemented workspace module enablement commands/events, declared SaaS module manifests, and stubbed passive module initialization handlers.
+Added actor metadata support, introduced core-engine module system scaffolding, implemented workspace module enablement commands/events, declared SaaS module manifests, stubbed passive module initialization handlers, and fixed UI workspace build by adding high-memory script and path mappings.
 
 ## Changes
 
@@ -38,6 +38,8 @@ Added actor metadata support, introduced core-engine module system scaffolding, 
 - packages/account-domain/src/aggregates/workspace.aggregate.ts - Added enabledModules state and enableModule workflow
 - packages/account-domain/src/events/index.ts - Exported WorkspaceModuleEnabled event
 - packages/saas-domain/index.ts - Exported module manifests and handlers
+- packages/ui-angular/package.json - Added ng-high-memory script for Angular builds
+- packages/ui-angular/tsconfig.json - Added @account-domain path mapping for workspace builds
 - .copilot-tracking/plans/20260107-module-mounting-mechanism-plan.instructions.md - Updated checklist progress
 
 ### Removed
@@ -46,7 +48,7 @@ Added actor metadata support, introduced core-engine module system scaffolding, 
 
 ## Release Summary
 
-**Total Files Affected**: 24
+**Total Files Affected**: 26
 
 ### Files Created (17)
 
@@ -68,7 +70,7 @@ Added actor metadata support, introduced core-engine module system scaffolding, 
 - packages/saas-domain/src/handlers/issue-module.handler.ts - Issue handler
 - packages/saas-domain/src/handlers/index.ts - Handler barrel exports
 
-### Files Modified (7)
+### Files Modified (9)
 
 - packages/core-engine/index.ts - Added module-system exports
 - packages/core-engine/src/events/domain-event.ts - Added actorAccountId metadata
@@ -76,6 +78,8 @@ Added actor metadata support, introduced core-engine module system scaffolding, 
 - packages/account-domain/src/aggregates/workspace.aggregate.ts - Included enabledModules and enableModule flow
 - packages/account-domain/src/events/index.ts - Exported WorkspaceModuleEnabled event
 - packages/saas-domain/index.ts - Added manifest and handler exports
+- packages/ui-angular/package.json - Added ng-high-memory script for Angular builds
+- packages/ui-angular/tsconfig.json - Added @account-domain path mapping for workspace builds
 - .copilot-tracking/plans/20260107-module-mounting-mechanism-plan.instructions.md - Updated checklist progress
 
 ### Files Removed (0)

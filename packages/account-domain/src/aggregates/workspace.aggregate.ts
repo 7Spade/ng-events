@@ -53,7 +53,7 @@ export class WorkspaceAggregate {
 
   enableModule(
     command: EnableModuleCommand,
-    registry: ModuleRegistry,
+    registry: typeof ModuleRegistry,
     manifests: ModuleManifest[]
   ): WorkspaceModuleEnabled {
     ModuleGuard.assertWorkspaceContext(command.workspaceId);
