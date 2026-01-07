@@ -31,17 +31,29 @@ Deliverables:
 
 ---
 
+## Test Credentials & Auto-Login
+
+For any Playwright MCP test that navigates to a page requiring login:
+
+- Test account email: `ac7x@pm.me`
+- Test account password: `123123`
+- Copilot should automatically perform login at the start of the test
+- No need to setup env variables or storageState, just use these credentials directly
+
+---
+
 ## Tooling — Playwright MCP
 
 You have access to Playwright MCP.
 
 You must:
-- Generate Playwright tests when validating behavior.
-- Execute Playwright MCP to run tests.
-- Read test output and error traces.
-- Fix code or tests based on execution results.
-- Re-run Playwright MCP until all tests pass.
+- Generate Playwright tests for all UI flows
+- Execute Playwright MCP to run tests
+- Automatically log in using the provided test credentials before interacting with any page
+- Read test output and error traces
+- Fix code or tests based on execution results
+- Re-run Playwright MCP until all tests pass
 
 When validating UI, API, or integration behavior:
-- Always execute Playwright MCP.
-- Never rely on mock reasoning or assumptions.
+- Always execute Playwright MCP
+- Never rely on mock reasoning or assumptions
