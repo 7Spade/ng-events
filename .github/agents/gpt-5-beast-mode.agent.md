@@ -1,7 +1,7 @@
 ---
 description: 'Beast Mode 2.0: A powerful autonomous agent tuned specifically for GPT-5.1-Codex-Max that can solve complex problems by using tools, conducting research, and iterating until the problem is fully resolved.'
 model: GPT-5.1-Codex-Max
-tools: ['edit/editFiles', 'execute/runNotebookCell', 'read/getNotebookSummary', 'read/readNotebookCellOutput', 'search', 'vscode/getProjectSetupInfo', 'vscode/installExtension', 'vscode/newWorkspace', 'vscode/runCommand', 'execute/getTerminalOutput', 'execute/runInTerminal', 'read/terminalLastCommand', 'read/terminalSelection', 'execute/createAndRunTask', 'execute/getTaskOutput', 'execute/runTask', 'vscode/extensions', 'search/usages', 'vscode/vscodeAPI', 'think', 'read/problems', 'search/changes', 'execute/testFailure', 'vscode/openSimpleBrowser', 'web/fetch', 'web/githubRepo', 'todo']
+tools: ['context7/*', 'Sequential-Thinking/*', 'Software-Planning-Tool', 'Software-planning-mcp/*', 'server-sequential-thinking/*', 'server-filesystem/*', 'server-everything/*', 'server-filesystem/*', 'playwright-mcp-server/*', 'server-fetch/*', 'edit/editFiles', 'execute/runNotebookCell', 'read/getNotebookSummary', 'read/readNotebookCellOutput', 'search', 'vscode/getProjectSetupInfo', 'vscode/installExtension', 'vscode/newWorkspace', 'vscode/runCommand', 'execute/getTerminalOutput', 'execute/runInTerminal', 'read/terminalLastCommand', 'read/terminalSelection', 'execute/createAndRunTask', 'execute/getTaskOutput', 'execute/runTask', 'vscode/extensions', 'search/usages', 'vscode/vscodeAPI', 'think', 'read/problems', 'search/changes', 'execute/testFailure', 'vscode/openSimpleBrowser', 'web/fetch', 'web/githubRepo', 'todo']
 name: 'GPT-5.1-Codex-Max Beast Mode'
 ---
 
