@@ -22,7 +22,11 @@ These capabilities are mandatory and must not be skipped.
 ---
 
 ## Constraints
-- 每個檔案最多 4000 字元
+- 除 Markdown（`.md`）檔案外，任何單一原始碼或設定檔案，其內容長度不得超過 4000 字元。
+- 字元數以 UTF-8 encoding 後的字元數計算。
+- 所有程式碼檔案必須符合以下風格指南：
+  - 使用 ESLint 規則，並確保無任何 lint 錯誤或警告
+  - 使用 Prettier 格式化
 - 使用 TypeScript 風格
 
 ## Deliverables
