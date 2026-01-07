@@ -67,7 +67,8 @@ export class DelonSessionContextAdapter implements SessionContext {
   }
 
   get workspaceId(): string | null {
-    const workspace = this.token?.workspaceId;
+    // Fallback to blueprintId (tenancy boundary) when workspaceId is absent to unblock guards that rely on workspace scope.
+    const workspace = this.token?.workspaceId ?? this.token?.blueprintId;
     return typeof workspace === 'string' && workspace ? workspace : null;
   }
 
