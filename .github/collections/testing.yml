@@ -1,0 +1,5 @@
+name: testing
+agents:
+  - playwright
+prompts:
+  - playwright.md

@@ -13,6 +13,10 @@ export interface CausalityMetadata {
 
 export interface DomainEventMetadata extends CausalityMetadata {
   /**
+   * The account that initiated this event (actor / who), distinct from workspace scope.
+   */
+  readonly actorAccountId?: string;
+  /**
    * Event version within the aggregate stream.
    */
   readonly version?: number;

@@ -21,4 +21,6 @@ export interface MembershipCreatedPayload {
 
 export type MembershipCreatedEvent = DomainEvent<MembershipCreatedPayload>;
 
+export type { WorkspaceModuleEnabled, WorkspaceModuleEnabledPayload } from './workspace-module-enabled.event';
+
 // END OF FILE

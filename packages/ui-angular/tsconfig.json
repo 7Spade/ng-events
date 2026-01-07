@@ -3,22 +3,53 @@
   "compilerOptions": {
     "outDir": "../../dist/ui-angular",
     "baseUrl": "./",
-    "lib": ["ES2022", "dom"],
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "types": [],
     "paths": {
-      "@core": ["src/app/core/index.ts"],
-      "@core/*": ["src/app/core/*"],
-      "@shared": ["src/app/shared/index.ts"],
-      "@shared/*": ["src/app/shared/*"],
-      "@env/*": ["src/environments/*"],
-      "@core-engine": ["../core-engine/index.ts"],
-      "@core-engine/*": ["../core-engine/*"],
-      "@saas-domain": ["../saas-domain/index.ts"],
-      "@saas-domain/*": ["../saas-domain/*"],
-      "@platform-adapters": ["../platform-adapters/index.ts"],
-      "@platform-adapters/*": ["../platform-adapters/*"]
+      "@core": [
+        "src/app/core/index.ts"
+      ],
+      "@core/*": [
+        "src/app/core/*"
+      ],
+      "@shared": [
+        "src/app/shared/index.ts"
+      ],
+      "@shared/*": [
+        "src/app/shared/*"
+      ],
+      "@env/*": [
+        "src/environments/*"
+      ],
+      "@core-engine": [
+        "../core-engine/index.ts"
+      ],
+      "@core-engine/*": [
+        "../core-engine/*"
+      ],
+      "@saas-domain": [
+        "../saas-domain/index.ts"
+      ],
+      "@saas-domain/*": [
+        "../saas-domain/*"
+      ],
+      "@platform-adapters": [
+        "../platform-adapters/index.ts"
+      ],
+      "@platform-adapters/*": [
+        "../platform-adapters/*"
+      ],
+      "@account-domain": [
+        "../account-domain/index.ts"
+      ],
+      "@account-domain/*": [
+        "../account-domain/*"
+      ]
     }
   },
   "include": [
@@ -28,4 +59,3 @@
     "src/**/*.spec.ts"
   ]
 }
-

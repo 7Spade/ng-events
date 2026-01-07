@@ -42,85 +42,85 @@ Implement the module mounting mechanism for ng-events, including ModuleManifest/
 
 ## Implementation Checklist
 
-### [ ] Phase 0: DomainEvent Interface Updates for actorAccountId
+### [x] Phase 0: DomainEvent Interface Updates for actorAccountId
 
-- [ ] Task 0.1: Add actorAccountId to DomainEventMetadata
+- [x] Task 0.1: Add actorAccountId to DomainEventMetadata
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 11-31)
 
-- [ ] Task 0.2: Update existing command/event interfaces to include actorAccountId in data
+- [x] Task 0.2: Update existing command/event interfaces to include actorAccountId in data
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 33-50)
 
-### [ ] Phase 1: Core-Engine Module System Contracts
+### [x] Phase 1: Core-Engine Module System Contracts
 
-- [ ] Task 1.1: Create ModuleManifest interface with key and requires fields
+- [x] Task 1.1: Create ModuleManifest interface with key and requires fields
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 52-69)
 
-- [ ] Task 1.2: Implement ModuleRegistry class with dependency validation
+- [x] Task 1.2: Implement ModuleRegistry class with dependency validation
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 71-91)
 
-- [ ] Task 1.3: Create ModuleGuard utility for workspace-module boundary checks
+- [x] Task 1.3: Create ModuleGuard utility for workspace-module boundary checks
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 93-109)
 
-- [ ] Task 1.4: Define ModuleKey union type for type-safe module references
+- [x] Task 1.4: Define ModuleKey union type for type-safe module references
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 111-125)
 
-### [ ] Phase 2: Account-Domain Workspace Module Management
+### [x] Phase 2: Account-Domain Workspace Module Management
 
-- [ ] Task 2.1: Add enabledModules array to WorkspaceAggregate
+- [x] Task 2.1: Add enabledModules array to WorkspaceAggregate
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 127-145)
 
-- [ ] Task 2.2: Create EnableModuleCommand interface with actorAccountId
+- [x] Task 2.2: Create EnableModuleCommand interface with actorAccountId
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 147-164)
 
-- [ ] Task 2.3: Create WorkspaceModuleEnabled event interface with actorAccountId
+- [x] Task 2.3: Create WorkspaceModuleEnabled event interface with actorAccountId
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 166-183)
 
-- [ ] Task 2.4: Implement enableModule method in WorkspaceAggregate
+- [x] Task 2.4: Implement enableModule method in WorkspaceAggregate
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 185-208)
 
-- [ ] Task 2.5: Update WorkspaceAggregate replay to handle WorkspaceModuleEnabled events
+- [x] Task 2.5: Update WorkspaceAggregate replay to handle WorkspaceModuleEnabled events
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 210-226)
 
-### [ ] Phase 3: SaaS-Domain Module Manifests
+### [x] Phase 3: SaaS-Domain Module Manifests
 
-- [ ] Task 3.1: Create task.manifest.ts with module declaration
+- [x] Task 3.1: Create task.manifest.ts with module declaration
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 228-244)
 
-- [ ] Task 3.2: Create payment.manifest.ts with task dependency
+- [x] Task 3.2: Create payment.manifest.ts with task dependency
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 246-263)
 
-- [ ] Task 3.3: Create issue.manifest.ts with module declaration
+- [x] Task 3.3: Create issue.manifest.ts with module declaration
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 265-281)
 
-- [ ] Task 3.4: Export manifests from saas-domain index
+- [x] Task 3.4: Export manifests from saas-domain index
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 283-297)
 
-### [ ] Phase 4: Passive Module Initialization
+### [x] Phase 4: Passive Module Initialization
 
-- [ ] Task 4.1: Create WorkspaceModuleEnabled event handler interface
+- [x] Task 4.1: Create WorkspaceModuleEnabled event handler interface
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 299-315)
 
-- [ ] Task 4.2: Implement task module initialization handler
+- [x] Task 4.2: Implement task module initialization handler
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 317-337)
 
-- [ ] Task 4.3: Implement payment module initialization handler
+- [x] Task 4.3: Implement payment module initialization handler
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 339-359)
 
-- [ ] Task 4.4: Implement issue module initialization handler
+- [x] Task 4.4: Implement issue module initialization handler
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 361-381)
 
-### [ ] Phase 5: Integration and Validation
+### [x] Phase 5: Integration and Validation
 
-- [ ] Task 5.1: Update core-engine index to export module system contracts
+- [x] Task 5.1: Update core-engine index to export module system contracts
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 383-397)
 
-- [ ] Task 5.2: Validate ModuleRegistry dependency checking logic
+- [x] Task 5.2: Validate ModuleRegistry dependency checking logic
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 399-416)
 
-- [ ] Task 5.3: Ensure all events carry complete causality metadata including actorAccountId
+- [x] Task 5.3: Ensure all events carry complete causality metadata including actorAccountId
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 418-435)
 
-- [ ] Task 5.4: Verify modules never create Workspaces or access other module state
+- [x] Task 5.4: Verify modules never create Workspaces or access other module state
   - Details: .copilot-tracking/details/20260107-module-mounting-mechanism-details.md (Lines 437-454)
 
 ## Dependencies

@@ -24,3 +24,4 @@ export * from './src/events';
 export * from './src/projections';
 // Causality utilities
 export * from './src/causality';
+export * from './src/module-system';
