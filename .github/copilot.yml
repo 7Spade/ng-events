@@ -8,13 +8,15 @@ instructions:
   - '.github/instructions/mcp-integration.instructions.md'
   - '.github/instructions/angular.instructions.md'
 
-version: 1
-
 agents:
   playwright:
-    description: Runs Playwright MCP for browser-based testing
+    description: >
+      Executes real browser automation using Playwright MCP.
+      Responsible for navigation, login, UI validation, screenshots, and reporting.
+    mcp_servers:
+      - playwright-mcp-server
     capabilities:
-      - run
-      - test
       - browser
+      - automation
+      - testing
       - mcp
